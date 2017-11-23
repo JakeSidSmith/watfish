@@ -1,0 +1,81 @@
+{
+  "name": "watfish",
+  "version": "0.0.0",
+  "description": "Simple development platform with process management & router",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "wtf": "dist/cli.js"
+  },
+  "scripts": {
+    "prepublish": "npm test && npm run dist",
+    "dist": "./scripts/dist",
+    "lint": "tslint --project tsconfig.json '@(src|tests|types|docs)/**/*.@(ts|tsx)'",
+    "tests": "jest",
+    "test": "npm run lint && npm run tests -- --coverage --runInBand"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakesidsmith/watfish.git"
+  },
+  "keywords": [
+    "development",
+    "server",
+    "router",
+    "process",
+    "management",
+    "platform"
+  ],
+  "author": "Jake 'Sid' Smith",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jakesidsmith/watfish/issues"
+  },
+  "homepage": "https://github.com/jakesidsmith/watfish#readme",
+  "dependencies": {
+    "@types/node": "8.0.53",
+    "jargs": "0.3.4",
+    "typescript": "2.6.1"
+  },
+  "devDependencies": {
+    "@types/jest": "20.0.3",
+    "jest": "21.2.1",
+    "ts-jest": "21.2.3",
+    "tslint": "5.8.0",
+    "tslint-eslint-rules": "4.1.1"
+  },
+  "jest": {
+    "setupFiles": [
+      "<rootDir>/tests/helpers/setup.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "types/.*\\.d\\.ts",
+      "tests/helpers/"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    },
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/tests/.*|\\.(test|spec))\\.(ts|tsx|js|jsx)$",
+    "testPathIgnorePatterns": [
+      "tests/helpers/"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx"
+    ],
+    "mapCoverage": true
+  }
+}
