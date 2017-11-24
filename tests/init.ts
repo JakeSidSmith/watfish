@@ -7,14 +7,12 @@ type WriteFileCallback = (error?: NodeJS.ErrnoException) => void;
 
 describe('init.ts', () => {
 
-  beforeAll(() => {
+  beforeEach(() => {
     init.QUESTIONS.forEach((question) => {
       spyOn(question, 'condition').and.callThrough();
       spyOn(question, 'callback').and.callThrough();
     });
-  });
 
-  beforeEach(() => {
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(process, 'exit');
     spyOn(fs, 'writeFile').and.callFake(
@@ -52,6 +50,38 @@ describe('init.ts', () => {
               url: 'my-url',
             },
           ],
+        },
+        undefined,
+        2
+      ),
+      UTF8,
+      init.writeFileCallback
+    );
+  });
+
+  it('should ask questions & output a config file (no process value)', () => {
+    spyOn(process.stderr, 'write');
+
+    const answers = [
+      '',
+      'my-url',
+    ];
+
+    mockStd(answers);
+
+    init.default();
+
+    init.QUESTIONS.forEach((question, index) => {
+      expect(process.stderr.write).toHaveBeenCalledWith(question.message);
+      expect(question.condition).toHaveBeenCalledWith(answers[index]);
+      expect(question.callback).not.toHaveBeenCalled();
+    });
+
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      'directory/wtf.json',
+      JSON.stringify(
+        {
+          routes: [],
         },
         undefined,
         2
