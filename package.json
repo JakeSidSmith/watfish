@@ -34,7 +34,7 @@
   "homepage": "https://github.com/jakesidsmith/watfish#readme",
   "dependencies": {
     "@types/node": "8.0.53",
-    "jargs": "0.3.4",
+    "jargs": "0.3.5",
     "typescript": "2.6.1"
   },
   "devDependencies": {
