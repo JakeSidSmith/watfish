@@ -8,7 +8,9 @@ export interface PortError extends Error {
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
 
 export const isPortTaken = (port: string, callback: PortCallback) => {
-  const tester = net.createServer()
+  const tester = net.createServer();
+
+  tester
     .once('error', (error: PortError) => {
       if (error.code !== 'EADDRINUSE') {
         callback(error);
