@@ -50,7 +50,8 @@
     ],
     "coveragePathIgnorePatterns": [
       "types/.*\\.d\\.ts",
-      "tests/helpers/"
+      "tests/helpers/",
+      "tests/mocks/"
     ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}"
@@ -68,7 +69,8 @@
     },
     "testRegex": "(/tests/.*|\\.(test|spec))\\.(ts|tsx|js|jsx)$",
     "testPathIgnorePatterns": [
-      "tests/helpers/"
+      "tests/helpers/",
+      "tests/mocks/"
     ],
     "moduleFileExtensions": [
       "ts",
