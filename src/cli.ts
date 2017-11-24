@@ -4,6 +4,7 @@ import {
   Arg,
   collect,
   Command,
+  Flag,
   Help,
   Program,
   RequireAny,
@@ -62,6 +63,13 @@ collect(
             ],
           }
         )
+      ),
+      Flag(
+        'version',
+        {
+          alias: 'v',
+          description: 'Display version',
+        }
       )
     )
   )
