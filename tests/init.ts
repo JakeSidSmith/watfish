@@ -28,6 +28,19 @@ describe('init.ts', () => {
       expect(question.callback).toHaveBeenCalledWith(answers[index]);
     });
 
-    expect(result).toBe('{"routes":[{"process":"my-process","url":"my-url"}]}');
+    expect(result).toBe(
+      JSON.stringify(
+        {
+          routes: [
+            {
+              process: 'my-process',
+              url: 'my-url',
+            },
+          ],
+        },
+        undefined,
+        2
+      )
+    );
   });
 });

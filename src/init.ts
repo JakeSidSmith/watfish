@@ -53,10 +53,14 @@ const askForInput = ({message, callback, condition}: Question) => {
 const createStringConfig = () => {
   const routes = route.process ? [route] : undefined;
 
-  return JSON.stringify({
-    ...config,
-    routes,
-  });
+  return JSON.stringify(
+    {
+      ...config,
+      routes,
+    },
+    undefined,
+    2
+  );
 };
 
 const init = () => {
