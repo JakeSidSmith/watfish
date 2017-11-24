@@ -13,6 +13,7 @@ import {
 } from 'jargs';
 import { helloWorld } from './index';
 import init from './init';
+import version from './version';
 
 helloWorld.replace('World', 'Everybody');
 
@@ -49,6 +50,7 @@ collect(
           'Simple development platform with process management & router',
         usage: `${PROGRAM} [<command>] [<sub-command>] [options]`,
         examples: [`${PROGRAM} start --env dev`],
+        callback: version,
       },
       RequireAny(
         Command(
@@ -164,14 +166,14 @@ collect(
             )
           ),
           GLOBAL_FLAG
+        ),
+        Flag(
+          'version',
+          {
+            alias: 'v',
+            description: 'Display version',
+          }
         )
-      ),
-      Flag(
-        'version',
-        {
-          alias: 'v',
-          description: 'Display version',
-        }
       )
     )
   )
