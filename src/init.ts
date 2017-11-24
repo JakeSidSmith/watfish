@@ -1,11 +1,16 @@
-interface Route {
-  process?: string;
-  url?: string;
-}
+import * as fs from 'fs';
+import * as path from 'path';
+import { UTF8 } from './constants';
+import { writeFile } from 'fs';
 
-interface Config {
+type Route = Partial<{
+  process: string;
+  url: string;
+}>;
+
+type Config = Partial<{
   routes: Route[];
-}
+}>;
 
 export type Callback = (value: string | undefined) => any;
 export type Condition = (value: string | undefined) => boolean;
@@ -50,8 +55,8 @@ const askForInput = ({message, callback, condition}: Question) => {
   });
 };
 
-const createStringConfig = () => {
-  const routes = route.process ? [route] : undefined;
+const createStringConfig = (): string => {
+  const routes = route.process ? [route] : [];
 
   return JSON.stringify(
     {
@@ -63,6 +68,17 @@ const createStringConfig = () => {
   );
 };
 
+export const writeFileCallback = (error: NodeJS.ErrnoException) => {
+  if (error) {
+    process.stderr.write(error.message);
+    return process.exit(1);
+  }
+
+  const configPath = path.join(process.cwd(), 'wtf.json');
+
+  process.stderr.write(`wtf.json written to ${configPath}`);
+};
+
 const init = () => {
   const questions = [...QUESTIONS];
 
@@ -72,7 +88,14 @@ const init = () => {
     askForInput(question);
   }
 
-  return createStringConfig();
+  const configPath = path.join(process.cwd(), 'wtf.json');
+
+  fs.writeFile(
+    configPath,
+    createStringConfig(),
+    UTF8,
+    writeFileCallback
+  );
 };
 
 export default init;

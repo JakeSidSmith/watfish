@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import { UTF8 } from '../src/constants';
 import * as init from '../src/init';
 import mockStd from './mocks/std';
 
@@ -8,6 +10,10 @@ describe('init.ts', () => {
       spyOn(question, 'condition').and.callThrough();
       spyOn(question, 'callback').and.callThrough();
     });
+
+    process.cwd = () => 'directory';
+
+    spyOn(fs, 'writeFile');
   });
 
   it('should ask questions & output a config file', () => {
@@ -28,7 +34,8 @@ describe('init.ts', () => {
       expect(question.callback).toHaveBeenCalledWith(answers[index]);
     });
 
-    expect(result).toBe(
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      'directory/wtf.json',
       JSON.stringify(
         {
           routes: [
@@ -40,7 +47,9 @@ describe('init.ts', () => {
         },
         undefined,
         2
-      )
+      ),
+      UTF8,
+      init.writeFileCallback
     );
   });
 });
