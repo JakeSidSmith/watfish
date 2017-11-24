@@ -1,12 +1,10 @@
 const mockStd = (answers: string[]) => {
-  let index = 0;
+  const answersCopy = [...answers];
 
   spyOn(process.stdin, 'resume').and.callFake(() => null as any);
 
   spyOn(process.stdin, 'once').and.callFake((event: string, callback: (data: any) => any) => {
-    callback(answers[index]);
-
-    index += 1;
+    callback(answersCopy.shift());
 
     return null as any;
   });

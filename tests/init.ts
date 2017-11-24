@@ -35,8 +35,9 @@ describe('init.ts', () => {
     init.default();
 
     init.QUESTIONS.forEach((question, index) => {
-      expect(process.stderr.write).toHaveBeenCalledWith(question.message);
-      expect(question.condition).toHaveBeenCalledWith(answers[index]);
+      expect(process.stdin.resume).toHaveBeenCalled();
+      expect(process.stderr.write).toHaveBeenCalledWith(question.message + ' ');
+      expect(question.condition).toHaveBeenCalled();
       expect(question.callback).toHaveBeenCalledWith(answers[index]);
     });
 
@@ -72,9 +73,16 @@ describe('init.ts', () => {
     init.default();
 
     init.QUESTIONS.forEach((question, index) => {
-      expect(process.stderr.write).toHaveBeenCalledWith(question.message);
-      expect(question.condition).toHaveBeenCalledWith(answers[index]);
-      expect(question.callback).not.toHaveBeenCalled();
+      if (index === 0) {
+        expect(process.stdin.resume).toHaveBeenCalled();
+        expect(process.stderr.write).toHaveBeenCalledWith(question.message + ' ');
+      }
+
+      expect(question.condition).toHaveBeenCalled();
+
+      if (index === 1) {
+        expect(question.callback).not.toHaveBeenCalled();
+      }
     });
 
     expect(fs.writeFile).toHaveBeenCalledWith(
@@ -100,14 +108,15 @@ describe('init.ts', () => {
     it('should output a success message', () => {
       init.writeFileCallback();
 
-      expect(process.stderr.write).toHaveBeenLastCalledWith('wtf.json written to directory/wtf.json');
+      expect(process.stderr.write).toHaveBeenCalledWith('wtf.json written to directory/wtf.json\n');
+      expect(process.exit).not.toHaveBeenCalled();
     });
 
     it('should exit on error', () => {
       init.writeFileCallback(new Error('WTF'));
 
-      expect(process.stderr.write).toHaveBeenLastCalledWith('WTF');
-      expect(process.exit).toHaveBeenLastCalledWith(1);
+      expect(process.stderr.write).toHaveBeenCalledWith('WTF');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 });

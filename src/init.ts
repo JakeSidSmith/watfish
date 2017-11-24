@@ -12,7 +12,7 @@ type Config = Partial<{
 }>;
 
 export type Callback = (value: string | undefined) => any;
-export type Condition = (value: string | undefined) => boolean;
+export type Condition = () => boolean;
 
 export interface Question {
   message: string;
@@ -26,32 +26,38 @@ let route: Route = {};
 export const QUESTIONS: Question[] = [
   {
     message: 'What is the name of the process you would like to route?',
-    condition: (value: string | undefined) => Boolean(value),
+    condition: () => true,
     callback: (value: string | undefined) => {
       route.process = value;
     },
   },
   {
     message: 'What url would you like to route this process to?',
-    condition: (value: string | undefined) => 'process' in route && Boolean(value),
+    condition: () => Boolean(route.process),
     callback: (value: string | undefined) => {
       route.url = value;
     },
   },
 ];
 
-const askForInput = ({message, callback, condition}: Question) => {
-  process.stdin.resume();
+const askForInput = (question: Question, callback: () => any) => {
+  if (question.condition()) {
+    process.stdin.resume();
 
-  process.stderr.write(message);
+    process.stderr.write(question.message + ' ');
 
-  process.stdin.once('data', (data) => {
-    const value: string | undefined = data.toString().trim();
+    process.stdin.once('data', (data) => {
+      const value: string | undefined = data.toString().trim();
 
-    if (condition(value)) {
-      callback(value);
-    }
-  });
+      question.callback(value);
+
+      process.stdin.pause();
+
+      callback();
+    });
+  } else {
+    callback();
+  }
 };
 
 const createStringConfig = (): string => {
@@ -75,21 +81,23 @@ export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
 
   const configPath = path.join(process.cwd(), 'wtf.json');
 
-  process.stderr.write(`wtf.json written to ${configPath}`);
+  process.stderr.write(`wtf.json written to ${configPath}\n`);
 };
 
-const init = () => {
-  config = {};
-  route = {};
+const askQuestions = (questions: Question[], callback: () => any) => {
+  const [question, ...remainingQuestions] = questions;
 
-  const questions = [...QUESTIONS];
-
-  while (questions.length) {
-    const question = questions.shift() as Question;
-
-    askForInput(question);
+  if (!question) {
+    callback();
+    return;
   }
 
+  askForInput(question, () => {
+    askQuestions(remainingQuestions, callback);
+  });
+};
+
+const writeFile = () => {
   const configPath = path.join(process.cwd(), 'wtf.json');
 
   fs.writeFile(
@@ -98,6 +106,13 @@ const init = () => {
     UTF8,
     writeFileCallback
   );
+};
+
+const init = () => {
+  config = {};
+  route = {};
+
+  askQuestions(QUESTIONS, writeFile);
 };
 
 export default init;
