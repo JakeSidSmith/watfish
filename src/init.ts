@@ -68,7 +68,7 @@ const createStringConfig = (): string => {
   );
 };
 
-export const writeFileCallback = (error: NodeJS.ErrnoException) => {
+export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
   if (error) {
     process.stderr.write(error.message);
     return process.exit(1);

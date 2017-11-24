@@ -3,6 +3,8 @@ import { UTF8 } from '../src/constants';
 import * as init from '../src/init';
 import mockStd from './mocks/std';
 
+type WriteFileCallback = (error?: NodeJS.ErrnoException) => void;
+
 describe('init.ts', () => {
 
   beforeAll(() => {
@@ -15,7 +17,11 @@ describe('init.ts', () => {
   beforeEach(() => {
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(process, 'exit');
-    spyOn(fs, 'writeFile');
+    spyOn(fs, 'writeFile').and.callFake(
+      (path: string, data: string, format: string, callback: WriteFileCallback) => {
+        callback();
+      }
+    );
   });
 
   it('should ask questions & output a config file', () => {
@@ -56,9 +62,18 @@ describe('init.ts', () => {
   });
 
   describe('writeFileCallback', () => {
-    it('should exit on error', () => {
-      spyOn(process.stderr, 'write');
 
+    beforeEach(() => {
+      spyOn(process.stderr, 'write');
+    });
+
+    it('should output a success message', () => {
+      init.writeFileCallback();
+
+      expect(process.stderr.write).toHaveBeenLastCalledWith('wtf.json written to directory/wtf.json');
+    });
+
+    it('should exit on error', () => {
       init.writeFileCallback(new Error('WTF'));
 
       expect(process.stderr.write).toHaveBeenLastCalledWith('WTF');
