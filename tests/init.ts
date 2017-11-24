@@ -1,11 +1,33 @@
-import init from '../src/init';
+import * as init from '../src/init';
+import mockStd from './mocks/std';
 
 describe('init.ts', () => {
+
+  beforeAll(() => {
+    init.QUESTIONS.forEach((question) => {
+      spyOn(question, 'condition').and.callThrough();
+      spyOn(question, 'callback').and.callThrough();
+    });
+  });
+
   it('should ask questions & output a config file', () => {
-    jest.spyOn(console, 'log').mockImplementation(() => null);
+    spyOn(process.stderr, 'write');
 
-    init();
+    const answers = [
+      'my-process',
+      'my-url',
+    ];
 
-    expect(console.log).toHaveBeenCalledWith('Initializing...');
+    mockStd(answers);
+
+    const result = init.default();
+
+    init.QUESTIONS.forEach((question, index) => {
+      expect(process.stderr.write).toHaveBeenCalledWith(question.message);
+      expect(question.condition).toHaveBeenCalledWith(answers[index]);
+      expect(question.callback).toHaveBeenCalledWith(answers[index]);
+    });
+
+    expect(result).toBe('{"routes":[{"process":"my-process","url":"my-url"}]}');
   });
 });
