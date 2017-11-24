@@ -1,6 +1,6 @@
 describe('cli.js', () => {
   it('should collect command line arguments', () => {
-    process.argv = [];
+    process.argv = ['node', 'wtf', 'start'];
 
     require('../src/cli');
 
