@@ -9,7 +9,7 @@ jest.mock('fs', () => {
   return {
     readFile: jest.fn((path: string, encoding: string, callback: Callback) => {
       if (MATCHES_ERROR.test(path)) {
-        callback(new Error('Error'), '');
+        callback(new Error('error'), '');
       } else if (MATCHES_PROCFILE.test(path)) {
         callback(undefined, 'web: http-server . -c-0 -o');
       }

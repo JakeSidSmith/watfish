@@ -26,7 +26,7 @@ describe('start.ts', () => {
       readFileCallback
     );
 
-    expect(process.stderr.write).toHaveBeenCalledWith('Error');
+    expect(process.stderr.write).toHaveBeenCalledWith('error');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
