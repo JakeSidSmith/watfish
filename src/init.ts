@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { UTF8 } from './constants';
-import { writeFile } from 'fs';
 
 type Route = Partial<{
   process: string;

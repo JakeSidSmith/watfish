@@ -34,7 +34,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    const result = init.default();
+    init.default();
 
     init.QUESTIONS.forEach((question, index) => {
       expect(process.stderr.write).toHaveBeenCalledWith(question.message);
