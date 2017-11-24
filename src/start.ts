@@ -7,8 +7,6 @@ import { UTF8 } from './constants';
 let options: Tree;
 
 export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => {
-  console.log('CLBCK');
-
   if (error) {
     process.stderr.write(error.message);
     return process.exit(1);

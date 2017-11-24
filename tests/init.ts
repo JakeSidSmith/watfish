@@ -13,8 +13,8 @@ describe('init.ts', () => {
       spyOn(question, 'callback').and.callThrough();
     });
 
-    spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(process, 'exit');
+    spyOn(process, 'cwd').and.returnValue('directory');
   });
 
   it('should ask questions & output a config file', () => {
