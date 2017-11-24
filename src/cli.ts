@@ -64,6 +64,42 @@ collect(
               `${PROGRAM} config -g`,
             ],
           },
+          Command(
+            'set',
+            {
+              alias: 's',
+              description: 'Set config value',
+              usage: `${PROGRAM} config set [options]`,
+              examples: [
+                `${PROGRAM} config set key:value`,
+                `${PROGRAM} config set key:value -g`,
+              ],
+            }
+          ),
+          Command(
+            'get',
+            {
+              alias: 'g',
+              description: 'Get config value',
+              usage: `${PROGRAM} config get [options]`,
+              examples: [
+                `${PROGRAM} config get key`,
+                `${PROGRAM} config get key -g`,
+              ],
+            }
+          ),
+          Command(
+            'del',
+            {
+              alias: 'd',
+              description: 'Delete config value',
+              usage: `${PROGRAM} config del [options]`,
+              examples: [
+                `${PROGRAM} config del key`,
+                `${PROGRAM} config del key -g`,
+              ],
+            }
+          ),
           Flag(
             'global',
             {
