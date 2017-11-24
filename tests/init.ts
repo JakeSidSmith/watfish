@@ -61,7 +61,7 @@ describe('init.ts', () => {
         },
         undefined,
         2
-      ),
+      ) + '\n',
       UTF8,
       init.writeFileCallback
     );
@@ -105,7 +105,7 @@ describe('init.ts', () => {
         },
         undefined,
         2
-      ),
+      ) + '\n',
       UTF8,
       init.writeFileCallback
     );
