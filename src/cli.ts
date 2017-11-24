@@ -57,10 +57,10 @@ collect(
             usage: `${PROGRAM} config [<sub-command>] [options]`,
             examples: [
               `${PROGRAM} config`,
-              `${PROGRAM} config set key:value`,
+              `${PROGRAM} config set key value`,
               `${PROGRAM} config get key`,
               `${PROGRAM} config del key`,
-              `${PROGRAM} config set key:value --global`,
+              `${PROGRAM} config set key value --global`,
               `${PROGRAM} config -g`,
             ],
           },
@@ -71,8 +71,8 @@ collect(
               description: 'Set config value',
               usage: `${PROGRAM} config set [options]`,
               examples: [
-                `${PROGRAM} config set key:value`,
-                `${PROGRAM} config set key:value -g`,
+                `${PROGRAM} config set key value`,
+                `${PROGRAM} config set key value -g`,
               ],
             }
           ),
