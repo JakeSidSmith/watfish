@@ -9,7 +9,9 @@ describe('init.ts', () => {
 
   beforeEach(() => {
     init.QUESTIONS.forEach((question) => {
-      spyOn(question, 'condition').and.callThrough();
+      if (typeof question.condition === 'function') {
+        spyOn(question, 'condition').and.callThrough();
+      }
       spyOn(question, 'callback').and.callThrough();
     });
 
@@ -28,6 +30,7 @@ describe('init.ts', () => {
     const answers = [
       'my-process',
       'my-url',
+      'y',
     ];
 
     mockStd(answers);
@@ -35,9 +38,13 @@ describe('init.ts', () => {
     init.default();
 
     init.QUESTIONS.forEach((question, index) => {
+      const message = typeof question.message === 'function' ? question.message() : question.message;
+
       expect(process.stdin.resume).toHaveBeenCalled();
-      expect(process.stderr.write).toHaveBeenCalledWith(question.message + ' ');
-      expect(question.condition).toHaveBeenCalled();
+      expect(process.stderr.write).toHaveBeenCalledWith(message + ' ');
+      if (typeof question.condition === 'function') {
+        expect(question.condition).toHaveBeenCalled();
+      }
       expect(question.callback).toHaveBeenCalledWith(answers[index]);
     });
 
@@ -66,6 +73,7 @@ describe('init.ts', () => {
     const answers = [
       '',
       'my-url',
+      'y',
     ];
 
     mockStd(answers);
@@ -74,11 +82,15 @@ describe('init.ts', () => {
 
     init.QUESTIONS.forEach((question, index) => {
       if (index === 0) {
+        const message = typeof question.message === 'function' ? question.message() : question.message;
+
         expect(process.stdin.resume).toHaveBeenCalled();
-        expect(process.stderr.write).toHaveBeenCalledWith(question.message + ' ');
+        expect(process.stderr.write).toHaveBeenCalledWith(message + ' ');
       }
 
-      expect(question.condition).toHaveBeenCalled();
+      if (typeof question.condition === 'function') {
+        expect(question.condition).toHaveBeenCalled();
+      }
 
       if (index === 1) {
         expect(question.callback).not.toHaveBeenCalled();
@@ -97,6 +109,37 @@ describe('init.ts', () => {
       UTF8,
       init.writeFileCallback
     );
+  });
+
+  it('should exit if config is incorrect', () => {
+    spyOn(process.stderr, 'write');
+
+    const answers = [
+      'my-process',
+      'my-url',
+      'n',
+    ];
+
+    mockStd(answers);
+
+    init.default();
+
+    expect(process.exit).toHaveBeenCalled();
+  });
+
+  it('should exit if config is incorrect (no process value)', () => {
+    spyOn(process.stderr, 'write');
+
+    const answers = [
+      '',
+      'n',
+    ];
+
+    mockStd(answers);
+
+    init.default();
+
+    expect(process.exit).toHaveBeenCalled();
   });
 
   describe('writeFileCallback', () => {

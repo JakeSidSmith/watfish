@@ -12,53 +12,16 @@ type Config = Partial<{
 }>;
 
 export type Callback = (value: string | undefined) => any;
-export type Condition = () => boolean;
+export type Condition = boolean | (() => boolean);
 
 export interface Question {
-  message: string;
+  message: string | (() => string);
   callback: Callback;
   condition: Condition;
 }
 
 let config: Config = {};
 let route: Route = {};
-
-export const QUESTIONS: Question[] = [
-  {
-    message: 'What is the name of the process you would like to route?',
-    condition: () => true,
-    callback: (value: string | undefined) => {
-      route.process = value;
-    },
-  },
-  {
-    message: 'What url would you like to route this process to?',
-    condition: () => Boolean(route.process),
-    callback: (value: string | undefined) => {
-      route.url = value;
-    },
-  },
-];
-
-const askForInput = (question: Question, callback: () => any) => {
-  if (question.condition()) {
-    process.stdin.resume();
-
-    process.stderr.write(question.message + ' ');
-
-    process.stdin.once('data', (data) => {
-      const value: string | undefined = data.toString().trim();
-
-      question.callback(value);
-
-      process.stdin.pause();
-
-      callback();
-    });
-  } else {
-    callback();
-  }
-};
 
 const createStringConfig = (): string => {
   const routes = route.process ? [route] : [];
@@ -71,6 +34,57 @@ const createStringConfig = (): string => {
     undefined,
     2
   );
+};
+
+export const QUESTIONS: Question[] = [
+  {
+    message: 'What is the name of the process you would like to route?',
+    condition: true,
+    callback: (value: string | undefined) => {
+      route.process = value;
+    },
+  },
+  {
+    message: 'What url would you like to route this process to?',
+    condition: () => Boolean(route.process),
+    callback: (value: string | undefined) => {
+      route.url = value;
+    },
+  },
+  {
+    message: () => {
+      return `\nCreated config:\n\n${createStringConfig()}\n\nIs this correct? [y]`;
+    },
+    condition: true,
+    callback: (value: string | undefined) => {
+      if (value === 'n' || value === 'N') {
+        process.exit(0);
+      }
+    },
+  },
+];
+
+const askForInput = (question: Question, callback: () => any) => {
+  if (
+    (typeof question.condition === 'boolean' && question.condition) ||
+    (typeof question.condition === 'function' && question.condition())
+  ) {
+    process.stdin.resume();
+
+    process.stderr.write((typeof question.message === 'function' ? question.message() : question.message) + ' ');
+
+    process.stdin.once('data', (data) => {
+      const value: string | undefined = (data || '').toString().trim();
+
+      question.callback(value);
+
+      process.stdin.pause();
+
+      callback();
+    });
+  } else {
+    callback();
+  }
 };
 
 export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
