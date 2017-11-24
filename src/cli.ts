@@ -10,7 +10,8 @@ import {
   RequireAll,
   RequireAny,
 } from 'jargs';
-import { helloWorld } from './';
+import { helloWorld } from './index';
+import init from './init';
 
 helloWorld.replace('World', 'Everybody');
 
@@ -50,6 +51,7 @@ collect(
             examples: [
               `${PROGRAM} init`,
             ],
+            callback: init,
           }
         ),
         Command(
