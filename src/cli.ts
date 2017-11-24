@@ -6,6 +6,7 @@ import {
   Command,
   Flag,
   Help,
+  KWArg,
   Program,
   RequireAll,
   RequireAny,
@@ -23,6 +24,14 @@ const GLOBAL_FLAG = Flag(
   {
     alias: 'g',
     description: 'View or edit global config',
+  }
+);
+
+const ENVIRONMENT = KWArg(
+  'env',
+  {
+    alias: 'e',
+    description: 'Environment to run in',
   }
 );
 
@@ -63,6 +72,7 @@ collect(
             examples: [
               `${PROGRAM} start`,
               `${PROGRAM} start watcher`,
+              `${PROGRAM} start --env production`,
             ],
           },
           Arg(
@@ -70,7 +80,8 @@ collect(
             {
               description: 'Process to start',
             }
-          )
+          ),
+          ENVIRONMENT
         ),
         Command(
           'config',
