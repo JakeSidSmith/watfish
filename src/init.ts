@@ -34,7 +34,7 @@ const createStringConfig = (): string => {
     },
     undefined,
     2
-  );
+  ) + '\n';
 };
 
 export const QUESTIONS: Question[] = [
@@ -54,7 +54,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     message: () => {
-      return `\nCreated config:\n\n${createStringConfig()}\n\nIs this correct? [y]`;
+      return `\nCreated config:\n\n${createStringConfig()}\nIs this correct? [y]`;
     },
     condition: true,
     callback: (value: string | undefined) => {
