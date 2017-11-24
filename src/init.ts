@@ -11,11 +11,12 @@ type Config = Partial<{
   routes: Route[];
 }>;
 
+export type ValueOrFunction<V> = V | (() => V);
 export type Callback = (value: string | undefined) => any;
-export type Condition = boolean | (() => boolean);
+export type Condition = ValueOrFunction<boolean>;
 
 export interface Question {
-  message: string | (() => string);
+  message: ValueOrFunction<string>;
   callback: Callback;
   condition: Condition;
 }
