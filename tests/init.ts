@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
-import * as init from '../src/init';
+import init, { QUESTIONS, writeFileCallback } from '../src/init';
 import mockStd from './mocks/std';
 
 type WriteFileCallback = (error?: NodeJS.ErrnoException) => void;
@@ -8,7 +8,7 @@ type WriteFileCallback = (error?: NodeJS.ErrnoException) => void;
 describe('init.ts', () => {
 
   beforeEach(() => {
-    init.QUESTIONS.forEach((question) => {
+    QUESTIONS.forEach((question) => {
       if (typeof question.condition === 'function') {
         spyOn(question, 'condition').and.callThrough();
       }
@@ -35,9 +35,9 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init.default();
+    init();
 
-    init.QUESTIONS.forEach((question, index) => {
+    QUESTIONS.forEach((question, index) => {
       const message = typeof question.message === 'function' ? question.message() : question.message;
 
       expect(process.stdin.resume).toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe('init.ts', () => {
         2
       ) + '\n',
       UTF8,
-      init.writeFileCallback
+      writeFileCallback
     );
   });
 
@@ -78,9 +78,9 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init.default();
+    init();
 
-    init.QUESTIONS.forEach((question, index) => {
+    QUESTIONS.forEach((question, index) => {
       if (index === 0) {
         const message = typeof question.message === 'function' ? question.message() : question.message;
 
@@ -107,7 +107,7 @@ describe('init.ts', () => {
         2
       ) + '\n',
       UTF8,
-      init.writeFileCallback
+      writeFileCallback
     );
   });
 
@@ -122,7 +122,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init.default();
+    init();
 
     expect(process.exit).toHaveBeenCalled();
   });
@@ -137,7 +137,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init.default();
+    init();
 
     expect(process.exit).toHaveBeenCalled();
   });
@@ -149,14 +149,14 @@ describe('init.ts', () => {
     });
 
     it('should output a success message', () => {
-      init.writeFileCallback();
+      writeFileCallback();
 
       expect(process.stderr.write).toHaveBeenCalledWith('wtf.json written to directory/wtf.json\n');
       expect(process.exit).not.toHaveBeenCalled();
     });
 
     it('should exit on error', () => {
-      init.writeFileCallback(new Error('WTF'));
+      writeFileCallback(new Error('WTF'));
 
       expect(process.stderr.write).toHaveBeenCalledWith('WTF');
       expect(process.exit).toHaveBeenCalledWith(1);
