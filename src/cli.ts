@@ -16,6 +16,14 @@ helloWorld.replace('World', 'Everybody');
 
 const PROGRAM = 'wtf';
 
+const GLOBAL_FLAG = Flag(
+  'global',
+  {
+    alias: 'g',
+    description: 'View or edit global config',
+  }
+);
+
 collect(
   Help(
     'help',
@@ -76,6 +84,7 @@ collect(
                 `${PROGRAM} config set key value -g`,
               ],
             },
+            GLOBAL_FLAG,
             RequireAll(
               Arg(
                 'key',
@@ -102,6 +111,7 @@ collect(
                 `${PROGRAM} config get key -g`,
               ],
             },
+            GLOBAL_FLAG,
             Arg(
               'key',
               {
@@ -120,6 +130,7 @@ collect(
                 `${PROGRAM} config del key -g`,
               ],
             },
+            GLOBAL_FLAG,
             Arg(
               'key',
               {
@@ -127,13 +138,7 @@ collect(
               }
             )
           ),
-          Flag(
-            'global',
-            {
-              alias: 'g',
-              description: 'View or edit global config',
-            }
-          )
+          GLOBAL_FLAG
         )
       ),
       Flag(
