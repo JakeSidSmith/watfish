@@ -42,7 +42,7 @@ collect(
             ],
           },
           Arg(
-            'process',
+            'processes',
             {
               description: 'Process to start',
             }
@@ -53,6 +53,13 @@ collect(
           {
             alias: 'c',
             description: 'View or edit project config',
+            usage: `${PROGRAM} config [<sub-command>] [options]`,
+            examples: [
+              `${PROGRAM} config`,
+              `${PROGRAM} config set key:value`,
+              `${PROGRAM} config get key`,
+              `${PROGRAM} config del key`,
+            ],
           }
         )
       )
