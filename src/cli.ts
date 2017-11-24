@@ -11,11 +11,8 @@ import {
   RequireAll,
   RequireAny,
 } from 'jargs';
-import { helloWorld } from './index';
 import init from './init';
 import version from './version';
-
-helloWorld.replace('World', 'Everybody');
 
 const NAME = 'watfish';
 const PROGRAM = 'wtf';
