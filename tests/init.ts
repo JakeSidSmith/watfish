@@ -10,9 +10,11 @@ describe('init.ts', () => {
       spyOn(question, 'condition').and.callThrough();
       spyOn(question, 'callback').and.callThrough();
     });
+  });
 
-    process.cwd = () => 'directory';
-
+  beforeEach(() => {
+    spyOn(process, 'cwd').and.returnValue('directory');
+    spyOn(process, 'exit');
     spyOn(fs, 'writeFile');
   });
 
@@ -51,5 +53,16 @@ describe('init.ts', () => {
       UTF8,
       init.writeFileCallback
     );
+  });
+
+  describe('writeFileCallback', () => {
+    it('should exit on error', () => {
+      spyOn(process.stderr, 'write');
+
+      init.writeFileCallback(new Error('WTF'));
+
+      expect(process.stderr.write).toHaveBeenLastCalledWith('WTF');
+      expect(process.exit).toHaveBeenLastCalledWith(1);
+    });
   });
 });
