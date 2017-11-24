@@ -1,4 +1,6 @@
-export const CONFIG_KEYS = [
+import { Config } from './init';
+
+export const CONFIG_KEYS: Array<keyof Config> = [
   'routes',
 ];
 

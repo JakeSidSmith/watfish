@@ -2,12 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { UTF8 } from './constants';
 
-type Route = Partial<{
+export type Route = Partial<{
   process: string;
   url: string;
 }>;
 
-type Config = Partial<{
+export type Config = Partial<{
   routes: Route[];
 }>;
 
