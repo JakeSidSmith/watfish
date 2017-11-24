@@ -7,6 +7,7 @@ import {
   Flag,
   Help,
   Program,
+  RequireAll,
   RequireAny,
 } from 'jargs';
 import { helloWorld } from './';
@@ -74,7 +75,21 @@ collect(
                 `${PROGRAM} config set key value`,
                 `${PROGRAM} config set key value -g`,
               ],
-            }
+            },
+            RequireAll(
+              Arg(
+                'key',
+                {
+                  description: 'Key to set in config',
+                }
+              ),
+              Arg(
+                'value',
+                {
+                  description: 'Value to set in config',
+                }
+              )
+            )
           ),
           Command(
             'get',
@@ -86,7 +101,13 @@ collect(
                 `${PROGRAM} config get key`,
                 `${PROGRAM} config get key -g`,
               ],
-            }
+            },
+            Arg(
+              'key',
+              {
+                description: 'Key to get from config',
+              }
+            )
           ),
           Command(
             'del',
@@ -98,7 +119,13 @@ collect(
                 `${PROGRAM} config del key`,
                 `${PROGRAM} config del key -g`,
               ],
-            }
+            },
+            Arg(
+              'key',
+              {
+                description: 'Key to remove from config',
+              }
+            )
           ),
           Flag(
             'global',
