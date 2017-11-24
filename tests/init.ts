@@ -3,8 +3,6 @@ import { UTF8 } from '../src/constants';
 import init, { QUESTIONS, writeFileCallback } from '../src/init';
 import mockStd from './mocks/std';
 
-type WriteFileCallback = (error?: NodeJS.ErrnoException) => void;
-
 describe('init.ts', () => {
 
   beforeEach(() => {
@@ -17,11 +15,6 @@ describe('init.ts', () => {
 
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(process, 'exit');
-    spyOn(fs, 'writeFile').and.callFake(
-      (path: string, data: string, format: string, callback: WriteFileCallback) => {
-        callback();
-      }
-    );
   });
 
   it('should ask questions & output a config file', () => {

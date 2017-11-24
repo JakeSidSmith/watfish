@@ -12,6 +12,7 @@ import {
   RequireAny,
 } from 'jargs';
 import init from './init';
+import start from './start';
 import version from './version';
 
 const NAME = 'watfish';
@@ -73,6 +74,7 @@ collect(
               `${PROGRAM} start watcher`,
               `${PROGRAM} start --env production`,
             ],
+            callback: start,
           },
           Arg(
             'processes',
