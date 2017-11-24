@@ -14,6 +14,7 @@ import { helloWorld } from './';
 
 helloWorld.replace('World', 'Everybody');
 
+const NAME = 'watfish';
 const PROGRAM = 'wtf';
 
 const GLOBAL_FLAG = Flag(
@@ -32,7 +33,7 @@ collect(
       description: 'Display help and usage info',
     },
     Program(
-      'watfish',
+      NAME,
       {
         description:
           'Simple development platform with process management & router',
@@ -40,6 +41,17 @@ collect(
         examples: [`${PROGRAM} start --env dev`],
       },
       RequireAny(
+        Command(
+          'init',
+          {
+            alias: 'i',
+            description: `Generate a ${NAME} config file`,
+            usage: `${PROGRAM} init`,
+            examples: [
+              `${PROGRAM} init`,
+            ],
+          }
+        ),
         Command(
           'start',
           {
