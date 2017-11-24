@@ -5,7 +5,7 @@ export interface PortError extends Error {
   code: string;
 }
 
-export type PortCallback = (error: PortError | undefined, thing?: boolean) => any;
+export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
 
 export const isPortTaken = (port: string, callback: PortCallback) => {
   const tester = net.createServer()
