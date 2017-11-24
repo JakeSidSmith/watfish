@@ -57,11 +57,11 @@ collect(
             usage: `${PROGRAM} config [<sub-command>] [options]`,
             examples: [
               `${PROGRAM} config`,
+              `${PROGRAM} config -g`,
               `${PROGRAM} config set key value`,
               `${PROGRAM} config get key`,
               `${PROGRAM} config del key`,
               `${PROGRAM} config set key value --global`,
-              `${PROGRAM} config -g`,
             ],
           },
           Command(
