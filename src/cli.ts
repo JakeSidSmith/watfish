@@ -60,8 +60,17 @@ collect(
               `${PROGRAM} config set key:value`,
               `${PROGRAM} config get key`,
               `${PROGRAM} config del key`,
+              `${PROGRAM} config set key:value --global`,
+              `${PROGRAM} config -g`,
             ],
-          }
+          },
+          Flag(
+            'global',
+            {
+              alias: 'g',
+              description: 'View or edit global config',
+            }
+          )
         )
       ),
       Flag(
