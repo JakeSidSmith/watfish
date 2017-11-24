@@ -20,8 +20,8 @@ export interface Question {
   condition: Condition;
 }
 
-const config: Config = {};
-const route: Route = {};
+let config: Config = {};
+let route: Route = {};
 
 export const QUESTIONS: Question[] = [
   {
@@ -79,6 +79,9 @@ export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
 };
 
 const init = () => {
+  config = {};
+  route = {};
+
   const questions = [...QUESTIONS];
 
   while (questions.length) {
