@@ -7,7 +7,7 @@ export interface PortError extends Error {
 
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
 
-export const isPortTaken = (port: string, callback: PortCallback) => {
+export const isPortTaken = (port: number, callback: PortCallback) => {
   const tester = net.createServer();
 
   tester
@@ -29,7 +29,7 @@ export const isPortTaken = (port: string, callback: PortCallback) => {
 
 export type ServerCallback = (error: PortError | undefined, port?: string) => any;
 
-export const getAvailablePort = (callback: ServerCallback) => {
+export const getAvailablePort = (callback: ServerCallback, attempt = 0) => {
   const server = net.createServer();
 
   server
@@ -38,13 +38,21 @@ export const getAvailablePort = (callback: ServerCallback) => {
         callback(error);
       }
 
-      getAvailablePort((portError: PortError | undefined, port?: string) => {
-        server
-          .once('close', () => {
-            callback(portError, port);
-          })
-          .close();
-      });
+      if (attempt >= 100) {
+        process.stderr.write('Could not find an available port\n');
+        return process.exit(1);
+      }
+
+      getAvailablePort(
+        (portError: PortError | undefined, port?: string) => {
+          server
+            .once('close', () => {
+              callback(portError, port);
+            })
+            .close();
+        },
+        attempt + 1
+      );
     })
     .once('listening', () => {
       const { port } = server.address();

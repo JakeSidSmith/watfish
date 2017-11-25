@@ -130,14 +130,9 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
 };
 
 export const startProcess = (item: procfile.Command, processName: string, env: string) => {
-  getAvailablePort((error: PortError | undefined, port?: string) => {
+  getAvailablePort((error: PortError | undefined, port: string) => {
     if (error) {
       process.stderr.write(error.message + '\n');
-      return process.exit(1);
-    }
-
-    if (typeof port === 'undefined') {
-      process.stderr.write('Could not find an available port\n');
       return process.exit(1);
     }
 

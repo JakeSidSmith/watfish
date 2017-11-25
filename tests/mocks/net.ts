@@ -3,34 +3,20 @@ interface Events {
 }
 
 jest.mock('net', () => {
-  const PORT_IN_USE = '8080';
-  const PORT_THAT_ERRORS = '666';
-
   const events: Events = {};
+  let returnPort = 8080;
 
   const server = {
     address: () => ({
-      port: 8080,
+      port: returnPort,
     }),
     once: function once (event: string, callback: (error?: any) => any) {
       events[event] = callback;
 
       return this;
     },
-    listen: function once (port: string) {
-      const { error, listening } = events;
-
-      if (port === PORT_IN_USE) {
-        if (typeof error === 'function') {
-          error({code: 'EADDRINUSE', message: 'Port taken', name: 'An error'});
-        }
-      } else if (port === PORT_THAT_ERRORS) {
-        if (typeof error === 'function') {
-          error({code: 'UNEXPECTED_ERROR', message: 'Oops', name: 'An error'});
-        }
-      } else if (typeof listening === 'function') {
-        listening();
-      }
+    listen: function listen (port: number) {
+      returnPort = port;
 
       return this;
     },
@@ -45,5 +31,12 @@ jest.mock('net', () => {
 
   return {
     createServer: () => server,
+    _trigger: (event: string, data: any) => {
+      const callback = events[event];
+
+      if (typeof callback === 'function') {
+        callback(data);
+      }
+    },
   };
 });

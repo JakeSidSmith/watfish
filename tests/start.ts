@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
+import * as net from 'net';
 import { UTF8 } from '../src/constants';
 import start, {
   getEnvVariables,
@@ -8,8 +9,12 @@ import start, {
   readFileCallback,
   startProcess,
 } from '../src/start';
+import * as utils from '../src/utils';
 
 describe('start.ts', () => {
+
+  const { _trigger } = net as any as {_trigger: (event: string, data: any) => void};
+
   beforeEach(() => {
     process.env = {
       VARIABLE: 'variable',
@@ -62,7 +67,9 @@ describe('start.ts', () => {
       readFileCallback
     );
 
-    expect(childProcess.spawn).toHaveBeenCalledTimes(2);
+    _trigger('listening', undefined);
+
+    expect(childProcess.spawn).toHaveBeenCalled();
   });
 
   it('should spawn child the processes that are supplied', () => {
@@ -76,6 +83,8 @@ describe('start.ts', () => {
       flags: {},
     });
 
+    _trigger('listening', undefined);
+
     expect(childProcess.spawn).toHaveBeenCalledTimes(1);
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'env/bin/node http-server',
@@ -86,7 +95,7 @@ describe('start.ts', () => {
         env: {
           VARIABLE: 'variable',
           VAR: 'value',
-          PORT: '8080',
+          PORT: '0',
         },
       }
     );
@@ -117,6 +126,12 @@ describe('start.ts', () => {
       flags: {},
     });
 
+    _trigger('listening', undefined);
+
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > data\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > error\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > process exited with code 7\n');
+
     start({
       name: 'start',
       command: null,
@@ -129,14 +144,8 @@ describe('start.ts', () => {
       flags: {},
     });
 
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > data\n');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > error\n');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > data\n');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > error\n');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > process exited with code 7\n');
+    _trigger('listening', undefined);
 
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data\n');
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error\n');
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data\n');
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error\n');
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > process exited with code 7\n');
@@ -171,6 +180,8 @@ describe('start.ts', () => {
     it('should start a process on an available port', () => {
       startProcess({command: 'http-server', options: []}, 'web', 'development');
 
+      _trigger('listening', undefined);
+
       expect(childProcess.spawn).toHaveBeenCalledWith(
         'env/bin/node http-server',
         [],
@@ -180,10 +191,28 @@ describe('start.ts', () => {
           env: {
             VARIABLE: 'variable',
             VAR: 'value',
-            PORT: '8080',
+            PORT: '0',
           },
         }
       );
+    });
+
+    it('should throw a port in use error', () => {
+      startProcess({command: 'http-server', options: []}, 'web', 'development');
+
+      for (let i = 0; i <= 100; i += 1) {
+        _trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
+      }
+
+      expect(process.stderr.write).toHaveBeenCalledWith('Could not find an available port\n');
+    });
+
+    it('should throw an unknown error', () => {
+      startProcess({command: 'http-server', options: []}, 'web', 'development');
+
+      _trigger('error', new Error('error'));
+
+      expect(process.stderr.write).toHaveBeenCalledWith('error\n');
     });
   });
 
