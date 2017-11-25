@@ -99,8 +99,6 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 const startProcessOnPort = (item: procfile.Command, processName: string, env: string, port: string) => {
   const displayName = getDisplayName(processName, env);
 
-  port = process.env.PORT || port;
-
   process.stderr.write(`Starting ${displayName} process on port ${port}\n`);
 
   const environment: {[i: string]: string} = {
@@ -152,7 +150,10 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
   const procfileConfig = procfile.parse(data);
 
   for (const processName in procfileConfig) {
-    if (!processes || processes === processName) {
+    if (
+      procfileConfig.hasOwnProperty(processName) &&
+      !processes || processes === processName
+    ) {
       const item = procfileConfig[processName];
 
       startProcess(item, processName, env);

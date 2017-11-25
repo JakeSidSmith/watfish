@@ -3,7 +3,7 @@ interface Events {
 }
 
 jest.mock('net', () => {
-  const events: Events = {};
+  let events: Events = {};
   let returnPort = 8080;
 
   const server = {
@@ -37,6 +37,9 @@ jest.mock('net', () => {
       if (typeof callback === 'function') {
         callback(data);
       }
+    },
+    _clear: () => {
+      events = {};
     },
   };
 });

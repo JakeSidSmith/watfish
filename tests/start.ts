@@ -11,9 +11,14 @@ import start, {
 } from '../src/start';
 import * as utils from '../src/utils';
 
+interface NetMock {
+  _trigger: (event: string, data: any) => void;
+  _clear: () => void;
+}
+
 describe('start.ts', () => {
 
-  const { _trigger } = net as any as {_trigger: (event: string, data: any) => void};
+  const { _clear, _trigger } = net as any as NetMock;
 
   beforeEach(() => {
     process.env = {
@@ -29,6 +34,8 @@ describe('start.ts', () => {
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(process.stderr, 'write');
+
+    _clear();
   });
 
   it('should exit if it cannot find a procfile', () => {
@@ -111,6 +118,8 @@ describe('start.ts', () => {
       kwargs: {},
       flags: {},
     });
+
+    _trigger('listening', undefined);
 
     expect(childProcess.spawn).not.toHaveBeenCalled();
   });
