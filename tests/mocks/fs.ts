@@ -8,6 +8,8 @@ jest.mock('fs', () => {
   const MATCHES_SHEBANG = /#!/;
   const MATCHES_ENV_FILE = /development\/env$/;
   const MATCHES_NOPE = /nope/;
+  const MATCHES_ENV_NO = /env-no/;
+  const MATCHES_NO_ENV = /no-env/;
 
   return {
     readFile: jest.fn((path: string, encoding: string, callback: Callback) => {
@@ -26,12 +28,24 @@ jest.mock('fs', () => {
       }
 
       if (MATCHES_SHEBANG.test(path)) {
+        if (MATCHES_NO_ENV.test(path)) {
+          return `${path}/env-no`;
+        }
+
         return path;
       }
 
       return '#! /usr/bin/env node\necho "text"';
     }),
     existsSync: jest.fn((path: string): boolean => {
+      if (MATCHES_ENV_NO.test(path)) {
+        return false;
+      }
+
+      if (MATCHES_NO_ENV.test(path)) {
+        return true;
+      }
+
       return !MATCHES_NOPE.test(path);
     }),
   };

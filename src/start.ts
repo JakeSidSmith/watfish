@@ -54,8 +54,12 @@ export const handleShebang = (command: string): string => {
   if (shebang) {
     const shebangCommand = shebang[2].trim();
 
-    if (fs.existsSync(path.join(process.cwd(), ENV_BIN, shebangCommand))) {
-      return path.join(ENV_BIN, shebangCommand);
+    const shebangCommandPath = path.join(process.cwd(), ENV_BIN, shebangCommand);
+
+    const envExists = fs.existsSync(shebangCommandPath);
+
+    if (envExists) {
+      return shebangCommandPath;
     }
 
     return shebangCommand;

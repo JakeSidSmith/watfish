@@ -93,7 +93,7 @@ describe('start.ts', () => {
 
     expect(childProcess.spawn).toHaveBeenCalledTimes(1);
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'env/bin/node http-server',
+      'directory/env/bin/node http-server',
       ['.', '-c-0', '-o'],
       {
         cwd: 'directory',
@@ -163,14 +163,16 @@ describe('start.ts', () => {
     it('should return the program from a shebang', () => {
       expect(handleShebang('#!')).toBe('');
 
-      expect(handleShebang('#!/usr/bin/env node')).toBe('env/bin/node');
-      expect(handleShebang('#!    /usr/bin/env   node  ')).toBe('env/bin/node');
-      expect(handleShebang('#!/usr/bin/env node  ')).toBe('env/bin/node');
-      expect(handleShebang('#!   /usr/bin/env        node')).toBe('env/bin/node');
-      expect(handleShebang('#! /usr/bin/env  node   ')).toBe('env/bin/node');
+      expect(handleShebang('#!/usr/bin/env node')).toBe('directory/env/bin/node');
+      expect(handleShebang('#!    /usr/bin/env   node  ')).toBe('directory/env/bin/node');
+      expect(handleShebang('#!/usr/bin/env node  ')).toBe('directory/env/bin/node');
+      expect(handleShebang('#!   /usr/bin/env        node')).toBe('directory/env/bin/node');
+      expect(handleShebang('#! /usr/bin/env  node   ')).toBe('directory/env/bin/node');
 
       expect(handleShebang('#!   nope  ')).toBe('#!   nope  ');
       expect(handleShebang('#!nope')).toBe('#!nope');
+
+      expect(handleShebang('#! /usr/bin/env no-env')).toBe('no-env/env-no');
     });
   });
 
@@ -191,7 +193,7 @@ describe('start.ts', () => {
       _trigger('listening', undefined);
 
       expect(childProcess.spawn).toHaveBeenCalledWith(
-        'env/bin/node http-server',
+        'directory/env/bin/node http-server',
         [],
         {
           cwd: 'directory',
