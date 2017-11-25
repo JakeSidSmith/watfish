@@ -121,7 +121,7 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
 
   const commandOptions = injectEnvVars(item.options, environment);
 
-  process.stderr.write(`Running ${command} ${commandOptions.join(' ')}\n`);
+  process.stderr.write(`Running ${command} ${commandOptions.join(' ')}\n\n`);
 
   const subProcess = childProcess.spawn(
     command,
