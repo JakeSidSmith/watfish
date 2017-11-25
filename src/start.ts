@@ -132,9 +132,9 @@ const startProcessOnPort =
   logger.log(colors[color](`Starting ${displayName} process...`));
 
   const environment: {[i: string]: string} = {
-    PORT: port,
     ...getEnvVariables(env, color),
     ...process.env,
+    PORT: port,
   };
 
   const command = handleShebang(item.command);
