@@ -8,6 +8,7 @@ import * as logger from './logger';
 import * as procfile from './procfile';
 import { getAvailablePort, PortError } from './utils';
 
+const PADDING = '                       ';
 const DEFAULT_ENV = 'development';
 const ENV_BIN = 'env/bin';
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
@@ -25,28 +26,37 @@ const COLORS: Colors[] = [
   'yellow',
 ];
 
+let longestName: number = 0;
 let options: Tree;
 
 export type DataOrError = Buffer | Error | string;
 
-const getDisplayName = (processName: string, env: string) => {
+const getDisplayName = (processName: string, env: string): string => {
   return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
+};
+
+const wrapDisplayName = (displayName: string): string => {
+  const diff = longestName - displayName.length;
+
+  const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
+
+  return `[ ${displayName}${padding} ]`;
 };
 
 const onDataOrError = (processName: string, env: string, color: Colors, dataOrError: DataOrError) => {
   const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
     .toString().split('\n');
-  const displayName = colors[color](getDisplayName(processName, env));
+  const displayName = colors[color](wrapDisplayName(getDisplayName(processName, env)));
 
   messages.forEach((message) => {
-    logger.log(`${displayName} > ${message}`);
+    logger.log(`${displayName} ${message}`);
   });
 };
 
 const onClose = (processName: string, env: string, color: Colors, code: number) => {
-  const displayName = colors[color](getDisplayName(processName, env));
+  const displayName = colors[color](wrapDisplayName(getDisplayName(processName, env)));
 
-  logger.log(`${displayName} > process exited with code ${code}`);
+  logger.log(`${displayName} process exited with code ${code}`);
 };
 
 export const handleShebang = (command: string): string => {
@@ -174,6 +184,17 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
   const procfileConfig = procfile.parse(data);
 
   let index = 0;
+
+  for (const processName in procfileConfig) {
+    /* istanbul ignore else */
+    if (
+      procfileConfig.hasOwnProperty(processName) &&
+      (!processes || processes === processName) &&
+      (!longestName || processName.length > longestName)
+    ) {
+      longestName = processName.length;
+    }
+  }
 
   for (const processName in procfileConfig) {
     /* istanbul ignore else */
