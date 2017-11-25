@@ -1,10 +1,14 @@
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
-import start, { readFileCallback } from '../src/start';
+import start, { getEnvVariables, handleShebang, readFileCallback } from '../src/start';
 
 describe('start.ts', () => {
   beforeEach(() => {
+    process.env = {
+      VARIABLE: 'variable',
+    };
+
     const subProcess = childProcess.spawn('test');
     (childProcess.spawn as jest.Mock<any>).mockClear();
 
@@ -67,7 +71,18 @@ describe('start.ts', () => {
     });
 
     expect(childProcess.spawn).toHaveBeenCalledTimes(1);
-    expect(childProcess.spawn).toHaveBeenCalledWith('http-server', ['.', '-c-0', '-o']);
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      'env/bin/node http-server',
+      ['.', '-c-0', '-o'],
+      {
+        cwd: 'directory',
+        shell: true,
+        env: {
+          VARIABLE: 'variable',
+          VAR: 'value',
+        },
+      }
+    );
   });
 
   it('should not spawn unknown processes', () => {
@@ -118,5 +133,30 @@ describe('start.ts', () => {
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data\n');
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error\n');
     expect(process.stderr.write).toHaveBeenCalledWith('production:watch > process exited with code 7\n');
+  });
+
+  describe('handleShebang', () => {
+    it('should return the program from a shebang', () => {
+      expect(handleShebang('#!')).toBe('');
+
+      expect(handleShebang('#!/usr/bin/env node')).toBe('env/bin/node');
+      expect(handleShebang('#!    /usr/bin/env   node  ')).toBe('env/bin/node');
+      expect(handleShebang('#!/usr/bin/env node  ')).toBe('env/bin/node');
+      expect(handleShebang('#!   /usr/bin/env        node')).toBe('env/bin/node');
+      expect(handleShebang('#! /usr/bin/env  node   ')).toBe('env/bin/node');
+
+      expect(handleShebang('#!   nope  ')).toBe('nope');
+      expect(handleShebang('#!nope')).toBe('nope');
+    });
+  });
+
+  describe('getEnvVariables', () => {
+    it('returns an empty object if no env file found', () => {
+      expect(getEnvVariables('nope')).toEqual({});
+    });
+
+    it('returns the env variables from the env file', () => {
+      expect(getEnvVariables('development')).toEqual({VAR: 'value'});
+    });
   });
 });

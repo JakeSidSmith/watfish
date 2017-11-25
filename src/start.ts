@@ -6,6 +6,9 @@ import * as procfile from 'procfile';
 import { UTF8 } from './constants';
 
 const DEFAULT_ENV = 'development';
+const ENV_BIN = 'env/bin';
+const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
+const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 
 let options: Tree;
 
@@ -31,6 +34,46 @@ const onClose = (processName: string, env: string, code: number) => {
   );
 };
 
+export const handleShebang = (filePath: string): string => {
+  const content = fs.readFileSync(path.join(process.cwd(), filePath), UTF8);
+
+  const shebang = MATCHES_SHEBANG.exec(content);
+
+  if (shebang) {
+    const command = shebang[2].trim();
+
+    if (fs.existsSync(path.join(process.cwd(), ENV_BIN, command))) {
+      return path.join(ENV_BIN, command);
+    }
+
+    return command;
+  }
+
+  return '';
+};
+
+export const getEnvVariables = (env: string) => {
+  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+
+  if (!fs.existsSync(envPath)) {
+    return {};
+  }
+
+  const lines = fs.readFileSync(envPath, UTF8).split('\n');
+
+  const envVariables: {[i: string]: string} = {};
+
+  lines.forEach((line) => {
+    const match = MATCHES_ENV_KEY_VALUE.exec(line);
+
+    if (match) {
+      envVariables[match[1]] = match[2];
+    }
+  });
+
+  return envVariables;
+};
+
 export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => {
   if (error) {
     process.stderr.write(error.message);
@@ -46,7 +89,18 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
     if (!processes || processes === key) {
       const item = procfileConfig[key];
 
-      const subProcess = childProcess.spawn(item.command, item.options);
+      const subProcess = childProcess.spawn(
+        `${handleShebang(item.command)} ${item.command}`,
+        item.options,
+        {
+          cwd: process.cwd(),
+          shell: true,
+          env: {
+            ...getEnvVariables(env),
+            ...process.env,
+          },
+        }
+      );
 
       subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
       subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
@@ -62,7 +116,7 @@ const start = (tree: Tree) => {
   options = tree;
   const { env = DEFAULT_ENV } = options.kwargs;
 
-  const procfilePath = path.join(process.cwd(), 'etc', 'environments', env, 'procfile');
+  const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
 
   fs.readFile(procfilePath, UTF8, readFileCallback);
 };
