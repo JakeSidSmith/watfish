@@ -107,10 +107,12 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
     PORT: port,
   };
 
+  const command = `${handleShebang(item.command)} ${item.command}`;
+
   const commandOptions = injectEnvVars(item.options, environment);
 
   const subProcess = childProcess.spawn(
-    `${handleShebang(item.command)} ${item.command}`,
+    command,
     commandOptions,
     {
       cwd: process.cwd(),

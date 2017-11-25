@@ -1,4 +1,4 @@
-const MATCHES_PROC_VALUE = /^([\w\d]+):\s*(.+)$/;
+const MATCHES_PROC_VALUE = /^([-_\w\d]+):\s*(.+)$/;
 const MATCHES_WHITESPACE = /\s+/g;
 
 export interface Command {
