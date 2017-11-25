@@ -56,7 +56,7 @@ const onDataOrError = (processName: string, env: string, color: Colors, dataOrEr
 const onClose = (processName: string, env: string, color: Colors, code: number) => {
   const displayName = colors[color](wrapDisplayName(getDisplayName(processName, env)));
 
-  logger.log(`${displayName} process exited with code ${code}`);
+  logger.log(`${displayName} ${colors.red(`Process exited with code ${code}`)}`);
 };
 
 export const handleShebang = (command: string): string => {

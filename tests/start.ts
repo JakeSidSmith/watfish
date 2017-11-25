@@ -139,7 +139,7 @@ describe('start.ts', () => {
 
     expect(logger.log).toHaveBeenCalledWith('[ watch ] data');
     expect(logger.log).toHaveBeenCalledWith('[ watch ] error');
-    expect(logger.log).toHaveBeenCalledWith('[ watch ] process exited with code 7');
+    expect(logger.log).toHaveBeenCalledWith('[ watch ] Process exited with code 7');
 
     start({
       name: 'start',
@@ -157,7 +157,7 @@ describe('start.ts', () => {
 
     expect(logger.log).toHaveBeenCalledWith('[ production:watch ] data');
     expect(logger.log).toHaveBeenCalledWith('[ production:watch ] error');
-    expect(logger.log).toHaveBeenCalledWith('[ production:watch ] process exited with code 7');
+    expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
   });
 
   describe('handleShebang', () => {
