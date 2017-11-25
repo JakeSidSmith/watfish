@@ -1,7 +1,12 @@
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
-import start, { getEnvVariables, handleShebang, readFileCallback } from '../src/start';
+import start, {
+  getEnvVariables,
+  handleShebang,
+  readFileCallback,
+  startProcess,
+} from '../src/start';
 
 describe('start.ts', () => {
   beforeEach(() => {
@@ -37,7 +42,7 @@ describe('start.ts', () => {
       readFileCallback
     );
 
-    expect(process.stderr.write).toHaveBeenCalledWith('error');
+    expect(process.stderr.write).toHaveBeenCalledWith('error\n');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
@@ -80,6 +85,7 @@ describe('start.ts', () => {
         env: {
           VARIABLE: 'variable',
           VAR: 'value',
+          PORT: '8080',
         },
       }
     );
@@ -157,6 +163,26 @@ describe('start.ts', () => {
 
     it('returns the env variables from the env file', () => {
       expect(getEnvVariables('development')).toEqual({VAR: 'value'});
+    });
+  });
+
+  describe('startProcess', () => {
+    it('should start a process on an available port', () => {
+      startProcess({command: 'http-server', options: []}, 'web', 'development');
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'env/bin/node http-server',
+        [],
+        {
+          cwd: 'directory',
+          shell: true,
+          env: {
+            VARIABLE: 'variable',
+            VAR: 'value',
+            PORT: '8080',
+          },
+        }
+      );
     });
   });
 });

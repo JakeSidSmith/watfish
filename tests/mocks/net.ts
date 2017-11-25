@@ -9,6 +9,9 @@ jest.mock('net', () => {
   const events: Events = {};
 
   const server = {
+    address: () => ({
+      port: 8080,
+    }),
     once: function once (event: string, callback: (error?: any) => any) {
       events[event] = callback;
 

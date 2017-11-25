@@ -2,13 +2,15 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import * as procfile from 'procfile';
 import { UTF8 } from './constants';
+import * as procfile from './procfile';
+import { getAvailablePort, PortError } from './utils';
 
 const DEFAULT_ENV = 'development';
 const ENV_BIN = 'env/bin';
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
+const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
 
 let options: Tree;
 
@@ -80,9 +82,72 @@ export const getEnvVariables = (env: string) => {
   return envVariables;
 };
 
+const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
+  return commandOptions.map((option) => {
+    return option.replace(MATCHES_ENV_VAR, (match: string): string => {
+      const varName = match.substring(1);
+
+      if (varName in environment) {
+        return environment[varName];
+      }
+
+      return varName;
+    });
+  });
+};
+
+const startProcessOnPort = (item: procfile.Command, processName: string, env: string, port: string) => {
+  const displayName = getDisplayName(processName, env);
+
+  port = process.env.PORT || port;
+
+  process.stderr.write(`Starting ${displayName} process on port ${port}\n`);
+
+  const environment: {[i: string]: string} = {
+    ...getEnvVariables(env),
+    ...process.env,
+    PORT: port,
+  };
+
+  const commandOptions = injectEnvVars(item.options, environment);
+
+  const subProcess = childProcess.spawn(
+    `${handleShebang(item.command)} ${item.command}`,
+    commandOptions,
+    {
+      cwd: process.cwd(),
+      shell: true,
+      env: environment,
+    }
+  );
+
+  subProcess.stdout.on('data', (dataOrError) => onDataOrError(processName, env, dataOrError));
+  subProcess.stdout.on('error', (dataOrError) => onDataOrError(processName, env, dataOrError));
+  subProcess.stderr.on('data', (dataOrError) => onDataOrError(processName, env, dataOrError));
+  subProcess.stderr.on('error', (dataOrError) => onDataOrError(processName, env, dataOrError));
+
+  subProcess.on('close', (code) => onClose(processName, env, code));
+};
+
+export const startProcess = (item: procfile.Command, processName: string, env: string) => {
+  getAvailablePort((error: PortError | undefined, port?: string) => {
+    if (error) {
+      process.stderr.write(error.message + '\n');
+      return process.exit(1);
+    }
+
+    if (typeof port === 'undefined') {
+      process.stderr.write('Could not find an available port\n');
+      return process.exit(1);
+    }
+
+    startProcessOnPort(item, processName, env, port);
+  });
+};
+
 export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => {
   if (error) {
-    process.stderr.write(error.message);
+    process.stderr.write(error.message + '\n');
     return process.exit(1);
   }
 
@@ -91,34 +156,11 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
 
   const procfileConfig = procfile.parse(data);
 
-  for (const key in procfileConfig) {
-    if (!processes || processes === key) {
-      const item = procfileConfig[key];
+  for (const processName in procfileConfig) {
+    if (!processes || processes === processName) {
+      const item = procfileConfig[processName];
 
-      const displayName = getDisplayName(key, env);
-      const port = '8080';
-
-      process.stderr.write(`Starting process ${displayName} on port ${port}\n`);
-
-      const subProcess = childProcess.spawn(
-        `${handleShebang(item.command)} ${item.command}`,
-        item.options,
-        {
-          cwd: process.cwd(),
-          shell: true,
-          env: {
-            ...getEnvVariables(env),
-            ...process.env,
-          },
-        }
-      );
-
-      subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
-      subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
-      subProcess.stderr.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
-      subProcess.stderr.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
-
-      subProcess.on('close', (code) => onClose(key, env, code));
+      startProcess(item, processName, env);
     }
   }
 };

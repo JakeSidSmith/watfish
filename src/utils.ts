@@ -26,3 +26,34 @@ export const isPortTaken = (port: string, callback: PortCallback) => {
     })
     .listen(port);
 };
+
+export type ServerCallback = (error: PortError | undefined, port?: string) => any;
+
+export const getAvailablePort = (callback: ServerCallback) => {
+  const server = net.createServer();
+
+  server
+    .once('error', (error: PortError) => {
+      if (error.code !== 'EADDRINUSE') {
+        callback(error);
+      }
+
+      getAvailablePort((portError: PortError | undefined, port?: string) => {
+        server
+          .once('close', () => {
+            callback(portError, port);
+          })
+          .close();
+      });
+    })
+    .once('listening', () => {
+      const { port } = server.address();
+
+      server
+        .once('close', () => {
+          callback(undefined, port.toString());
+        })
+        .close();
+    })
+    .listen(0);
+};
