@@ -15,11 +15,10 @@ describe('init.ts', () => {
 
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
+    spyOn(process.stderr, 'write');
   });
 
   it('should ask questions & output a config file', () => {
-    spyOn(process.stderr, 'write');
-
     const answers = [
       'my-process',
       'my-url',
@@ -61,8 +60,6 @@ describe('init.ts', () => {
   });
 
   it('should ask questions & output a config file (no process value)', () => {
-    spyOn(process.stderr, 'write');
-
     const answers = [
       '',
       'my-url',
@@ -105,8 +102,6 @@ describe('init.ts', () => {
   });
 
   it('should exit if config is incorrect', () => {
-    spyOn(process.stderr, 'write');
-
     const answers = [
       'my-process',
       'my-url',
@@ -121,8 +116,6 @@ describe('init.ts', () => {
   });
 
   it('should exit if config is incorrect (no process value)', () => {
-    spyOn(process.stderr, 'write');
-
     const answers = [
       '',
       'n',
@@ -136,10 +129,6 @@ describe('init.ts', () => {
   });
 
   describe('writeFileCallback', () => {
-
-    beforeEach(() => {
-      spyOn(process.stderr, 'write');
-    });
 
     it('should output a success message', () => {
       writeFileCallback();

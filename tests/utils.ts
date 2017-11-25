@@ -7,6 +7,10 @@ const EADDRINUSE_ERROR = {
 };
 
 describe('utils.ts', () => {
+  beforeEach(() => {
+    spyOn(process.stderr, 'write');
+  });
+
   describe('isPortTaken', () => {
     it('should call with success', () => {
       const callback = jest.fn();

@@ -1,6 +1,7 @@
 describe('cli.js', () => {
   beforeEach(() => {
     spyOn(process, 'exit');
+    spyOn(process.stderr, 'write');
   });
 
   it('should collect command line arguments', () => {
