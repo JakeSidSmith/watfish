@@ -14,23 +14,27 @@ let options: Tree;
 
 export type DataOrError = Buffer | Error | string;
 
+const getDisplayName = (processName: string, env: string) => {
+  return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
+};
+
 const onDataOrError = (processName: string, env: string, dataOrError: DataOrError) => {
   const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
     .toString().split('\n');
-  env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
+  const displayName = getDisplayName(processName, env);
 
   messages.forEach((message) => {
     process.stderr.write(
-      `${env}${processName} > ${message}\n`
+      `${displayName} > ${message}\n`
     );
   });
 };
 
 const onClose = (processName: string, env: string, code: number) => {
-  env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
+  const displayName = getDisplayName(processName, env);
 
   process.stderr.write(
-    `${env}${processName} > process exited with code ${code}\n`
+    `${displayName} > process exited with code ${code}\n`
   );
 };
 
@@ -71,6 +75,8 @@ export const getEnvVariables = (env: string) => {
     }
   });
 
+  process.stderr.write(`Found ${Object.keys(envVariables).length} variables in ${envPath}\n`);
+
   return envVariables;
 };
 
@@ -88,6 +94,11 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
   for (const key in procfileConfig) {
     if (!processes || processes === key) {
       const item = procfileConfig[key];
+
+      const displayName = getDisplayName(key, env);
+      const port = '8080';
+
+      process.stderr.write(`Starting process ${displayName} on port ${port}\n`);
 
       const subProcess = childProcess.spawn(
         `${handleShebang(item.command)} ${item.command}`,
