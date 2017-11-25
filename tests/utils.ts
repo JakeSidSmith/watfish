@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { isPortTaken } from '../src/utils';
+import { getAvailablePort, isPortTaken } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
   code: 'EADDRINUSE',
@@ -7,12 +7,19 @@ const EADDRINUSE_ERROR = {
   name: 'An error',
 };
 
+interface NetMock {
+  _trigger: (event: string, data: any) => void;
+  _clear: () => void;
+}
+
 describe('utils.ts', () => {
 
-  const { _trigger } = net as any as {_trigger: (event: string, data: any) => void};
+  const { _clear, _trigger } = net as any as NetMock;
 
   beforeEach(() => {
     spyOn(process.stderr, 'write');
+
+    _clear();
   });
 
   describe('isPortTaken', () => {
@@ -50,6 +57,25 @@ describe('utils.ts', () => {
       expect(callback).toHaveBeenCalledWith(undefined, true);
       expect(callback).not.toHaveBeenCalledWith(undefined, false);
       expect(callback).not.toHaveBeenCalledWith(EADDRINUSE_ERROR);
+    });
+  });
+
+  describe('getAvailablePort', () => {
+    it('should check for available ports until one is found', () => {
+      const callback = jest.fn();
+      getAvailablePort(callback);
+
+      _trigger('error', EADDRINUSE_ERROR);
+
+      expect(callback).not.toHaveBeenCalled();
+
+      _trigger('error', EADDRINUSE_ERROR);
+
+      expect(callback).not.toHaveBeenCalled();
+
+      _trigger('listening', undefined);
+
+      expect(callback).toHaveBeenCalledWith(undefined, '0');
     });
   });
 });
