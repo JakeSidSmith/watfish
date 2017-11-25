@@ -5,3 +5,5 @@ export const CONFIG_KEYS: Array<keyof Config> = [
 ];
 
 export const UTF8 = 'utf8';
+
+export const SOCKET_PORT = 5253;

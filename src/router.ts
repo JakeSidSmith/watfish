@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as proxy from 'express-http-proxy';
 import * as vhost from 'vhost';
+import { SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { isPortTaken, PortError } from './utils';
 
