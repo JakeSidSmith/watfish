@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as proxy from 'express-http-proxy';
 import * as vhost from 'vhost';
+import * as WebSocket from 'ws';
 import { SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { isPortTaken, PortError } from './utils';
@@ -35,7 +36,7 @@ const addRoute = (subDomain: string, url: string) => {
   applyRoutes();
 };
 
-const removeRoute = (subDomain: string, url: string) => {
+const removeRoute = (subDomain: string) => {
   delete routes[subDomain];
   expressRouter = express.Router();
   applyRoutes();
@@ -52,8 +53,32 @@ const router = () => {
     } else if (inUse) {
       logger.log(`Port ${port} is already in use`);
     } else {
-      logger.log(`Starting router on port ${port}`);
-      app.listen(port);
+      logger.log(`Starting router on port ${port}...`);
+
+      app.listen(port, () => {
+        logger.log(`Router running on port ${port}`);
+      });
+
+      const wss = new WebSocket.Server({ port: SOCKET_PORT });
+
+      wss.on('connection', (ws) => {
+        // Listen for messages
+        ws.on('message', (data) => {
+          logger.log(data.toString());
+        });
+
+        // Send message
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send('Message');
+        }
+
+        // // Broadcast
+        // wss.clients.forEach((client: WebSocket) => {
+        //   if (client.readyState === WebSocket.OPEN) {
+        //     client.send('Message');
+        //   }
+        // });
+      });
     }
   });
 };
