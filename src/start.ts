@@ -16,7 +16,7 @@ const onDataOrError = (processName: string, env: string, dataOrError: DataOrErro
   env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
 
   process.stderr.write(
-    `${env}${processName}: ${message}`
+    `${env}${processName} > ${message}`
   );
 };
 
@@ -24,7 +24,7 @@ const onClose = (processName: string, env: string, code: number) => {
   env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
 
   process.stderr.write(
-    `${env}${processName}: child process exited with code ${code}`
+    `${env}${processName} > process exited with code ${code}`
   );
 };
 
