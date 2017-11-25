@@ -84,41 +84,6 @@ describe('start.ts', () => {
     expect(childProcess.spawn).not.toHaveBeenCalled();
   });
 
-  it('should add logs in verbose mode', () => {
-    const subProcess = childProcess.spawn('test');
-
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'watch',
-      },
-      kwargs: {},
-      flags: {
-        verbose: true,
-      },
-    });
-
-    expect(subProcess.stderr.on).toHaveBeenCalledTimes(2);
-    expect(subProcess.stdout.on).toHaveBeenCalledTimes(2);
-
-    (subProcess.stderr.on as jest.Mock<any>).mockClear();
-    (subProcess.stdout.on as jest.Mock<any>).mockClear();
-
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'watch',
-      },
-      kwargs: {},
-      flags: {},
-    });
-
-    expect(subProcess.stderr.on).toHaveBeenCalledTimes(2);
-    expect(subProcess.stdout.on).not.toHaveBeenCalled();
-  });
-
   it('should log the environment if not the default', () => {
     start({
       name: 'start',
@@ -142,16 +107,16 @@ describe('start.ts', () => {
       flags: {},
     });
 
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > data');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > error');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > data');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > error');
-    expect(process.stderr.write).toHaveBeenCalledWith('watch > process exited with code 7');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > data\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > error\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > data\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > error\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('watch > process exited with code 7\n');
 
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data');
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error');
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data');
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error');
-    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > process exited with code 7');
+    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > data\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > error\n');
+    expect(process.stderr.write).toHaveBeenCalledWith('production:watch > process exited with code 7\n');
   });
 });

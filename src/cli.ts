@@ -34,14 +34,6 @@ const ENVIRONMENT = KWArg(
   }
 );
 
-const VERBOSE = Flag(
-  'verbose',
-  {
-    alias: 'v',
-    description: 'Output verbose logs',
-  }
-);
-
 collect(
   Help(
     'help',
@@ -90,8 +82,7 @@ collect(
               description: 'Process to start',
             }
           ),
-          ENVIRONMENT,
-          VERBOSE
+          ENVIRONMENT
         ),
         Command(
           'config',

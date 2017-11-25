@@ -12,19 +12,22 @@ let options: Tree;
 export type DataOrError = Buffer | Error | string;
 
 const onDataOrError = (processName: string, env: string, dataOrError: DataOrError) => {
-  const message = dataOrError instanceof Error ? dataOrError.message : dataOrError;
+  const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
+    .toString().split('\n');
   env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
 
-  process.stderr.write(
-    `${env}${processName} > ${message}`
-  );
+  messages.forEach((message) => {
+    process.stderr.write(
+      `${env}${processName} > ${message}\n`
+    );
+  });
 };
 
 const onClose = (processName: string, env: string, code: number) => {
   env = `${env === DEFAULT_ENV ? '' : `${env}:`}`;
 
   process.stderr.write(
-    `${env}${processName} > process exited with code ${code}`
+    `${env}${processName} > process exited with code ${code}\n`
   );
 };
 
@@ -35,7 +38,6 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
   }
 
   const { processes } = options.args;
-  const { verbose } = options.flags;
   const { env = DEFAULT_ENV } = options.kwargs;
 
   const procfileConfig = procfile.parse(data);
@@ -46,10 +48,8 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
 
       const subProcess = childProcess.spawn(item.command, item.options);
 
-      if (verbose) {
-        subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
-        subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
-      }
+      subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
+      subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
       subProcess.stderr.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
       subProcess.stderr.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
 
