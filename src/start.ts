@@ -46,9 +46,11 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
 
       const subProcess = childProcess.spawn(item.command, item.options);
 
-      subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
+      if (verbose) {
+        subProcess.stdout.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
+        subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
+      }
       subProcess.stderr.on('data', (dataOrError) => onDataOrError(key, env, dataOrError));
-      subProcess.stdout.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
       subProcess.stderr.on('error', (dataOrError) => onDataOrError(key, env, dataOrError));
 
       subProcess.on('close', (code) => onClose(key, env, code));

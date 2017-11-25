@@ -5,7 +5,11 @@ import start, { readFileCallback } from '../src/start';
 
 describe('start.ts', () => {
   beforeEach(() => {
+    const subProcess = childProcess.spawn('test');
     (childProcess.spawn as jest.Mock<any>).mockClear();
+
+    (subProcess.stderr.on as jest.Mock<any>).mockClear();
+    (subProcess.stdout.on as jest.Mock<any>).mockClear();
 
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
@@ -47,6 +51,8 @@ describe('start.ts', () => {
       UTF8,
       readFileCallback
     );
+
+    expect(childProcess.spawn).toHaveBeenCalledTimes(2);
   });
 
   it('should spawn child the processes that are supplied', () => {
@@ -76,5 +82,40 @@ describe('start.ts', () => {
     });
 
     expect(childProcess.spawn).not.toHaveBeenCalled();
+  });
+
+  it('should add logs in verbose mode', () => {
+    const subProcess = childProcess.spawn('test');
+
+    start({
+      name: 'start',
+      command: null,
+      args: {
+        processes: 'watch',
+      },
+      kwargs: {},
+      flags: {
+        verbose: true,
+      },
+    });
+
+    expect(subProcess.stderr.on).toHaveBeenCalledTimes(2);
+    expect(subProcess.stdout.on).toHaveBeenCalledTimes(2);
+
+    (subProcess.stderr.on as jest.Mock<any>).mockClear();
+    (subProcess.stdout.on as jest.Mock<any>).mockClear();
+
+    start({
+      name: 'start',
+      command: null,
+      args: {
+        processes: 'watch',
+      },
+      kwargs: {},
+      flags: {},
+    });
+
+    expect(subProcess.stderr.on).toHaveBeenCalledTimes(2);
+    expect(subProcess.stdout.on).not.toHaveBeenCalled();
   });
 });

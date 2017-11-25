@@ -11,7 +11,7 @@ jest.mock('fs', () => {
       if (MATCHES_ERROR.test(path)) {
         callback(new Error('error'), '');
       } else if (MATCHES_PROCFILE.test(path)) {
-        callback(undefined, 'web: http-server . -c-0 -o');
+        callback(undefined, 'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js');
       }
     }),
     writeFile: jest.fn((path: string, data: string, format: string, callback: WriteFileCallback) => {

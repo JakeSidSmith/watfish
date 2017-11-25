@@ -6,7 +6,17 @@ type OnCloseCallback = (code: number) => any;
 jest.mock('child_process', () => {
   let firstCall = true;
 
-  const onErrorOrData = jest.fn((event: 'data' | 'error', callback: OnErrorOrDataCallback) => {
+  const onErrorOrDataOut = jest.fn((event: 'data' | 'error', callback: OnErrorOrDataCallback) => {
+    if (firstCall) {
+      callback('data');
+    } else {
+      callback(new Error('error'));
+    }
+
+    firstCall = false;
+  });
+
+  const onErrorOrDataErr = jest.fn((event: 'data' | 'error', callback: OnErrorOrDataCallback) => {
     if (firstCall) {
       callback('data');
     } else {
@@ -23,10 +33,10 @@ jest.mock('child_process', () => {
   const spawn = jest.fn(() => {
     return {
       stdout: {
-        on: onErrorOrData,
+        on: onErrorOrDataOut,
       },
       stderr: {
-        on: onErrorOrData,
+        on: onErrorOrDataErr,
       },
       on: onClose,
     };
