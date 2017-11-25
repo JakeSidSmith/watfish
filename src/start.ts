@@ -40,19 +40,25 @@ const onClose = (processName: string, env: string, code: number) => {
   );
 };
 
-export const handleShebang = (filePath: string): string => {
-  const content = fs.readFileSync(path.join(process.cwd(), filePath), UTF8);
+export const handleShebang = (command: string): string => {
+  const filePath = path.join(process.cwd(), command);
+
+  if (!fs.existsSync(filePath)) {
+    return command;
+  }
+
+  const content = fs.readFileSync(filePath, UTF8);
 
   const shebang = MATCHES_SHEBANG.exec(content);
 
   if (shebang) {
-    const command = shebang[2].trim();
+    const shebangCommand = shebang[2].trim();
 
-    if (fs.existsSync(path.join(process.cwd(), ENV_BIN, command))) {
-      return path.join(ENV_BIN, command);
+    if (fs.existsSync(path.join(process.cwd(), ENV_BIN, shebangCommand))) {
+      return path.join(ENV_BIN, shebangCommand);
     }
 
-    return command;
+    return shebangCommand;
   }
 
   return '';

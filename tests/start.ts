@@ -169,8 +169,8 @@ describe('start.ts', () => {
       expect(handleShebang('#!   /usr/bin/env        node')).toBe('env/bin/node');
       expect(handleShebang('#! /usr/bin/env  node   ')).toBe('env/bin/node');
 
-      expect(handleShebang('#!   nope  ')).toBe('nope');
-      expect(handleShebang('#!nope')).toBe('nope');
+      expect(handleShebang('#!   nope  ')).toBe('#!   nope  ');
+      expect(handleShebang('#!nope')).toBe('#!nope');
     });
   });
 
