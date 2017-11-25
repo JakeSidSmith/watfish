@@ -109,7 +109,7 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 const startProcessOnPort = (item: procfile.Command, processName: string, env: string, port: string) => {
   const displayName = getDisplayName(processName, env);
 
-  process.stderr.write(`Starting ${displayName} process on port ${port}\n`);
+  process.stderr.write(`Starting ${displayName} process...\n`);
 
   const environment: {[i: string]: string} = {
     ...getEnvVariables(env),
