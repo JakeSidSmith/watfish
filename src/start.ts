@@ -59,13 +59,13 @@ export const handleShebang = (command: string): string => {
     const envExists = fs.existsSync(shebangCommandPath);
 
     if (envExists) {
-      return shebangCommandPath;
+      return `${shebangCommandPath} ${command}`;
     }
 
-    return shebangCommand;
+    return `${shebangCommand} ${command}`;
   }
 
-  return '';
+  return command;
 };
 
 export const getEnvVariables = (env: string) => {
@@ -117,7 +117,7 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
     PORT: port,
   };
 
-  const command = `${handleShebang(item.command)} ${item.command}`;
+  const command = handleShebang(item.command);
 
   const commandOptions = injectEnvVars(item.options, environment);
 
