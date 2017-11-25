@@ -9,7 +9,6 @@ import start, {
   readFileCallback,
   startProcess,
 } from '../src/start';
-import * as utils from '../src/utils';
 
 interface NetMock {
   _trigger: (event: string, data: any) => void;
