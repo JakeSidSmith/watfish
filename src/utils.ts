@@ -1,4 +1,5 @@
 import * as net from 'net';
+import * as logger from './logger';
 
 export interface PortError extends Error {
   message: string;
@@ -39,7 +40,7 @@ export const getAvailablePort = (callback: ServerCallback, attempt = 0) => {
       }
 
       if (attempt >= 100) {
-        process.stderr.write('Could not find an available port\n');
+        logger.log('Could not find an available port');
         return process.exit(1);
       }
 

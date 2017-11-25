@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { UTF8 } from './constants';
+import * as logger from './logger';
 
 export type Route = Partial<{
   process: string;
@@ -72,7 +73,7 @@ const askForInput = (question: Question, callback: () => any) => {
   ) {
     process.stdin.resume();
 
-    process.stderr.write((typeof question.message === 'function' ? question.message() : question.message) + ' ');
+    logger.log((typeof question.message === 'function' ? question.message() : question.message) + ' ');
 
     process.stdin.once('data', (data) => {
       const value: string | undefined = (data || '').toString().trim();
@@ -90,13 +91,13 @@ const askForInput = (question: Question, callback: () => any) => {
 
 export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
   if (error) {
-    process.stderr.write(error.message);
+    logger.log(error.message);
     return process.exit(1);
   }
 
   const configPath = path.join(process.cwd(), 'wtf.json');
 
-  process.stderr.write(`wtf.json written to ${configPath}\n`);
+  logger.log(`wtf.json written to ${configPath}`);
 };
 
 const askQuestions = (questions: Question[], callback: () => any) => {

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
 import init, { QUESTIONS, writeFileCallback } from '../src/init';
+import * as logger from '../src/logger';
 import mockStd from './mocks/std';
 
 describe('init.ts', () => {
@@ -15,7 +16,7 @@ describe('init.ts', () => {
 
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
-    spyOn(process.stderr, 'write');
+    spyOn(logger, 'log');
   });
 
   it('should ask questions & output a config file', () => {
@@ -33,7 +34,7 @@ describe('init.ts', () => {
       const message = typeof question.message === 'function' ? question.message() : question.message;
 
       expect(process.stdin.resume).toHaveBeenCalled();
-      expect(process.stderr.write).toHaveBeenCalledWith(message + ' ');
+      expect(logger.log).toHaveBeenCalledWith(message + ' ');
       if (typeof question.condition === 'function') {
         expect(question.condition).toHaveBeenCalled();
       }
@@ -75,7 +76,7 @@ describe('init.ts', () => {
         const message = typeof question.message === 'function' ? question.message() : question.message;
 
         expect(process.stdin.resume).toHaveBeenCalled();
-        expect(process.stderr.write).toHaveBeenCalledWith(message + ' ');
+        expect(logger.log).toHaveBeenCalledWith(message + ' ');
       }
 
       if (typeof question.condition === 'function') {
@@ -133,14 +134,14 @@ describe('init.ts', () => {
     it('should output a success message', () => {
       writeFileCallback();
 
-      expect(process.stderr.write).toHaveBeenCalledWith('wtf.json written to directory/wtf.json\n');
+      expect(logger.log).toHaveBeenCalledWith('wtf.json written to directory/wtf.json');
       expect(process.exit).not.toHaveBeenCalled();
     });
 
     it('should exit on error', () => {
       writeFileCallback(new Error('WTF'));
 
-      expect(process.stderr.write).toHaveBeenCalledWith('WTF');
+      expect(logger.log).toHaveBeenCalledWith('WTF');
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

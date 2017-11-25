@@ -1,8 +1,9 @@
+import * as logger from '../src/logger';
 import version from '../src/version';
 
 describe('version.ts', () => {
   beforeEach(() => {
-    spyOn(process.stderr, 'write');
+    spyOn(logger, 'log');
   });
 
   it('should log the version if that flag is supplied', () => {
@@ -14,7 +15,7 @@ describe('version.ts', () => {
       flags: {},
     });
 
-    expect(process.stderr.write).not.toHaveBeenCalled();
+    expect(logger.log).not.toHaveBeenCalled();
 
     version({
       name: 'watfish',
@@ -26,6 +27,6 @@ describe('version.ts', () => {
       },
     });
 
-    expect(process.stderr.write).toHaveBeenCalledWith('0.0.0\n');
+    expect(logger.log).toHaveBeenCalledWith('0.0.0');
   });
 });

@@ -1,8 +1,10 @@
 import * as childProcess from 'child_process';
+import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import { UTF8 } from './constants';
+import * as logger from './logger';
 import * as procfile from './procfile';
 import { getAvailablePort, PortError } from './utils';
 
@@ -12,6 +14,17 @@ const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
 
+type Colors = 'red' | 'green' | 'blue' | 'magenta' | 'cyan' | 'yellow';
+
+const COLORS: Colors[] = [
+  'red',
+  'green',
+  'blue',
+  'magenta',
+  'cyan',
+  'yellow',
+];
+
 let options: Tree;
 
 export type DataOrError = Buffer | Error | string;
@@ -20,24 +33,20 @@ const getDisplayName = (processName: string, env: string) => {
   return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
 };
 
-const onDataOrError = (processName: string, env: string, dataOrError: DataOrError) => {
+const onDataOrError = (processName: string, env: string, color: Colors, dataOrError: DataOrError) => {
   const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
     .toString().split('\n');
-  const displayName = getDisplayName(processName, env);
+  const displayName = colors[color](getDisplayName(processName, env));
 
   messages.forEach((message) => {
-    process.stderr.write(
-      `${displayName} > ${message}\n`
-    );
+    logger.log(`${displayName} > ${message}`);
   });
 };
 
-const onClose = (processName: string, env: string, code: number) => {
-  const displayName = getDisplayName(processName, env);
+const onClose = (processName: string, env: string, color: Colors, code: number) => {
+  const displayName = colors[color](getDisplayName(processName, env));
 
-  process.stderr.write(
-    `${displayName} > process exited with code ${code}\n`
-  );
+  logger.log(`${displayName} > process exited with code ${code}`);
 };
 
 export const handleShebang = (command: string): string => {
@@ -68,7 +77,7 @@ export const handleShebang = (command: string): string => {
   return command;
 };
 
-export const getEnvVariables = (env: string) => {
+export const getEnvVariables = (env: string, color: Colors) => {
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
 
   if (!fs.existsSync(envPath)) {
@@ -87,7 +96,7 @@ export const getEnvVariables = (env: string) => {
     }
   });
 
-  process.stderr.write(`Found ${Object.keys(envVariables).length} variables in ${envPath}\n`);
+  logger.log(colors[color](`Found ${Object.keys(envVariables).length} variables in ${envPath}`));
 
   return envVariables;
 };
@@ -106,13 +115,14 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
   });
 };
 
-const startProcessOnPort = (item: procfile.Command, processName: string, env: string, port: string) => {
+const startProcessOnPort =
+  (item: procfile.Command, processName: string, env: string, color: Colors, port: string) => {
   const displayName = getDisplayName(processName, env);
 
-  process.stderr.write(`Starting ${displayName} process...\n`);
+  logger.log(colors[color](`Starting ${displayName} process...`));
 
   const environment: {[i: string]: string} = {
-    ...getEnvVariables(env),
+    ...getEnvVariables(env, color),
     ...process.env,
     PORT: port,
   };
@@ -121,7 +131,7 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
 
   const commandOptions = injectEnvVars(item.options, environment);
 
-  process.stderr.write(`Running ${command} ${commandOptions.join(' ')}\n\n`);
+  logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
 
   const subProcess = childProcess.spawn(
     command,
@@ -133,28 +143,28 @@ const startProcessOnPort = (item: procfile.Command, processName: string, env: st
     }
   );
 
-  subProcess.stdout.on('data', (dataOrError) => onDataOrError(processName, env, dataOrError));
-  subProcess.stdout.on('error', (dataOrError) => onDataOrError(processName, env, dataOrError));
-  subProcess.stderr.on('data', (dataOrError) => onDataOrError(processName, env, dataOrError));
-  subProcess.stderr.on('error', (dataOrError) => onDataOrError(processName, env, dataOrError));
+  subProcess.stdout.on('data', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
+  subProcess.stdout.on('error', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
+  subProcess.stderr.on('data', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
+  subProcess.stderr.on('error', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
 
-  subProcess.on('close', (code) => onClose(processName, env, code));
+  subProcess.on('close', (code) => onClose(processName, env, color, code));
 };
 
-export const startProcess = (item: procfile.Command, processName: string, env: string) => {
+export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors) => {
   getAvailablePort((error: PortError | undefined, port: string) => {
     if (error) {
-      process.stderr.write(error.message + '\n');
+      logger.log(error.message);
       return process.exit(1);
     }
 
-    startProcessOnPort(item, processName, env, port);
+    startProcessOnPort(item, processName, env, color, port);
   });
 };
 
 export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => {
   if (error) {
-    process.stderr.write(error.message + '\n');
+    logger.log(error.message);
     return process.exit(1);
   }
 
@@ -163,14 +173,18 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
 
   const procfileConfig = procfile.parse(data);
 
-  for (const processName in procfileConfig) {
-    if (
-      procfileConfig.hasOwnProperty(processName) &&
-      !processes || processes === processName
-    ) {
-      const item = procfileConfig[processName];
+  let index = 0;
 
-      startProcess(item, processName, env);
+  for (const processName in procfileConfig) {
+    /* istanbul ignore else */
+    if (procfileConfig.hasOwnProperty(processName)) {
+      if (!processes || processes === processName) {
+        const item = procfileConfig[processName];
+
+        startProcess(item, processName, env, COLORS[index % (COLORS.length)]);
+      }
+
+      index += 1;
     }
   }
 };
