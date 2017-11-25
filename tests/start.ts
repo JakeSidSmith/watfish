@@ -4,6 +4,7 @@ import { UTF8 } from '../src/constants';
 import start, {
   getEnvVariables,
   handleShebang,
+  injectEnvVars,
   readFileCallback,
   startProcess,
 } from '../src/start';
@@ -183,6 +184,14 @@ describe('start.ts', () => {
           },
         }
       );
+    });
+  });
+
+  describe('injectEnvVars', () => {
+    it('should inject env vars into procfile', () => {
+      const result = injectEnvVars(['wat', '0.0.0.0:$WAT', '$NOPE'], {WAT: '1234'});
+
+      expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
     });
   });
 });

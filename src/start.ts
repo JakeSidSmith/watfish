@@ -82,7 +82,7 @@ export const getEnvVariables = (env: string) => {
   return envVariables;
 };
 
-const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
+export const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
   return commandOptions.map((option) => {
     return option.replace(MATCHES_ENV_VAR, (match: string): string => {
       const varName = match.substring(1);
@@ -91,7 +91,7 @@ const injectEnvVars = (commandOptions: string[], environment: {[i: string]: stri
         return environment[varName];
       }
 
-      return varName;
+      return match;
     });
   });
 };
