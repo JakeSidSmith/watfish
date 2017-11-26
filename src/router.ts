@@ -1,10 +1,9 @@
 import * as colors from 'colors';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
-import { parse as parseUrl } from 'url';
 import * as vhost from 'vhost';
 import * as WebSocket from 'ws';
-import { Colors, COLORS, SOCKET_PORT } from './constants';
+import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { isPortTaken, PortError } from './utils';
 

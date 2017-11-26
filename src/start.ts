@@ -3,7 +3,6 @@ import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { parse as parseUrl } from 'url';
 import * as WebSocket from 'ws';
 import { Colors, COLORS, SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';

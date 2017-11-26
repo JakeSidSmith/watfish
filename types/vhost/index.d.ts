@@ -7,4 +7,3 @@ declare module 'vhost' {
 
   namespace vhost {}
 }
-
