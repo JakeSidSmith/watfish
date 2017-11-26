@@ -3,13 +3,17 @@ import * as path from 'path';
 import { UTF8 } from './constants';
 import * as logger from './logger';
 
-export type Route = Partial<{
+type TempRoute = Partial<{
   process: string;
   url: string;
 }>;
 
+export interface Routes {
+  [i: string]: string;
+}
+
 export type Config = Partial<{
-  routes: Route[];
+  routes: Routes;
 }>;
 
 export type ValueOrFunction<V> = V | (() => V);
@@ -23,10 +27,10 @@ export interface Question {
 }
 
 let config: Config = {};
-let route: Route = {};
+let tempRoute: TempRoute = {};
 
 const createStringConfig = (): string => {
-  const routes = route.process ? [route] : [];
+  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url} : {};
 
   return JSON.stringify(
     {
@@ -43,14 +47,14 @@ export const QUESTIONS: Question[] = [
     message: 'What is the name of the process you would like to route?',
     condition: true,
     callback: (value: string | undefined) => {
-      route.process = value;
+      tempRoute.process = value;
     },
   },
   {
     message: 'From url would you like to route this process?',
-    condition: () => Boolean(route.process),
+    condition: () => Boolean(tempRoute.process),
     callback: (value: string | undefined) => {
-      route.url = value;
+      tempRoute.url = value;
     },
   },
   {
@@ -126,7 +130,7 @@ const writeFile = () => {
 
 const init = () => {
   config = {};
-  route = {};
+  tempRoute = {};
 
   askQuestions(QUESTIONS, writeFile);
 };

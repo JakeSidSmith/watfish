@@ -13,14 +13,13 @@ import { getAvailablePort, PortError } from './utils';
 
 const routes: Routes = {};
 
-const MATCHES_CTF_URL = /.+\.ctf\.sh/;
-
 const PADDING = '                       ';
 const DEFAULT_ENV = 'development';
 const ENV_BIN = 'env/bin';
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
-const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
+const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
+const MATCHES_CTF_URL = /^[-a-z0-9]\.ctf\.sh$/;
 
 let ws: WebSocket;
 
@@ -31,21 +30,20 @@ const applyRoutes = () => {
 };
 
 const addRoute = (processName: string, color: Colors, url: string, port: number) => {
-  const hostname = parseUrl(url).hostname || '';
-
-  if (!MATCHES_CTF_URL.test(hostname)) {
+  if (!MATCHES_CTF_URL.test(url)) {
     logger.log(`Invalid hostname ${url}`);
+    logger.log('URLs must follow the pattern sub-domain.ctf.sh and should not include a port or protocol');
   }
 
-  routes[hostname] = {
+  routes[url] = {
     processName,
-    url: hostname,
+    url,
     port,
     color,
   };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url: hostname, port}}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
 };
 
@@ -148,8 +146,8 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
   });
 };
 
-const startProcessOnPort =
-  (item: procfile.Command, processName: string, env: string, color: Colors, port: number) => {
+const startProcessWithMaybePort =
+  (item: procfile.Command, processName: string, env: string, color: Colors, url?: string, port?: number) => {
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
@@ -159,16 +157,20 @@ const startProcessOnPort =
   const environment: {[i: string]: string} = {
     ...envVariables,
     ...process.env,
-    PORT: port.toString(),
+    PORT: process.env.PORT || '',
   };
 
-  const command = handleShebang(item.command);
+  if (url && port) {
+    environment.PORT = port.toString();
+    addRoute(displayName, color, url, port);
+  }
 
+  console.log(environment);
+
+  const command = handleShebang(item.command);
   const commandOptions = injectEnvVars(item.options, environment);
 
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
-
-  addRoute(displayName, color, 'http://vop.ctf.sh:8080', port);
 
   const subProcess = childProcess.spawn(
     command,
@@ -188,27 +190,26 @@ const startProcessOnPort =
   subProcess.on('close', (code) => onClose(processName, env, color, code));
 };
 
-export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors) => {
-  getAvailablePort((error: PortError | undefined, port: number) => {
-    if (error) {
-      logger.log(error.message);
-      return process.exit(1);
-    }
+export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors, url?: string) => {
+  if (url) {
+    getAvailablePort((error: PortError | undefined, port: number) => {
+      if (error) {
+        logger.log(error.message);
+        return process.exit(1);
+      }
 
-    startProcessOnPort(item, processName, env, color, port);
-  });
+      startProcessWithMaybePort(item, processName, env, color, url, port);
+    });
+  } else {
+    startProcessWithMaybePort(item, processName, env, color);
+  }
 };
 
-export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => {
-  if (error) {
-    logger.log(error.message);
-    return process.exit(1);
-  }
-
+const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
   const { processes } = options.args;
   const { env = DEFAULT_ENV } = options.kwargs;
 
-  const procfileConfig = procfile.parse(data);
+  const procfileConfig = procfile.parse(procfileData.toString());
 
   let index = 0;
 
@@ -229,12 +230,45 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
       if (!processes || processes === processName) {
         const item = procfileConfig[processName];
 
-        startProcess(item, processName, env, COLORS[index % (COLORS.length)]);
+        const url = processName in wtfJson.routes ? wtfJson.routes[processName] : undefined;
+
+        startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
       }
 
       index += 1;
     }
   }
+};
+
+export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData: Buffer | string) => {
+  if (error) {
+    logger.log(error.message);
+    return process.exit(1);
+  }
+
+  const wtfJsonPath = path.join(process.cwd(), 'wtf.json');
+
+  if (!fs.existsSync(wtfJsonPath)) {
+    logger.log(`No wtf.json found at ${wtfJsonPath}`);
+    startProcesses(procfileData);
+  } else {
+    fs.readFile(wtfJsonPath, UTF8, (wtfJsonError: Error, wtfJsonData) => {
+      let wtfJson;
+
+      try {
+        wtfJson = JSON.parse(wtfJsonData.toString());
+      } catch (error) {
+        logger.log('Invalid wtf.json');
+        logger.log(error.message);
+        return process.exit(1);
+      }
+
+      logger.log(`Loaded wtf.json from ${wtfJsonPath}`);
+
+      startProcesses(procfileData, wtfJson);
+    });
+  }
+
 };
 
 const startRouterCommunication = () => {
@@ -260,7 +294,12 @@ const start = (tree: Tree) => {
 
   const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
 
-  fs.readFile(procfilePath, UTF8, readFileCallback);
+  if (!fs.existsSync(procfilePath)) {
+    logger.log(`No procfile found at ${procfilePath}`);
+    return process.exit(1);
+  }
+
+  fs.readFile(procfilePath, UTF8, readProcfileCallback);
 };
 
 export default start;
