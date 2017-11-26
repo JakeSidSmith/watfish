@@ -1,4 +1,5 @@
 import * as childProcess from 'child_process';
+import * as colors from 'colors';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
@@ -15,7 +16,7 @@ const findCommand = (command: string): string => {
     return rootPath;
   }
 
-  logger.log(`Could not find command ${command} at ${rootPath}`);
+  logger.log(colors.red(`Could not find command ${command} at ${rootPath}`));
   return process.exit(1);
 };
 
@@ -44,8 +45,8 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
     }
   );
 
-  logger.log(`Running ${command} ${commandOptions.join(' ')}`);
-  logger.log(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`);
+  logger.log(colors.green(`Running ${command} ${commandOptions.join(' ')}`));
+  logger.log(colors.green(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
   subProcess.on('close', (code) => onClose('', code));
 };
