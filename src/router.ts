@@ -25,9 +25,14 @@ export const ACTIONS = {
 
 const globalRoutes: Routes = {};
 
-const expressRouter: express.Router = express.Router();
-
+const app = express();
+const expressRouter = express.Router();
 const proxy = httpProxy.createServer();
+
+proxy.on('error', (error) => {
+  logger.log(error.message);
+  logger.log('Process may still be starting');
+});
 
 expressRouter.use(vhost('*.ctf.sh', (req, res) => {
   const route = globalRoutes[req.hostname];
@@ -41,8 +46,6 @@ expressRouter.use(vhost('*.ctf.sh', (req, res) => {
     res.send(`Unknown host ${req.hostname}`);
   }
 }));
-
-const app = express();
 
 app.use((req, res, next) => {
   return expressRouter(req, res, next);
