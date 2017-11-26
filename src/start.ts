@@ -11,12 +11,18 @@ import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
 import { getAvailablePort, PortError } from './utils';
 
-router();
-
 const routes: Routes = {};
 
 const MATCHES_CTF_URL = /.+\.ctf\.sh/;
-const ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
+
+const PADDING = '                       ';
+const DEFAULT_ENV = 'development';
+const ENV_BIN = 'env/bin';
+const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
+const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
+const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
+
+let ws: WebSocket;
 
 const applyRoutes = () => {
   if (ws.readyState === WebSocket.OPEN) {
@@ -42,23 +48,6 @@ const addRoute = (processName: string, color: Colors, url: string, port: number)
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url: hostname, port}}));
   }
 };
-
-ws.on('open', applyRoutes);
-
-ws.on('close', () => {
-  router();
-});
-
-ws.on('message', (data) => {
-  logger.log(data.toString());
-});
-
-const PADDING = '                       ';
-const DEFAULT_ENV = 'development';
-const ENV_BIN = 'env/bin';
-const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
-const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
-const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
 
 let longestName: number = 0;
 let options: Tree;
@@ -248,7 +237,24 @@ export const readFileCallback = (error: NodeJS.ErrnoException, data: string) => 
   }
 };
 
+const startRouterCommunication = () => {
+  ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
+
+  ws.on('open', applyRoutes);
+
+  ws.on('close', () => {
+    router();
+  });
+
+  ws.on('message', (data) => {
+    logger.log(data.toString());
+  });
+};
+
 const start = (tree: Tree) => {
+  router();
+  startRouterCommunication();
+
   options = tree;
   const { env = DEFAULT_ENV } = options.kwargs;
 
