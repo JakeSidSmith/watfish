@@ -276,6 +276,8 @@ const startRouterCommunication = () => {
 
   ws.on('close', () => {
     router();
+
+    setTimeout(startRouterCommunication, 1000);
   });
 
   ws.on('message', (data) => {
