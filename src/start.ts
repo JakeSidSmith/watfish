@@ -4,18 +4,15 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
-import { Colors, COLORS, SOCKET_PORT, UTF8 } from './constants';
+import { Colors, COLORS, DEFAULT_ENV, SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
-import { getAvailablePort, PortError } from './utils';
+import { getAvailablePort, handleShebang, PortError } from './utils';
 
 const routes: Routes = {};
 
 const PADDING = '                       ';
-const DEFAULT_ENV = 'development';
-const ENV_BIN = 'env/bin';
-const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
@@ -79,48 +76,6 @@ const onClose = (processName: string, env: string, color: Colors, code: number) 
 
   const exitColor = code ? 'red' : 'green';
   logger.log(`${displayName} ${colors[exitColor](`Process exited with code ${code}`)}`);
-};
-
-export const handleShebang = (command: string): string => {
-  const filePath = path.join(process.cwd(), command);
-  const envFilePath = path.join(process.cwd(), ENV_BIN, command);
-
-  // In root of project
-  if (!fs.existsSync(filePath)) {
-    // In env
-    if (fs.existsSync(envFilePath)) {
-      return envFilePath;
-    // Global command
-    } else {
-      return command;
-    }
-  }
-
-  const firstLine = fs.readFileSync(filePath, UTF8).split('\n')[0];
-
-  if (!firstLine) {
-    return command;
-  }
-
-  const shebang = MATCHES_SHEBANG.exec(firstLine);
-
-  if (shebang) {
-    const shebangCommand = shebang[2].trim();
-
-    const shebangCommandPath = path.join(process.cwd(), ENV_BIN, shebangCommand);
-
-    const envExists = fs.existsSync(shebangCommandPath);
-
-    // Shebang in env
-    if (envExists) {
-      return `${shebangCommandPath} ${command}`;
-    }
-
-    // Global command
-    return `${shebangCommand} ${command}`;
-  }
-
-  return command;
 };
 
 export const getEnvVariables = (env: string, color: Colors): {[i: string]: string} => {
