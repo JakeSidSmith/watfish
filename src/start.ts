@@ -3,6 +3,7 @@ import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
+import { parse as parseUrl } from 'url';
 import * as WebSocket from 'ws';
 import { Colors, COLORS, SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';
@@ -14,6 +15,7 @@ router();
 
 const routes: Routes = {};
 
+const MATCHES_CTF_URL = /.+\.ctf\.sh/;
 const ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
 
 const applyRoutes = () => {
@@ -23,14 +25,21 @@ const applyRoutes = () => {
 };
 
 const addRoute = (processName: string, color: Colors, url: string, port: number) => {
-  routes[processName] = {
-    url,
+  const hostname = parseUrl(url).hostname || '';
+
+  if (!MATCHES_CTF_URL.test(hostname)) {
+    logger.log(`Invalid hostname ${url}`);
+  }
+
+  routes[hostname] = {
+    processName,
+    url: hostname,
     port,
     color,
   };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url: hostname, port}}));
   }
 };
 
@@ -112,7 +121,7 @@ export const handleShebang = (command: string): string => {
   return command;
 };
 
-export const getEnvVariables = (env: string, color: Colors) => {
+export const getEnvVariables = (env: string, color: Colors): {[i: string]: string} => {
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
 
   if (!fs.existsSync(envPath)) {
@@ -156,8 +165,10 @@ const startProcessOnPort =
 
   logger.log(colors[color](`Starting ${displayName} process...`));
 
+  const envVariables = getEnvVariables(env, color);
+
   const environment: {[i: string]: string} = {
-    ...getEnvVariables(env, color),
+    ...envVariables,
     ...process.env,
     PORT: port.toString(),
   };
@@ -168,7 +179,7 @@ const startProcessOnPort =
 
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
 
-  addRoute(displayName, color, 'test.ctf.sh', port);
+  addRoute(displayName, color, 'http://vop.ctf.sh:8080', port);
 
   const subProcess = childProcess.spawn(
     command,

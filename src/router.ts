@@ -1,6 +1,7 @@
 import * as colors from 'colors';
 import * as express from 'express';
-import * as proxy from 'express-http-proxy';
+import * as httpProxy from 'http-proxy';
+import { parse as parseUrl } from 'url';
 import * as vhost from 'vhost';
 import * as WebSocket from 'ws';
 import { Colors, COLORS, SOCKET_PORT } from './constants';
@@ -11,6 +12,7 @@ export interface Routes {
   [i: string]: {
     url: string;
     port: number;
+    processName: string;
     color: Colors;
   };
 }
@@ -23,7 +25,22 @@ export const ACTIONS = {
 
 const globalRoutes: Routes = {};
 
-let expressRouter: express.Router = express.Router();
+const expressRouter: express.Router = express.Router();
+
+const proxy = httpProxy.createServer();
+
+expressRouter.use(vhost('*.ctf.sh', (req, res) => {
+  const route = globalRoutes[req.hostname];
+
+  if (route) {
+    proxy.web(req, res, {
+      target: `http://0.0.0.0:${route.port}`,
+      changeOrigin: true,
+    });
+  } else {
+    res.send(`Unknown host ${req.hostname}`);
+  }
+}));
 
 const app = express();
 
@@ -31,25 +48,16 @@ app.use((req, res, next) => {
   return expressRouter(req, res, next);
 });
 
-const applyRoutes = () => {
-  for (const processName in globalRoutes) {
-    if (globalRoutes.hasOwnProperty(processName)) {
-      const { url, port } = globalRoutes[processName];
-
-      expressRouter.use(vhost(`localhost:${port}`, proxy(url)));
-    }
-  }
-};
-
-const addRoute = (name: string, color: Colors, url: string, port: number, ws: WebSocket) => {
-  globalRoutes[name] = {
+const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
+  globalRoutes[url] = {
+    processName,
     url,
     port,
     color,
   };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(colors[color](`Routing process ${name} from ${url} to port ${port}`));
+    ws.send(colors[color](`Routing process ${processName} from ${url} to port ${port}`));
   }
 };
 
@@ -57,12 +65,9 @@ const addRoutes = (routes: Routes, ws: WebSocket) => {
   for (const processName in routes) {
     if (routes.hasOwnProperty(processName)) {
       const { url, port, color } = routes[processName];
-      addRoute(name, color, url, port, ws);
+      addRoute(processName, color, url, port, ws);
     }
   }
-
-  expressRouter = express.Router();
-  applyRoutes();
 };
 
 const removeRoutes = (routes: Routes, ws: WebSocket) => {
@@ -76,9 +81,6 @@ const removeRoutes = (routes: Routes, ws: WebSocket) => {
       }
     }
   }
-
-  expressRouter = express.Router();
-  applyRoutes();
 };
 
 const startSockets = (port: number) => {
