@@ -28,7 +28,7 @@ export const isPortTaken = (port: number, callback: PortCallback) => {
     .listen(port);
 };
 
-export type ServerCallback = (error: PortError | undefined, port?: string) => any;
+export type ServerCallback = (error: PortError | undefined, port?: number) => any;
 
 export const getAvailablePort = (callback: ServerCallback, attempt = 0) => {
   const server = net.createServer();
@@ -45,7 +45,7 @@ export const getAvailablePort = (callback: ServerCallback, attempt = 0) => {
       }
 
       getAvailablePort(
-        (portError: PortError | undefined, port?: string) => {
+        (portError: PortError | undefined, port?: number) => {
           server
             .once('close', () => {
               callback(portError, port);
@@ -60,7 +60,7 @@ export const getAvailablePort = (callback: ServerCallback, attempt = 0) => {
 
       server
         .once('close', () => {
-          callback(undefined, port.toString());
+          callback(undefined, port);
         })
         .close();
     })

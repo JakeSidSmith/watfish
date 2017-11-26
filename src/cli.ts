@@ -11,26 +11,9 @@ import {
   RequireAll,
   RequireAny,
 } from 'jargs';
-import * as WebSocket from 'ws';
-import { SOCKET_PORT } from './constants';
 import init from './init';
-import * as logger from './logger';
-import router from './router';
 import start from './start';
 import version from './version';
-
-router();
-
-const ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
-
-ws.on('open', () => {
-  logger.log('Open');
-  ws.send('MESSAGE!');
-});
-
-ws.on('message', (data) => {
-  logger.log(`Received: ${data}`);
-});
 
 const NAME = 'watfish';
 const PROGRAM = 'wtf';

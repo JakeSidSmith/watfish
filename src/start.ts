@@ -3,10 +3,42 @@ import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { UTF8 } from './constants';
+import * as WebSocket from 'ws';
+import { SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';
 import * as procfile from './procfile';
+import router, { ACTIONS, Routes } from './router';
 import { getAvailablePort, PortError } from './utils';
+
+router();
+
+const routes: Routes = {};
+
+const ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
+
+const applyRoutes = () => {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routes}));
+  }
+};
+
+const addRoute = (url: string, port: number) => {
+  routes[url] = port;
+
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {url, port}}));
+  }
+};
+
+ws.on('open', applyRoutes);
+
+ws.on('close', () => {
+  router();
+});
+
+ws.on('message', (data) => {
+  logger.log(data.toString());
+});
 
 const PADDING = '                       ';
 const DEFAULT_ENV = 'development';
@@ -126,7 +158,7 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 };
 
 const startProcessOnPort =
-  (item: procfile.Command, processName: string, env: string, color: Colors, port: string) => {
+  (item: procfile.Command, processName: string, env: string, color: Colors, port: number) => {
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
@@ -134,7 +166,7 @@ const startProcessOnPort =
   const environment: {[i: string]: string} = {
     ...getEnvVariables(env, color),
     ...process.env,
-    PORT: port,
+    PORT: port.toString(),
   };
 
   const command = handleShebang(item.command);
@@ -142,6 +174,8 @@ const startProcessOnPort =
   const commandOptions = injectEnvVars(item.options, environment);
 
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
+
+  addRoute('test.ctf.sh', port);
 
   const subProcess = childProcess.spawn(
     command,
@@ -162,7 +196,7 @@ const startProcessOnPort =
 };
 
 export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors) => {
-  getAvailablePort((error: PortError | undefined, port: string) => {
+  getAvailablePort((error: PortError | undefined, port: number) => {
     if (error) {
       logger.log(error.message);
       return process.exit(1);
