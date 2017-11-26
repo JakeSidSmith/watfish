@@ -47,7 +47,7 @@ export const QUESTIONS: Question[] = [
     },
   },
   {
-    message: 'What url would you like to route this process to?',
+    message: 'From url would you like to route this process?',
     condition: () => Boolean(route.process),
     callback: (value: string | undefined) => {
       route.url = value;
