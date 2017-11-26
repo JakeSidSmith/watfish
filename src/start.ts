@@ -182,8 +182,6 @@ const startProcessWithMaybePort =
   const command = handleShebang(item.command);
   const commandOptions = injectEnvVars(item.options, environment);
 
-  logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
-
   const subProcess = childProcess.spawn(
     command,
     commandOptions,
@@ -193,6 +191,9 @@ const startProcessWithMaybePort =
       env: environment,
     }
   );
+
+  logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}`));
+  logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
   subProcess.stdout.on('data', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
   subProcess.stdout.on('error', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
