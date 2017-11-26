@@ -7,7 +7,7 @@ const version = (tree: Tree) => {
   if (tree.flags.version) {
     logger.log(json.version);
   } else if (tree.args.command) {
-    runCommand(tree.args.command as any);
+    runCommand(tree.args.command as any, tree.kwargs.env);
   }
 };
 

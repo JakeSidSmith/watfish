@@ -1,5 +1,7 @@
 import { Config } from './init';
 
+export type DataOrError = Buffer | Error | string;
+
 export const CONFIG_KEYS: Array<keyof Config> = [
   'routes',
 ];

@@ -1,10 +1,13 @@
+import * as colors from 'colors';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
-import { ENV_BIN, UTF8 } from './constants';
+import { Colors, ENV_BIN, UTF8 } from './constants';
 import * as logger from './logger';
 
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
+const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
+const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 
 export interface PortError extends Error {
   message: string;
@@ -112,4 +115,38 @@ export const handleShebang = (command: string): string => {
   }
 
   return command;
+};
+
+export const getEnvVariables = (env: string, envPath: string): {[i: string]: string} => {
+  if (!fs.existsSync(envPath)) {
+    return {};
+  }
+
+  const lines = fs.readFileSync(envPath, UTF8).split('\n');
+
+  const envVariables: {[i: string]: string} = {};
+
+  lines.forEach((line) => {
+    const match = MATCHES_ENV_KEY_VALUE.exec(line);
+
+    if (match) {
+      envVariables[match[1]] = match[2];
+    }
+  });
+
+  return envVariables;
+};
+
+export const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
+  return commandOptions.map((option) => {
+    return option.replace(MATCHES_ENV_VAR, (match: string): string => {
+      const varName = match.substring(1);
+
+      if (varName in environment) {
+        return environment[varName];
+      }
+
+      return match;
+    });
+  });
 };

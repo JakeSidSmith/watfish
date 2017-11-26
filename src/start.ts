@@ -4,20 +4,20 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
-import { Colors, COLORS, DEFAULT_ENV, SOCKET_PORT, UTF8 } from './constants';
+import { Colors, COLORS, DataOrError, DEFAULT_ENV, SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
-import { getAvailablePort, handleShebang, PortError } from './utils';
+import { getAvailablePort, getEnvVariables, handleShebang, injectEnvVars, PortError } from './utils';
 
 const routes: Routes = {};
 
 const PADDING = '                       ';
-const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
-const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
 
 let ws: WebSocket;
+let longestName: number = 0;
+let options: Tree;
 
 const applyRoutes = () => {
   if (ws.readyState === WebSocket.OPEN) {
@@ -43,11 +43,6 @@ const addRoute = (processName: string, color: Colors, url: string, port: number)
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
 };
-
-let longestName: number = 0;
-let options: Tree;
-
-export type DataOrError = Buffer | Error | string;
 
 const getDisplayName = (processName: string, env: string): string => {
   return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
@@ -78,51 +73,16 @@ const onClose = (processName: string, env: string, color: Colors, code: number) 
   logger.log(`${displayName} ${colors[exitColor](`Process exited with code ${code}`)}`);
 };
 
-export const getEnvVariables = (env: string, color: Colors): {[i: string]: string} => {
-  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-
-  if (!fs.existsSync(envPath)) {
-    return {};
-  }
-
-  const lines = fs.readFileSync(envPath, UTF8).split('\n');
-
-  const envVariables: {[i: string]: string} = {};
-
-  lines.forEach((line) => {
-    const match = MATCHES_ENV_KEY_VALUE.exec(line);
-
-    if (match) {
-      envVariables[match[1]] = match[2];
-    }
-  });
-
-  logger.log(colors[color](`Found ${Object.keys(envVariables).length} variables in ${envPath}`));
-
-  return envVariables;
-};
-
-export const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
-  return commandOptions.map((option) => {
-    return option.replace(MATCHES_ENV_VAR, (match: string): string => {
-      const varName = match.substring(1);
-
-      if (varName in environment) {
-        return environment[varName];
-      }
-
-      return match;
-    });
-  });
-};
-
 const startProcessWithMaybePort =
   (item: procfile.Command, processName: string, env: string, color: Colors, url?: string, port?: number) => {
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
 
-  const envVariables = getEnvVariables(env, color);
+  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+  const envVariables = getEnvVariables(env, envPath);
+
+  logger.log(colors[color](`Found ${Object.keys(envVariables).length} variables in ${envPath}`));
 
   const environment: {[i: string]: string} = {
     ...envVariables,
