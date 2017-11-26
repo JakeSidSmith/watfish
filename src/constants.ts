@@ -2,6 +2,12 @@ import { Config } from './init';
 
 export type DataOrError = Buffer | Error | string;
 
+export const PADDING = '                       ';
+export const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
+export const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
+export const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
+export const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
+
 export const CONFIG_KEYS: Array<keyof Config> = [
   'routes',
 ];

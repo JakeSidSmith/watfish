@@ -4,16 +4,28 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
-import { Colors, COLORS, DataOrError, DEFAULT_ENV, SOCKET_PORT, UTF8 } from './constants';
+import {
+  Colors,
+  COLORS,
+  DataOrError,
+  DEFAULT_ENV,
+  MATCHES_CTF_URL,
+  PADDING,
+  SOCKET_PORT,
+  UTF8,
+} from './constants';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
-import { getAvailablePort, getEnvVariables, handleShebang, injectEnvVars, PortError } from './utils';
+import {
+  getAvailablePort,
+  getEnvVariables,
+  handleShebang,
+  injectEnvVars,
+  PortError,
+} from './utils';
 
 const routes: Routes = {};
-
-const PADDING = '                       ';
-const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
 
 let ws: WebSocket;
 let longestName: number = 0;

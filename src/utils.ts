@@ -2,12 +2,15 @@ import * as colors from 'colors';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
-import { Colors, ENV_BIN, UTF8 } from './constants';
+import {
+  Colors,
+  ENV_BIN,
+  MATCHES_ENV_KEY_VALUE,
+  MATCHES_ENV_VAR,
+  MATCHES_SHEBANG,
+  UTF8,
+} from './constants';
 import * as logger from './logger';
-
-const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
-const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
-const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 
 export interface PortError extends Error {
   message: string;
