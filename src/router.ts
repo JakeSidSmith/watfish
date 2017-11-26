@@ -64,19 +64,19 @@ const addRoute = (processName: string, color: Colors, url: string, port: number,
 };
 
 const addRoutes = (routes: Routes, ws: WebSocket) => {
-  for (const processName in routes) {
-    if (routes.hasOwnProperty(processName)) {
-      const { url, port, color } = routes[processName];
+  for (const url in routes) {
+    if (routes.hasOwnProperty(url)) {
+      const { processName, port, color } = routes[url];
       addRoute(processName, color, url, port, ws);
     }
   }
 };
 
 const removeRoutes = (routes: Routes, ws: WebSocket) => {
-  for (const processName in routes) {
-    if (routes.hasOwnProperty(processName)) {
-      const { url, port, color } = routes[processName];
-      delete globalRoutes[processName];
+  for (const url in routes) {
+    if (routes.hasOwnProperty(url)) {
+      const { processName, port, color } = routes[url];
+      delete globalRoutes[url];
 
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(colors[color](`Removing route ${processName} ${url} on port ${port}`));
