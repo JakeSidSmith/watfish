@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
-import { SOCKET_PORT, UTF8 } from './constants';
+import { Colors, COLORS, SOCKET_PORT, UTF8 } from './constants';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
@@ -22,14 +22,15 @@ const applyRoutes = () => {
   }
 };
 
-const addRoute = (processName: string, url: string, port: number) => {
+const addRoute = (processName: string, color: Colors, url: string, port: number) => {
   routes[processName] = {
     url,
     port,
+    color,
   };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, url, port}}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
 };
 
@@ -49,17 +50,6 @@ const ENV_BIN = 'env/bin';
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 const MATCHES_ENV_VAR = /\$([A-Z0-9_]+)/;
-
-type Colors = 'red' | 'green' | 'blue' | 'magenta' | 'cyan' | 'yellow';
-
-const COLORS: Colors[] = [
-  'red',
-  'green',
-  'blue',
-  'magenta',
-  'cyan',
-  'yellow',
-];
 
 let longestName: number = 0;
 let options: Tree;
@@ -178,7 +168,7 @@ const startProcessOnPort =
 
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
 
-  addRoute(colors[color](displayName), 'test.ctf.sh', port);
+  addRoute(displayName, color, 'test.ctf.sh', port);
 
   const subProcess = childProcess.spawn(
     command,

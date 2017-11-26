@@ -1,8 +1,9 @@
+import * as colors from 'colors';
 import * as express from 'express';
 import * as proxy from 'express-http-proxy';
 import * as vhost from 'vhost';
 import * as WebSocket from 'ws';
-import { SOCKET_PORT } from './constants';
+import { Colors, COLORS, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { isPortTaken, PortError } from './utils';
 
@@ -10,6 +11,7 @@ export interface Routes {
   [i: string]: {
     url: string;
     port: number;
+    color: Colors;
   };
 }
 
@@ -39,22 +41,23 @@ const applyRoutes = () => {
   }
 };
 
-const addRoute = (name: string, url: string, port: number, ws: WebSocket) => {
+const addRoute = (name: string, color: Colors, url: string, port: number, ws: WebSocket) => {
   globalRoutes[name] = {
     url,
     port,
+    color,
   };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(`Routing process ${name} from ${url} to port ${port}`);
+    ws.send(colors[color](`Routing process ${name} from ${url} to port ${port}`));
   }
 };
 
 const addRoutes = (routes: Routes, ws: WebSocket) => {
   for (const processName in routes) {
     if (routes.hasOwnProperty(processName)) {
-      const { url, port } = routes[processName];
-      addRoute(name, url, port, ws);
+      const { url, port, color } = routes[processName];
+      addRoute(name, color, url, port, ws);
     }
   }
 
@@ -65,11 +68,11 @@ const addRoutes = (routes: Routes, ws: WebSocket) => {
 const removeRoutes = (routes: Routes, ws: WebSocket) => {
   for (const processName in routes) {
     if (routes.hasOwnProperty(processName)) {
-      const { url, port} = routes[processName];
+      const { url, port, color } = routes[processName];
       delete globalRoutes[processName];
 
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(`Removing route ${processName} ${url} on port ${port}`);
+        ws.send(colors[color](`Removing route ${processName} ${url} on port ${port}`));
       }
     }
   }
@@ -94,11 +97,11 @@ const startSockets = (port: number) => {
         return;
       }
 
-      const { type, payload, payload: { processName, url, port: routePort } } = json;
+      const { type, payload, payload: { processName, color, url, port: routePort } } = json;
 
       switch (type) {
         case ACTIONS.ADD_ROUTE:
-          addRoute(processName, url, routePort, ws);
+          addRoute(processName, color, url, routePort, ws);
           break;
         case ACTIONS.ADD_ROUTES:
           addRoutes(payload, ws);
