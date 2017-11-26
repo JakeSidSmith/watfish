@@ -165,8 +165,6 @@ const startProcessWithMaybePort =
     addRoute(displayName, color, url, port);
   }
 
-  console.log(environment);
-
   const command = handleShebang(item.command);
   const commandOptions = injectEnvVars(item.options, environment);
 
