@@ -120,7 +120,7 @@ const startSockets = (port: number) => {
 
     // Send message
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(`Connected to router on port ${port}`);
+      ws.send(`Connected to router on port ${port}\n`);
     }
   });
 

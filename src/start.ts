@@ -187,7 +187,7 @@ export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData:
   const wtfJsonPath = path.join(process.cwd(), 'wtf.json');
 
   if (!fs.existsSync(wtfJsonPath)) {
-    logger.log(`No wtf.json found at ${wtfJsonPath}`);
+    logger.log(`No wtf.json found at ${wtfJsonPath}\n`);
     startProcesses(procfileData);
   } else {
     fs.readFile(wtfJsonPath, UTF8, (wtfJsonError: Error, wtfJsonData) => {
@@ -201,7 +201,7 @@ export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData:
         return process.exit(1);
       }
 
-      logger.log(`Loaded wtf.json from ${wtfJsonPath}`);
+      logger.log(`Loaded wtf.json from ${wtfJsonPath}\n`);
 
       startProcesses(procfileData, wtfJson);
     });
