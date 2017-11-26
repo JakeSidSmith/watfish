@@ -228,7 +228,7 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
       if (!processes || processes === processName) {
         const item = procfileConfig[processName];
 
-        const url = processName in wtfJson.routes ? wtfJson.routes[processName] : undefined;
+        const url = (wtfJson && processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
         startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
       }
