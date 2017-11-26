@@ -19,7 +19,7 @@ const ENV_BIN = 'env/bin';
 const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
-const MATCHES_CTF_URL = /^[-a-z0-9]\.ctf\.sh$/;
+const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
 
 let ws: WebSocket;
 
@@ -31,8 +31,9 @@ const applyRoutes = () => {
 
 const addRoute = (processName: string, color: Colors, url: string, port: number) => {
   if (!MATCHES_CTF_URL.test(url)) {
-    logger.log(`Invalid hostname ${url}`);
+    logger.log(`Invalid url ${url}`);
     logger.log('URLs must follow the pattern sub-domain.ctf.sh and should not include a port or protocol');
+    return process.exit(1);
   }
 
   routes[url] = {
