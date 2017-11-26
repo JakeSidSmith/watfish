@@ -10,10 +10,12 @@ import {
   Program,
   RequireAll,
   RequireAny,
+  Required,
 } from 'jargs';
 import init from './init';
+import program from './program';
+import run from './run';
 import start from './start';
-import version from './version';
 
 const NAME = 'watfish';
 const PROGRAM = 'wtf';
@@ -34,6 +36,13 @@ const ENVIRONMENT = KWArg(
   }
 );
 
+const COMMAND = Arg(
+  'command',
+  {
+    description: 'Arbitrary command to run in the environment',
+  }
+);
+
 collect(
   Help(
     'help',
@@ -48,7 +57,7 @@ collect(
           'Simple development platform with process management & router',
         usage: `${PROGRAM} [<command>] [<sub-command>] [options]`,
         examples: [`${PROGRAM} start --env dev`],
-        callback: version,
+        callback: program,
       },
       RequireAny(
         Command(
@@ -166,6 +175,23 @@ collect(
           ),
           GLOBAL_FLAG
         ),
+        Command(
+          'run',
+          {
+            alias: 'r',
+            description: 'Run arbitrary commands in the environment',
+            usage: `${PROGRAM} run <command>`,
+            examples: [
+              `${PROGRAM} run build`,
+              `${PROGRAM} run manage.py migrate`,
+            ],
+            callback: run,
+          },
+          Required(
+            COMMAND
+          )
+        ),
+        COMMAND,
         Flag(
           'version',
           {
