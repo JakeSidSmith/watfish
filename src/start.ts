@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 import * as colors from 'colors/safe';
+import * as es from 'event-stream';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
@@ -23,7 +24,6 @@ import {
   handleShebang,
   injectEnvVars,
   onClose,
-  onDataOrError,
   PortError,
 } from './utils';
 
@@ -102,6 +102,7 @@ const startProcessWithMaybePort =
       cwd: process.cwd(),
       shell: true,
       env: environment,
+      stdio: 'pipe',
     }
   );
 
@@ -110,10 +111,19 @@ const startProcessWithMaybePort =
 
   const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env)));
 
-  subProcess.stdout.on('data', (dataOrError) => onDataOrError(prefix, dataOrError));
-  subProcess.stdout.on('error', (dataOrError) => onDataOrError(prefix, dataOrError));
-  subProcess.stderr.on('data', (dataOrError) => onDataOrError(prefix, dataOrError));
-  subProcess.stderr.on('error', (dataOrError) => onDataOrError(prefix, dataOrError));
+  subProcess.stdout
+    .pipe(es.split('\n'))
+    .pipe(es.map((message: any, cb: any) => {
+      logger.log(`${prefix}${message}`);
+      cb();
+    }));
+
+  subProcess.stderr
+    .pipe(es.split('\n'))
+    .pipe(es.map((message: any, cb: any) => {
+      logger.log(`${prefix}${message}`);
+      cb();
+    }));
 
   subProcess.on('close', (code) => onClose(prefix, code));
 };

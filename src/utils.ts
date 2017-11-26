@@ -155,13 +155,6 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
   });
 };
 
-export const onDataOrError = (prefix: string, dataOrError: DataOrError) => {
-  const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
-    .toString().split('\n');
-
-  logger.log(`${prefix}${messages.join(`\n${prefix}`)}`);
-};
-
 export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
   logger.log(`${prefix}${colors[exitColor](`Process exited with code ${code}`)}`);
