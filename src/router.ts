@@ -40,7 +40,6 @@ expressRouter.use(vhost('*.ctf.sh', (req, res) => {
   if (route) {
     proxy.web(req, res, {
       target: `http://0.0.0.0:${route.port}`,
-      changeOrigin: true,
     });
   } else {
     res.send(`Unknown host ${req.hostname}`);
