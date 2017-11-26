@@ -15,7 +15,7 @@ const routes: Routes = {};
 const PADDING = '                       ';
 const DEFAULT_ENV = 'development';
 const ENV_BIN = 'env/bin';
-const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/m;
+const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
 const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 const MATCHES_CTF_URL = /^[-a-z0-9]+\.ctf\.sh$/;
@@ -82,14 +82,26 @@ const onClose = (processName: string, env: string, color: Colors, code: number) 
 
 export const handleShebang = (command: string): string => {
   const filePath = path.join(process.cwd(), command);
+  const envFilePath = path.join(process.cwd(), ENV_BIN, command);
 
+  // In root of project
   if (!fs.existsSync(filePath)) {
+    // In env
+    if (fs.existsSync(envFilePath)) {
+      return envFilePath;
+    // Global command
+    } else {
+      return command;
+    }
+  }
+
+  const firstLine = fs.readFileSync(filePath, UTF8).split('\n')[0];
+
+  if (!firstLine) {
     return command;
   }
 
-  const content = fs.readFileSync(filePath, UTF8);
-
-  const shebang = MATCHES_SHEBANG.exec(content);
+  const shebang = MATCHES_SHEBANG.exec(firstLine);
 
   if (shebang) {
     const shebangCommand = shebang[2].trim();
@@ -98,10 +110,12 @@ export const handleShebang = (command: string): string => {
 
     const envExists = fs.existsSync(shebangCommandPath);
 
+    // Shebang in env
     if (envExists) {
       return `${shebangCommandPath} ${command}`;
     }
 
+    // Global command
     return `${shebangCommand} ${command}`;
   }
 
@@ -228,7 +242,7 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
       if (!processes || processes === processName) {
         const item = procfileConfig[processName];
 
-        const url = (wtfJson && (processName in wtfJson.routes)) ? wtfJson.routes[processName] : undefined;
+        const url = processName in wtfJson.routes ? wtfJson.routes[processName] : undefined;
 
         startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
       }
