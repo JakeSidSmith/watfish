@@ -10,6 +10,7 @@ import {
   MATCHES_ENV_VAR,
   MATCHES_SHEBANG,
   UTF8,
+  WAT,
 } from './constants';
 import * as logger from './logger';
 
@@ -157,5 +158,5 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 
 export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
-  logger.log(`${prefix}${colors[exitColor](`Process exited with code ${code}`)}`);
+  logger.log(`${code ? colors.red(WAT) : ''}${prefix}${colors[exitColor](`Process exited with code ${code}`)}`);
 };
