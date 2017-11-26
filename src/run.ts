@@ -4,22 +4,9 @@ import { Tree } from 'jargs';
 import * as path from 'path';
 import { DataOrError, DEFAULT_ENV } from './constants';
 import * as logger from './logger';
-import { getEnvVariables, handleShebang } from './utils';
+import { getEnvVariables, handleShebang, onClose, onDataOrError } from './utils';
 
 const color = 'white';
-
-const onDataOrError = (dataOrError: DataOrError) => {
-  const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
-    .toString().split('\n');
-
-  messages.forEach((message) => {
-    logger.log(message);
-  });
-};
-
-const onClose = (code: number) => {
-  logger.log(`Process exited with code ${code}`);
-};
 
 const findCommand = (command: string): string => {
   const rootPath = path.join(process.cwd(), command);
@@ -59,12 +46,12 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
   logger.log(`Running ${command} ${commandOptions.join(' ')}`);
   logger.log(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`);
 
-  subProcess.stdout.on('data', onDataOrError);
-  subProcess.stdout.on('error', onDataOrError);
-  subProcess.stderr.on('data', onDataOrError);
-  subProcess.stderr.on('error', onDataOrError);
+  subProcess.stdout.on('data', (dataOrError) => onDataOrError('', dataOrError));
+  subProcess.stdout.on('error', (dataOrError) => onDataOrError('', dataOrError));
+  subProcess.stderr.on('data', (dataOrError) => onDataOrError('', dataOrError));
+  subProcess.stderr.on('error', (dataOrError) => onDataOrError('', dataOrError));
 
-  subProcess.on('close', onClose);
+  subProcess.on('close', (code) => onClose('', code));
 };
 
 const run = (tree: Tree) => {

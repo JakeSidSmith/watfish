@@ -22,6 +22,8 @@ import {
   getEnvVariables,
   handleShebang,
   injectEnvVars,
+  onClose,
+  onDataOrError,
   PortError,
 } from './utils';
 
@@ -65,24 +67,7 @@ const wrapDisplayName = (displayName: string): string => {
 
   const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
 
-  return `[ ${displayName}${padding} ]`;
-};
-
-const onDataOrError = (processName: string, env: string, color: Colors, dataOrError: DataOrError) => {
-  const messages = (dataOrError instanceof Error ? dataOrError.message : dataOrError)
-    .toString().split('\n');
-  const displayName = colors[color](wrapDisplayName(getDisplayName(processName, env)));
-
-  messages.forEach((message) => {
-    logger.log(`${displayName} ${message}`);
-  });
-};
-
-const onClose = (processName: string, env: string, color: Colors, code: number) => {
-  const displayName = colors[color](wrapDisplayName(getDisplayName(processName, env)));
-
-  const exitColor = code ? 'red' : 'green';
-  logger.log(`${displayName} ${colors[exitColor](`Process exited with code ${code}`)}`);
+  return `[ ${displayName}${padding} ] `;
 };
 
 const startProcessWithMaybePort =
@@ -123,12 +108,14 @@ const startProcessWithMaybePort =
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}`));
   logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
-  subProcess.stdout.on('data', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
-  subProcess.stdout.on('error', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
-  subProcess.stderr.on('data', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
-  subProcess.stderr.on('error', (dataOrError) => onDataOrError(processName, env, color, dataOrError));
+  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env)));
 
-  subProcess.on('close', (code) => onClose(processName, env, color, code));
+  subProcess.stdout.on('data', (dataOrError) => onDataOrError(prefix, dataOrError));
+  subProcess.stdout.on('error', (dataOrError) => onDataOrError(prefix, dataOrError));
+  subProcess.stderr.on('data', (dataOrError) => onDataOrError(prefix, dataOrError));
+  subProcess.stderr.on('error', (dataOrError) => onDataOrError(prefix, dataOrError));
+
+  subProcess.on('close', (code) => onClose(prefix, code));
 };
 
 export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors, url?: string) => {
