@@ -4,7 +4,7 @@ import { Tree } from 'jargs';
 import * as path from 'path';
 import { DataOrError, DEFAULT_ENV } from './constants';
 import * as logger from './logger';
-import { getEnvVariables, handleShebang, onClose, onDataOrError } from './utils';
+import { getEnvVariables, handleShebang, onClose } from './utils';
 
 const color = 'white';
 
@@ -40,16 +40,12 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
       cwd: process.cwd(),
       shell: true,
       env: environment,
+      stdio: 'inherit',
     }
   );
 
   logger.log(`Running ${command} ${commandOptions.join(' ')}`);
   logger.log(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`);
-
-  subProcess.stdout.on('data', (dataOrError) => onDataOrError('', dataOrError));
-  subProcess.stdout.on('error', (dataOrError) => onDataOrError('', dataOrError));
-  subProcess.stderr.on('data', (dataOrError) => onDataOrError('', dataOrError));
-  subProcess.stderr.on('error', (dataOrError) => onDataOrError('', dataOrError));
 
   subProcess.on('close', (code) => onClose('', code));
 };
