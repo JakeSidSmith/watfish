@@ -22,11 +22,14 @@ const applyRoutes = () => {
   }
 };
 
-const addRoute = (url: string, port: number) => {
-  routes[url] = port;
+const addRoute = (processName: string, url: string, port: number) => {
+  routes[processName] = {
+    url,
+    port,
+  };
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {url, port}}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, url, port}}));
   }
 };
 
@@ -175,7 +178,7 @@ const startProcessOnPort =
 
   logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}\n`));
 
-  addRoute('test.ctf.sh', port);
+  addRoute(colors[color](displayName), 'test.ctf.sh', port);
 
   const subProcess = childProcess.spawn(
     command,
