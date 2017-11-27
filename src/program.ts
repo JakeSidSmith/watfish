@@ -4,12 +4,13 @@ import { runCommand } from './run';
 const json = require('../package.json'); // tslint:disable-line:no-var-requires
 
 const version = (tree: Tree) => {
-  const { env } = tree.kwargs;
+  let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : undefined;
 
   if (tree.flags.version) {
     logger.log(json.version);
   } else if (tree.args.command) {
-    runCommand(tree.args.command as any, typeof env === 'string' ? env : undefined);
+    runCommand(tree.args.command as any, env);
   }
 };
 

@@ -144,7 +144,8 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
 
 const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
   const { processes } = options.args;
-  const { env = DEFAULT_ENV } = options.kwargs;
+  let { env } = options.kwargs;
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
@@ -232,7 +233,8 @@ const start = (tree: Tree) => {
   startRouterCommunication();
 
   options = tree;
-  const { env = DEFAULT_ENV } = options.kwargs;
+  let { env } = options.kwargs;
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
 
