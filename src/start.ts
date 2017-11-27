@@ -153,12 +153,15 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
 
   for (const processName in procfileConfig) {
     /* istanbul ignore else */
-    if (
-      procfileConfig.hasOwnProperty(processName) &&
-      (!processes || processes === processName) &&
-      (!longestName || processName.length > longestName)
-    ) {
-      longestName = processName.length;
+    if (procfileConfig.hasOwnProperty(processName)) {
+      const displayName = getDisplayName(processName, env);
+
+      if (
+        (!processes || processes === processName) &&
+        (!longestName || displayName.length > longestName)
+      ) {
+        longestName = displayName.length;
+      }
     }
   }
 
