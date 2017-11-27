@@ -201,5 +201,6 @@ collect(
         )
       )
     )
-  )
+  ),
+  process.argv
 );
