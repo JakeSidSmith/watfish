@@ -40,6 +40,7 @@ const COMMAND = Arg(
   'command',
   {
     description: 'Arbitrary command to run in the environment',
+    multi: true,
   }
 );
 

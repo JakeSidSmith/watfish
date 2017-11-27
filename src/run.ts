@@ -18,7 +18,8 @@ const findCommand = (command: string): string => {
   return process.exit(1);
 };
 
-export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
+export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_ENV) => {
+  const [command = '', ...commandOptions] = commandAndOptions;
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
   const envVariables = getEnvVariables(env, envPath);
 
@@ -30,7 +31,6 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
 
   const commandPath = findCommand(command);
   const resolvedCommand = handleShebang(commandPath);
-  const commandOptions: never[] = [];
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
@@ -50,10 +50,11 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
 };
 
 const run = (tree: Tree) => {
-  const { command } = tree.args;
-  const { env } = tree.kwargs;
+  const { command = [] } = tree.args;
+  let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : undefined;
 
-  runCommand(typeof command === 'string' ? command : '', typeof env === 'string' ? env : undefined);
+  runCommand(command as any, env);
 };
 
 export default run;
