@@ -3,11 +3,9 @@ import * as colors from 'colors';
 import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { DataOrError, DEFAULT_ENV } from './constants';
+import { DEFAULT_ENV } from './constants';
 import * as logger from './logger';
 import { getEnvVariables, handleShebang, onClose } from './utils';
-
-const color = 'white';
 
 const findCommand = (command: string): string => {
   const rootPath = path.join(process.cwd(), command);
@@ -52,10 +50,10 @@ export const runCommand = (command: string, env: string = DEFAULT_ENV) => {
 };
 
 const run = (tree: Tree) => {
-  const { command = '' } = tree.args;
+  const { command } = tree.args;
   const { env } = tree.kwargs;
 
-  runCommand(command, env);
+  runCommand(typeof command === 'string' ? command : '', typeof env === 'string' ? env : undefined);
 };
 
 export default run;

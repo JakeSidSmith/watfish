@@ -3,8 +3,6 @@ import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
 import {
-  Colors,
-  DataOrError,
   ENV_BIN,
   MATCHES_ENV_KEY_VALUE,
   MATCHES_ENV_VAR,

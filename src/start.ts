@@ -8,7 +8,6 @@ import * as WebSocket from 'ws';
 import {
   Colors,
   COLORS,
-  DataOrError,
   DEFAULT_ENV,
   MATCHES_CTF_URL,
   PADDING,
