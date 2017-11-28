@@ -56,7 +56,7 @@ collect(
       {
         description:
           'Simple development platform with process management & router',
-        usage: `${PROGRAM} [<command>] [<sub-command>] [options]`,
+        usage: `${PROGRAM} command [<sub-command>] [options]`,
         examples: [`${PROGRAM} start --env dev`],
         callback: program,
       },

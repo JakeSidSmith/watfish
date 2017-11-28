@@ -51,7 +51,7 @@ export const QUESTIONS: Question[] = [
     },
   },
   {
-    message: 'From url would you like to route this process?',
+    message: 'From what url would you like to route this process?',
     condition: () => Boolean(tempRoute.process),
     callback: (value: string | undefined) => {
       tempRoute.url = value;
