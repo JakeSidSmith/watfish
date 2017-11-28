@@ -94,6 +94,7 @@ collect(
           ),
           ENVIRONMENT
         ),
+        /*
         Command(
           'config',
           {
@@ -176,6 +177,7 @@ collect(
           ),
           GLOBAL_FLAG
         ),
+        */
         Command(
           'run',
           {
