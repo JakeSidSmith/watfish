@@ -91,11 +91,11 @@ const startProcessWithMaybePort =
     addRoute(displayName, color, url, port);
   }
 
-  const command = handleShebang(item.command);
+  const resolvedCommand = handleShebang(item.command);
   const commandOptions = injectEnvVars(item.options, environment);
 
   const subProcess = childProcess.spawn(
-    command,
+    resolvedCommand,
     commandOptions,
     {
       cwd: process.cwd(),
@@ -105,7 +105,7 @@ const startProcessWithMaybePort =
     }
   );
 
-  logger.log(colors[color](`Running ${command} ${commandOptions.join(' ')}`));
+  logger.log(colors[color](`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
   logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
   const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env)));

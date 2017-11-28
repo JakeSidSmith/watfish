@@ -5,18 +5,7 @@ import { Tree } from 'jargs';
 import * as path from 'path';
 import { DEFAULT_ENV } from './constants';
 import * as logger from './logger';
-import { getEnvVariables, handleShebang, onClose } from './utils';
-
-const findCommand = (command: string): string => {
-  const rootPath = path.join(process.cwd(), command);
-
-  if (fs.existsSync(rootPath)) {
-    return rootPath;
-  }
-
-  logger.log(colors.red(`Could not find command ${command} at ${rootPath}`));
-  return process.exit(1);
-};
+import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
 export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_ENV) => {
   const [command = '', ...commandOptions] = commandAndOptions;
@@ -29,12 +18,11 @@ export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_EN
     PORT: process.env.PORT || '',
   };
 
-  const commandPath = findCommand(command);
-  const resolvedCommand = handleShebang(commandPath);
+  const resolvedCommand = handleShebang(command);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
-    commandOptions, // TODO: Should pick these from the array or commands when multi is supported in jargs
+    injectEnvVars(commandOptions, environment),
     {
       cwd: process.cwd(),
       shell: true,
@@ -43,7 +31,7 @@ export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_EN
     }
   );
 
-  logger.log(colors.green(`Running ${command} ${commandOptions.join(' ')}`));
+  logger.log(colors.green(`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
   logger.log(colors.green(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
   subProcess.on('close', (code) => onClose('', code));
