@@ -9,7 +9,6 @@ import {
   Colors,
   COLORS,
   DEFAULT_ENV,
-  MATCHES_CTF_URL,
   PADDING,
   SOCKET_PORT,
   UTF8,
@@ -39,12 +38,6 @@ const applyRoutes = () => {
 };
 
 const addRoute = (processName: string, color: Colors, url: string, port: number) => {
-  if (!MATCHES_CTF_URL.test(url)) {
-    logger.log(`Invalid url ${url}`);
-    logger.log('URLs must follow the pattern sub-domain.ctf.sh and should not include a port or protocol');
-    return process.exit(1);
-  }
-
   routes[url] = {
     processName,
     url,

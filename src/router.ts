@@ -1,7 +1,6 @@
 import * as colors from 'colors';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
-import * as vhost from 'vhost';
 import * as WebSocket from 'ws';
 import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
@@ -33,7 +32,7 @@ proxy.on('error', (error) => {
   logger.log('Process may still be starting');
 });
 
-expressRouter.use(vhost('*.ctf.sh', (req, res) => {
+expressRouter.use((req, res) => {
   const route = globalRoutes[req.hostname];
 
   if (route) {
@@ -43,7 +42,7 @@ expressRouter.use(vhost('*.ctf.sh', (req, res) => {
   } else {
     res.send(`Unknown host ${req.hostname}`);
   }
-}));
+});
 
 app.use((req, res, next) => {
   return expressRouter(req, res, next);
