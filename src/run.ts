@@ -2,12 +2,18 @@ import * as childProcess from 'child_process';
 import * as colors from 'colors';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { DEFAULT_ENV } from './constants';
+import { DEFAULT_ENV, NO } from './constants';
 import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
 export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_ENV) => {
   const [command = '', ...commandOptions] = commandAndOptions;
+
+  if (command === 'wtf') {
+    logger.log(colors.red(NO));
+    return process.exit(1);
+  }
+
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
   const envVariables = getEnvVariables(env, envPath);
 
