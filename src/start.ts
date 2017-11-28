@@ -84,6 +84,7 @@ const startProcessWithMaybePort =
     ...envVariables,
     ...process.env,
     PORT: process.env.PORT || '',
+    PYTHONUNBUFFERED: 'true',
   };
 
   if (url && port) {

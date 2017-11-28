@@ -25,6 +25,7 @@ export const runCommand = (
     ...envVariables,
     ...process.env,
     PORT: process.env.PORT || '',
+    PYTHONUNBUFFERED: 'true',
   };
 
   const resolvedCommand = handleShebang(command);
