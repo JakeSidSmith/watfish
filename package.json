@@ -1,6 +1,6 @@
 {
   "name": "watfish",
-  "version": "0.0.0",
+  "version": "0.0.0-alpha.0",
   "description": "Simple development platform with process management & router",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
