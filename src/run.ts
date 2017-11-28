@@ -6,7 +6,11 @@ import { DEFAULT_ENV, NO } from './constants';
 import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
-export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_ENV) => {
+export const runCommand = (
+  commandAndOptions: string[],
+  env: string = DEFAULT_ENV,
+  rest: undefined | string | string[] = []
+) => {
   const [command = '', ...commandOptions] = commandAndOptions;
 
   if (command === 'wtf') {
@@ -24,10 +28,11 @@ export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_EN
   };
 
   const resolvedCommand = handleShebang(command);
+  const resolvedCommandOptions = injectEnvVars(commandOptions.concat(rest), environment);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
-    injectEnvVars(commandOptions, environment),
+    resolvedCommandOptions,
     {
       cwd: process.cwd(),
       shell: true,
@@ -36,7 +41,7 @@ export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_EN
     }
   );
 
-  logger.log(colors.green(`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
+  logger.log(colors.green(`Running ${resolvedCommand} ${resolvedCommandOptions.join(' ')}`));
   logger.log(colors.green(`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
   subProcess.on('close', (code) => onClose('', code));
@@ -45,9 +50,10 @@ export const runCommand = (commandAndOptions: string[], env: string = DEFAULT_EN
 const run = (tree: Tree) => {
   const { command = [] } = tree.args;
   let { env } = tree.kwargs;
+  const { rest } = tree;
   env = typeof env === 'string' ? env : undefined;
 
-  runCommand(command as any, env);
+  runCommand(command as any, env, rest as string[]);
 };
 
 export default run;

@@ -7,12 +7,13 @@ const json = require('../package.json'); // tslint:disable-line:no-var-requires
 const version = (tree: Tree) => {
   const { command } = tree.args;
   let { env } = tree.kwargs;
+  const { rest } = tree;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   if (tree.flags.version) {
     logger.log(json.version);
   } else if (command) {
-    runCommand(command as any, env);
+    runCommand(command as any, env, rest as string[]);
   }
 };
 
