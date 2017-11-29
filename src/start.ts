@@ -18,7 +18,9 @@ import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
 import {
   getAvailablePort,
+  getConfigPath,
   getEnvVariables,
+  getProjectName,
   handleShebang,
   injectEnvVars,
   onClose,
@@ -165,7 +167,8 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
       if (!processes || processes === processName) {
         const item = procfileConfig[processName];
 
-        const url = wtfJson && (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
+        const url = wtfJson && wtfJson.routes &&
+          (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
         startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
       }
@@ -181,26 +184,32 @@ export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData:
     return process.exit(1);
   }
 
-  const wtfJsonPath = path.join(process.cwd(), 'wtf.json');
+  const configPath = getConfigPath();
+  const projectName = getProjectName();
 
-  if (!fs.existsSync(wtfJsonPath)) {
-    logger.log(`No wtf.json found at ${wtfJsonPath}\n`);
+  if (!fs.existsSync(configPath)) {
+    logger.log(`No wtf.json found at ${configPath}\n`);
     startProcesses(procfileData);
   } else {
-    fs.readFile(wtfJsonPath, UTF8, (wtfJsonError: Error, wtfJsonData) => {
+    fs.readFile(configPath, UTF8, (wtfJsonError: NodeJS.ErrnoException, data) => {
+      if (wtfJsonError) {
+        logger.log(wtfJsonError.message);
+        return process.exit(1);
+      }
+
       let wtfJson;
 
       try {
-        wtfJson = JSON.parse(wtfJsonData.toString());
+        wtfJson = JSON.parse(data.toString());
       } catch (error) {
         logger.log('Invalid wtf.json');
         logger.log(error.message);
         return process.exit(1);
       }
 
-      logger.log(`Loaded wtf.json from ${wtfJsonPath}\n`);
+      logger.log(`Loaded wtf.json from ${configPath}\n`);
 
-      startProcesses(procfileData, wtfJson);
+      startProcesses(procfileData, wtfJson[projectName] || {});
     });
   }
 

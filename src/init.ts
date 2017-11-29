@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { UTF8 } from './constants';
 import * as logger from './logger';
+import { getConfigPath, getProjectName } from './utils';
 
 type TempRoute = Partial<{
   process: string;
@@ -12,9 +12,11 @@ export interface Routes {
   [i: string]: string;
 }
 
-export type Config = Partial<{
-  routes: Routes;
-}>;
+export interface Config {
+  [i: string]: Partial<{
+    routes: Routes;
+  }>;
+}
 
 export type ValueOrFunction<V> = V | (() => V);
 export type Callback = (value: string | undefined) => any;
@@ -29,17 +31,24 @@ export interface Question {
 let config: Config = {};
 let tempRoute: TempRoute = {};
 
-const createStringConfig = (): string => {
-  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url} : {};
-
+const createStringFromConfig = (createdConfig: {} | undefined): string => {
   return JSON.stringify(
-    {
-      ...config,
-      routes,
-    },
+    createdConfig,
     undefined,
     2
   ) + '\n';
+};
+
+const createConfig = (): Config => {
+  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
+  const projectName = getProjectName();
+
+  return {
+    ...config,
+    [projectName]: {
+      routes,
+    },
+  };
 };
 
 export const QUESTIONS: Question[] = [
@@ -59,7 +68,11 @@ export const QUESTIONS: Question[] = [
   },
   {
     message: () => {
-      return `\nCreated config:\n\n${createStringConfig()}\nIs this correct? [y]`;
+      const projectName = getProjectName();
+      const createdConfig = createConfig();
+      const stringConfig = createStringFromConfig(createdConfig[projectName]);
+
+      return `\nCreated config:\n\n${stringConfig}\nIs this correct? [y]`;
     },
     condition: true,
     callback: (value: string | undefined) => {
@@ -99,7 +112,7 @@ export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
     return process.exit(1);
   }
 
-  const configPath = path.join(process.cwd(), 'wtf.json');
+  const configPath = getConfigPath();
 
   logger.log(`wtf.json written to ${configPath}`);
 };
@@ -118,21 +131,45 @@ const askQuestions = (questions: Question[], callback: () => any) => {
 };
 
 const writeFile = () => {
-  const configPath = path.join(process.cwd(), 'wtf.json');
+  const configPath = getConfigPath();
+  const createdConfig = createConfig();
+  const stringConfig = createStringFromConfig(createdConfig);
 
   fs.writeFile(
     configPath,
-    createStringConfig(),
+    stringConfig,
     UTF8,
     writeFileCallback
   );
 };
 
 const init = () => {
-  config = {};
   tempRoute = {};
 
-  askQuestions(QUESTIONS, writeFile);
+  const configPath = getConfigPath();
+
+  if (fs.existsSync(configPath)) {
+    fs.readFile(configPath, (error: NodeJS.ErrnoException, data) => {
+      if (error) {
+        logger.log(error.message);
+        return process.exit(1);
+      }
+
+      try {
+        config = JSON.parse(data.toString());
+      } catch (error) {
+        logger.log('Invalid wtf.json');
+        logger.log(error.message);
+        return process.exit(1);
+      }
+
+      askQuestions(QUESTIONS, writeFile);
+    });
+  } else {
+    logger.log(`No wtf.json found at ${configPath}. I\'ll create that for you`);
+    config = {};
+    askQuestions(QUESTIONS, writeFile);
+  }
 };
 
 export default init;
