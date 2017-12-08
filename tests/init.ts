@@ -134,7 +134,7 @@ describe('init.ts', () => {
     it('should output a success message', () => {
       writeFileCallback();
 
-      expect(logger.log).toHaveBeenCalledWith('wtf.json written to directory/wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('wtf.json written to ~/wtf.json');
       expect(process.exit).not.toHaveBeenCalled();
     });
 
