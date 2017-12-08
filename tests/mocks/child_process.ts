@@ -1,4 +1,4 @@
-import { DataOrError } from '../../src/start';
+import { DataOrError } from '../../src/constants';
 
 type OnErrorOrDataCallback = (dataOrError: DataOrError) => any;
 type OnCloseCallback = (code: number) => any;

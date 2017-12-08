@@ -24,7 +24,7 @@ jest.mock('fs', () => {
     }),
     readFileSync: jest.fn((path: string, encoding: string): string => {
       if (MATCHES_ENV_FILE.test(path)) {
-        return 'VAR=value';
+        return 'VAR=value\nNOT-valid';
       }
 
       if (MATCHES_SHEBANG.test(path)) {

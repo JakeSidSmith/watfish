@@ -1,4 +1,4 @@
-import * as colors from 'colors';
+import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as os from 'os';
@@ -157,7 +157,8 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 
 export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
-  logger.log(`${code ? colors.red(WAT) : ''}${prefix}${colors[exitColor](`Process exited with code ${code}`)}`);
+  const message = `${code ? colors.red(WAT) : ''}${prefix}${colors[exitColor](`Process exited with code ${code}`)}`;
+  logger.log(message);
 };
 
 export const getConfigPath = () => {

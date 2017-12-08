@@ -1,10 +1,15 @@
 import * as net from 'net';
+import { WAT } from '../src/constants';
+import * as logger from '../src/logger';
 import {
   getAvailablePort,
+  getConfigPath,
   getEnvVariables,
+  getProjectName,
   handleShebang,
   injectEnvVars,
   isPortTaken,
+  onClose,
 } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
@@ -25,6 +30,7 @@ describe('utils.ts', () => {
   beforeEach(() => {
     spyOn(process.stderr, 'write');
     spyOn(process, 'cwd').and.callFake(() => '/directory/');
+    spyOn(logger, 'log');
 
     _clear();
   });
@@ -127,6 +133,30 @@ describe('utils.ts', () => {
 
       expect(handleShebang('#! /usr/bin/env no-env'))
         .toBe('no-env/env-no #! /usr/bin/env no-env');
+    });
+  });
+
+  describe('onClose', () => {
+    it('should log that a process exited', () => {
+      expect(logger.log).not.toHaveBeenCalled();
+
+      onClose('prefix ', 0);
+      expect(logger.log).toHaveBeenCalledWith('prefix Process exited with code 0');
+
+      onClose('prefix ', 1);
+      expect(logger.log).toHaveBeenCalledWith(`${WAT}prefix Process exited with code 1`);
+    });
+  });
+
+  describe('getConfigPath', () => {
+    it('should return the config path', () => {
+      expect(getConfigPath()).toBe('~/wtf.json');
+    });
+  });
+
+  describe('getProjectName', () => {
+    it('should return the directory of the project', () => {
+      expect(getProjectName()).toBe('directory');
     });
   });
 
