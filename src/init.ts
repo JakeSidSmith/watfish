@@ -117,7 +117,7 @@ export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
   logger.log(`wtf.json written to ${configPath}`);
 };
 
-const askQuestions = (questions: Question[], callback: () => any) => {
+export const askQuestions = (questions: Question[], callback: () => any) => {
   const [question, ...remainingQuestions] = questions;
 
   if (!question) {
@@ -130,7 +130,7 @@ const askQuestions = (questions: Question[], callback: () => any) => {
   });
 };
 
-const writeFile = () => {
+export const writeFile = () => {
   const configPath = getConfigPath();
   const createdConfig = createConfig();
   const stringConfig = createStringFromConfig(createdConfig);

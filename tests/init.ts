@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
-import init, { QUESTIONS, writeFileCallback } from '../src/init';
+import {
+  askQuestions,
+  QUESTIONS,
+  writeFile,
+  writeFileCallback,
+} from '../src/init';
 import * as logger from '../src/logger';
 import mockStd from './mocks/std';
 
@@ -28,7 +33,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init();
+    askQuestions(QUESTIONS, writeFile);
 
     QUESTIONS.forEach((question, index) => {
       const message = typeof question.message === 'function' ? question.message() : question.message;
@@ -42,15 +47,14 @@ describe('init.ts', () => {
     });
 
     expect(fs.writeFile).toHaveBeenCalledWith(
-      'directory/wtf.json',
+      '~/wtf.json',
       JSON.stringify(
         {
-          routes: [
-            {
-              process: 'my-process',
-              url: 'my-url',
+          directory: {
+            routes: {
+              'my-process': 'my-url',
             },
-          ],
+          },
         },
         undefined,
         2
@@ -69,7 +73,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init();
+    askQuestions(QUESTIONS, writeFile);
 
     QUESTIONS.forEach((question, index) => {
       if (index === 0) {
@@ -89,10 +93,12 @@ describe('init.ts', () => {
     });
 
     expect(fs.writeFile).toHaveBeenCalledWith(
-      'directory/wtf.json',
+      '~/wtf.json',
       JSON.stringify(
         {
-          routes: [],
+          directory: {
+            routes: {},
+          },
         },
         undefined,
         2
@@ -111,20 +117,7 @@ describe('init.ts', () => {
 
     mockStd(answers);
 
-    init();
-
-    expect(process.exit).toHaveBeenCalled();
-  });
-
-  it('should exit if config is incorrect (no process value)', () => {
-    const answers = [
-      '',
-      'n',
-    ];
-
-    mockStd(answers);
-
-    init();
+    askQuestions(QUESTIONS, writeFile);
 
     expect(process.exit).toHaveBeenCalled();
   });
