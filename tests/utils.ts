@@ -112,27 +112,12 @@ describe('utils.ts', () => {
 
   describe('handleShebang', () => {
     it('should return the program from a shebang', () => {
-      expect(handleShebang('#!'))
-        .toBe('#!');
-
-      expect(handleShebang('#!/usr/bin/env node'))
-        .toBe('/directory/env/bin/node #!/usr/bin/env node');
-      expect(handleShebang('#!    /usr/bin/env   node  '))
-        .toBe('/directory/env/bin/node #!    /usr/bin/env   node  ');
-      expect(handleShebang('#!/usr/bin/env node  '))
-        .toBe('/directory/env/bin/node #!/usr/bin/env node  ');
-      expect(handleShebang('#!   /usr/bin/env        node'))
-        .toBe('/directory/env/bin/node #!   /usr/bin/env        node');
-      expect(handleShebang('#! /usr/bin/env  node   '))
-        .toBe('/directory/env/bin/node #! /usr/bin/env  node   ');
-
-      expect(handleShebang('#!   nope  '))
-        .toBe('#!   nope  ');
-      expect(handleShebang('#!nope'))
-        .toBe('#!nope');
-
-      expect(handleShebang('#! /usr/bin/env no-env'))
-        .toBe('no-env/env-no #! /usr/bin/env no-env');
+      expect(handleShebang('manage.py')).toBe('/directory/env/bin/python manage.py');
+      expect(handleShebang('python')).toBe('/directory/env/bin/python');
+      expect(handleShebang('start.js')).toBe('node start.js');
+      expect(handleShebang('npm')).toBe('npm');
+      expect(handleShebang('empty')).toBe('empty');
+      expect(handleShebang('no-shebang')).toBe('no-shebang');
     });
   });
 
