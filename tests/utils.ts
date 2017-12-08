@@ -30,6 +30,7 @@ describe('utils.ts', () => {
   beforeEach(() => {
     spyOn(process.stderr, 'write');
     spyOn(process, 'cwd').and.callFake(() => '/directory/');
+    spyOn(process, 'exit');
     spyOn(logger, 'log');
 
     _clear();
@@ -89,6 +90,26 @@ describe('utils.ts', () => {
       _trigger('listening', undefined);
 
       expect(callback).toHaveBeenCalledWith(undefined, 0);
+    });
+
+    it('should output unknown errors', () => {
+      const callback = jest.fn();
+      getAvailablePort(callback);
+
+      _trigger('error', 'error');
+
+      expect(callback).toHaveBeenCalledWith('error');
+    });
+
+    it('should exit if after 100 attempts it cannot find a free port', () => {
+      getAvailablePort(jest.fn());
+
+      for (let i = 0; i < 101; i += 1) {
+        _trigger('error', EADDRINUSE_ERROR);
+      }
+
+      expect(logger.log).toHaveBeenCalledWith('Could not find an available port');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 
