@@ -75,7 +75,7 @@ describe('utils.ts', () => {
 
       _trigger('listening', undefined);
 
-      expect(callback).toHaveBeenCalledWith(undefined, '0');
+      expect(callback).toHaveBeenCalledWith(undefined, 0);
     });
   });
 });
