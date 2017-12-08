@@ -1,5 +1,11 @@
 import * as net from 'net';
-import { getAvailablePort, isPortTaken } from '../src/utils';
+import {
+  getAvailablePort,
+  getEnvVariables,
+  handleShebang,
+  injectEnvVars,
+  isPortTaken,
+} from '../src/utils';
 
 const EADDRINUSE_ERROR = {
   code: 'EADDRINUSE',
@@ -18,6 +24,7 @@ describe('utils.ts', () => {
 
   beforeEach(() => {
     spyOn(process.stderr, 'write');
+    spyOn(process, 'cwd').and.callFake(() => '/directory/');
 
     _clear();
   });
@@ -78,4 +85,49 @@ describe('utils.ts', () => {
       expect(callback).toHaveBeenCalledWith(undefined, 0);
     });
   });
+
+  describe('injectEnvVars', () => {
+    it('should inject env vars into procfile', () => {
+      const result = injectEnvVars(['wat', '0.0.0.0:$WAT', '$NOPE'], {WAT: '1234'});
+
+      expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
+    });
+  });
+
+  describe('getEnvVariables', () => {
+    it('returns an empty object if no env file found', () => {
+      expect(getEnvVariables('nope', 'nope')).toEqual({});
+    });
+
+    it('returns the env variables from the env file', () => {
+      expect(getEnvVariables('development', 'etc/environments/development/env')).toEqual({VAR: 'value'});
+    });
+  });
+
+  describe('handleShebang', () => {
+    it('should return the program from a shebang', () => {
+      expect(handleShebang('#!'))
+        .toBe('#!');
+
+      expect(handleShebang('#!/usr/bin/env node'))
+        .toBe('/directory/env/bin/node #!/usr/bin/env node');
+      expect(handleShebang('#!    /usr/bin/env   node  '))
+        .toBe('/directory/env/bin/node #!    /usr/bin/env   node  ');
+      expect(handleShebang('#!/usr/bin/env node  '))
+        .toBe('/directory/env/bin/node #!/usr/bin/env node  ');
+      expect(handleShebang('#!   /usr/bin/env        node'))
+        .toBe('/directory/env/bin/node #!   /usr/bin/env        node');
+      expect(handleShebang('#! /usr/bin/env  node   '))
+        .toBe('/directory/env/bin/node #! /usr/bin/env  node   ');
+
+      expect(handleShebang('#!   nope  '))
+        .toBe('#!   nope  ');
+      expect(handleShebang('#!nope'))
+        .toBe('#!nope');
+
+      expect(handleShebang('#! /usr/bin/env no-env'))
+        .toBe('no-env/env-no #! /usr/bin/env no-env');
+    });
+  });
+
 });

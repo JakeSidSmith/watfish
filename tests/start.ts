@@ -4,10 +4,6 @@ import * as net from 'net';
 import { UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
 import start, {
-  getEnvVariables,
-  handleShebang,
-  injectEnvVars,
-  readFileCallback,
   startProcess,
 } from '../src/start';
 
@@ -160,42 +156,6 @@ describe('start.ts', () => {
     expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
   });
 
-  describe('handleShebang', () => {
-    it('should return the program from a shebang', () => {
-      expect(handleShebang('#!'))
-        .toBe('#!');
-
-      expect(handleShebang('#!/usr/bin/env node'))
-        .toBe('directory/env/bin/node #!/usr/bin/env node');
-      expect(handleShebang('#!    /usr/bin/env   node  '))
-        .toBe('directory/env/bin/node #!    /usr/bin/env   node  ');
-      expect(handleShebang('#!/usr/bin/env node  '))
-        .toBe('directory/env/bin/node #!/usr/bin/env node  ');
-      expect(handleShebang('#!   /usr/bin/env        node'))
-        .toBe('directory/env/bin/node #!   /usr/bin/env        node');
-      expect(handleShebang('#! /usr/bin/env  node   '))
-        .toBe('directory/env/bin/node #! /usr/bin/env  node   ');
-
-      expect(handleShebang('#!   nope  '))
-        .toBe('#!   nope  ');
-      expect(handleShebang('#!nope'))
-        .toBe('#!nope');
-
-      expect(handleShebang('#! /usr/bin/env no-env'))
-        .toBe('no-env/env-no #! /usr/bin/env no-env');
-    });
-  });
-
-  describe('getEnvVariables', () => {
-    it('returns an empty object if no env file found', () => {
-      expect(getEnvVariables('nope', 'red')).toEqual({});
-    });
-
-    it('returns the env variables from the env file', () => {
-      expect(getEnvVariables('development', 'red')).toEqual({VAR: 'value'});
-    });
-  });
-
   describe('startProcess', () => {
     it('should start a process on an available port', () => {
       startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
@@ -236,11 +196,4 @@ describe('start.ts', () => {
     });
   });
 
-  describe('injectEnvVars', () => {
-    it('should inject env vars into procfile', () => {
-      const result = injectEnvVars(['wat', '0.0.0.0:$WAT', '$NOPE'], {WAT: '1234'});
-
-      expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
-    });
-  });
 });
