@@ -1,3 +1,7 @@
+jest.mock('../src/router', () => ({
+  default: () => null,
+}));
+
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as net from 'net';
