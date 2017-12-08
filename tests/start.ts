@@ -8,6 +8,7 @@ import * as net from 'net';
 import { UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
 import start, {
+  readProcfileCallback,
   startProcess,
 } from '../src/start';
 
@@ -41,7 +42,6 @@ describe('start.ts', () => {
   it('should exit if it cannot find a procfile', () => {
     start({
       name: 'start',
-      command: null,
       args: {},
       kwargs: {
         env: 'error',
@@ -52,7 +52,7 @@ describe('start.ts', () => {
     expect(fs.readFile).toHaveBeenCalledWith(
       'directory/etc/environments/error/procfile',
       UTF8,
-      readFileCallback
+      readProcfileCallback
     );
 
     expect(logger.log).toHaveBeenCalledWith('error');
@@ -62,7 +62,6 @@ describe('start.ts', () => {
   it('should read from a procfile', () => {
     start({
       name: 'start',
-      command: null,
       args: {},
       kwargs: {},
       flags: {},
@@ -71,7 +70,7 @@ describe('start.ts', () => {
     expect(fs.readFile).toHaveBeenCalledWith(
       'directory/etc/environments/development/procfile',
       UTF8,
-      readFileCallback
+      readProcfileCallback
     );
 
     _trigger('listening', undefined);
@@ -82,7 +81,6 @@ describe('start.ts', () => {
   it('should spawn child the processes that are supplied', () => {
     start({
       name: 'start',
-      command: null,
       args: {
         processes: 'web',
       },
@@ -111,7 +109,6 @@ describe('start.ts', () => {
   it('should not spawn unknown processes', () => {
     start({
       name: 'start',
-      command: null,
       args: {
         processes: 'unknown',
       },
@@ -127,7 +124,6 @@ describe('start.ts', () => {
   it('should log the environment if not the default', () => {
     start({
       name: 'start',
-      command: null,
       args: {
         processes: 'watch',
       },
@@ -143,7 +139,6 @@ describe('start.ts', () => {
 
     start({
       name: 'start',
-      command: null,
       args: {
         processes: 'watch',
       },
