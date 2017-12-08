@@ -1,5 +1,5 @@
 import * as childProcess from 'child_process';
-import * as colors from 'colors';
+import * as colors from 'colors/safe';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import { DEFAULT_ENV, NO } from './constants';

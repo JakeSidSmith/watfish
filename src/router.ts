@@ -1,4 +1,4 @@
-import * as colors from 'colors';
+import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
