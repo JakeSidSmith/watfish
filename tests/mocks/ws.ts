@@ -64,4 +64,6 @@ jest.mock('ws', () => {
       webSocketEvents[type] = callback;
     }
   }
+
+  return WebSocket;
 });
