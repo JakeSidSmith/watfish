@@ -1,7 +1,10 @@
 import * as logger from '../src/logger';
-import version from '../src/version';
+import version from '../src/program';
 
-describe('version.ts', () => {
+// tslint:disable-next-line:no-var-requires
+const json = require('../package.json');
+
+describe('program.ts', () => {
   beforeEach(() => {
     spyOn(logger, 'log');
   });
@@ -9,7 +12,6 @@ describe('version.ts', () => {
   it('should log the version if that flag is supplied', () => {
     version({
       name: 'watfish',
-      command: null,
       args: {},
       kwargs: {},
       flags: {},
@@ -19,7 +21,6 @@ describe('version.ts', () => {
 
     version({
       name: 'watfish',
-      command: null,
       args: {},
       kwargs: {},
       flags: {
@@ -27,6 +28,6 @@ describe('version.ts', () => {
       },
     });
 
-    expect(logger.log).toHaveBeenCalledWith('0.0.0');
+    expect(logger.log).toHaveBeenCalledWith(json.version);
   });
 });
