@@ -1,9 +1,32 @@
+import { Data } from 'ws';
+
+interface Events {
+  [i: string]: undefined | ((error?: any) => any);
+}
+
 jest.mock('ws', () => {
+  let webSocketServerEvents: Events = {};
+  let webSocketEvents: Events = {};
+
   class Server {
+    public static _trigger (event: string, data: any) {
+      const callback = webSocketServerEvents[event];
+
+      if (typeof callback === 'function') {
+        callback(data);
+      }
+    }
+
+    public static _clear () {
+      webSocketServerEvents = {};
+    }
+
     public clients = [];
 
-    public on (type: string, callback: (webSocket: WebSocket) => any) {
-
+    public on (type: 'callback', callback: (webSocket: WebSocket) => any): void;
+    public on (type: 'close', callback: () => any): void;
+    public on (type: string, callback: (webSocket: WebSocket) => any): void {
+      webSocketServerEvents[type] = callback;
     }
   }
 
@@ -12,18 +35,33 @@ jest.mock('ws', () => {
     public static OPEN = 'OPEN';
     public static Server = Server;
 
+    public static _trigger (event: string, data: any) {
+      const callback = webSocketEvents[event];
+
+      if (typeof callback === 'function') {
+        callback(data);
+      }
+    }
+
+    public static _clear () {
+      webSocketEvents = {};
+    }
+
     public readyState: string;
 
     public constructor () {
       this.readyState = WebSocket.OPEN;
+
+      Server._trigger('connection', this);
     }
 
-    public send (message: string) {
-
+    public send (message: Data) {
+      Server._trigger('message', message);
     }
 
-    public on (type: string, callback: (message: string) => any) {
-
+    public on (type: 'message', callback: (message: Data) => any): void;
+    public on (type: string, callback: (message: Data) => any): void {
+      webSocketEvents[type] = callback;
     }
   }
 });
