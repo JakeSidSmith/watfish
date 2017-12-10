@@ -20,14 +20,6 @@ import start from './start';
 const NAME = 'watfish';
 const PROGRAM = 'wtf';
 
-// const GLOBAL_FLAG = Flag(
-//   'global',
-//   {
-//     alias: 'g',
-//     description: 'View or edit global config',
-//   }
-// );
-
 const ENVIRONMENT = KWArg(
   'env',
   {
