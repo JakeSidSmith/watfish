@@ -49,13 +49,7 @@ describe('start.ts', () => {
       flags: {},
     });
 
-    expect(fs.readFile).toHaveBeenCalledWith(
-      'directory/etc/environments/error/procfile',
-      UTF8,
-      readProcfileCallback
-    );
-
-    expect(logger.log).toHaveBeenCalledWith('error');
+    expect(logger.log).toHaveBeenCalledWith('No procfile found at directory/etc/environments/error/procfile');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
@@ -72,10 +66,6 @@ describe('start.ts', () => {
       UTF8,
       readProcfileCallback
     );
-
-    _trigger('listening', undefined);
-
-    expect(childProcess.spawn).toHaveBeenCalled();
   });
 
   it('should spawn child the processes that are supplied', () => {

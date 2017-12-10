@@ -66,6 +66,10 @@ jest.mock('fs', () => {
       return '#! /usr/bin/env node\necho "text"';
     }),
     existsSync: jest.fn((path: string): boolean => {
+      if (MATCHES_ERROR.test(path)) {
+        return false;
+      }
+
       if (MATCHES_NO_SHEBANG.test(path)) {
         return true;
       }
