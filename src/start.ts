@@ -109,16 +109,16 @@ const startProcessWithMaybePort =
   subProcess.stdout
     .pipe(es.split('\n'))
     .pipe(es.map((message: any, cb: any) => {
-      logger.log(`${prefix}${message}`);
-      cb();
-    }));
+      cb(null, `${prefix}${message}\n`);
+    }))
+    .pipe(process.stderr);
 
   subProcess.stderr
     .pipe(es.split('\n'))
     .pipe(es.map((message: any, cb: any) => {
-      logger.log(`${prefix}${message}`);
-      cb();
-    }));
+      cb(null, `${prefix}${message}\n`);
+    }))
+    .pipe(process.stderr);
 
   subProcess.on('close', (code) => onClose(prefix, code));
 };
