@@ -5,11 +5,12 @@ jest.mock('../src/router', () => ({
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as net from 'net';
+import * as WebSocket from 'ws';
 import { UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
 import router from '../src/router';
 import * as start from '../src/start';
-import { startProcess } from '../src/start';
+import { applyRoutes, startProcess, startRouterCommunication } from '../src/start';
 
 interface NetMock {
   _trigger: (event: string, data: any) => void;
@@ -97,6 +98,45 @@ describe('start.ts', () => {
 
       expect(start.readWtfJson)
         .toHaveBeenCalledWith('web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js');
+    });
+
+  });
+
+  describe('startRouterCommunication', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'on').and.callThrough();
+    });
+
+    it('should start a web socket client', () => {
+      startRouterCommunication();
+
+      expect(WebSocket.prototype.on).toHaveBeenCalledWith('open', applyRoutes);
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(3);
+    });
+
+    it('should restart the router and communication on close', () => {
+      jest.useFakeTimers();
+
+      startRouterCommunication();
+
+      expect(router).not.toHaveBeenCalled();
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(3);
+
+      (WebSocket as any)._trigger('close');
+
+      jest.runAllTimers();
+
+      expect(router).toHaveBeenCalled();
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(6);
+    });
+
+    it('should log messages from the router', () => {
+      startRouterCommunication();
+
+      (WebSocket as any)._trigger('message', 'Hello, World!');
+
+      expect(logger.log).toHaveBeenCalledWith('Hello, World!');
     });
 
   });

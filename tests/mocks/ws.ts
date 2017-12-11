@@ -1,7 +1,7 @@
 import { Data } from 'ws';
 
 interface Events {
-  [i: string]: undefined | ((error?: any) => any);
+  [i: string]: undefined | ((data: any) => any);
 }
 
 jest.mock('ws', () => {

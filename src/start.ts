@@ -34,7 +34,7 @@ let ws: WebSocket;
 let longestName: number = 0;
 let options: Tree;
 
-const applyRoutes = () => {
+export const applyRoutes = () => {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routes}));
   }
