@@ -1,5 +1,6 @@
 import * as colors from 'colors/safe';
 import * as fs from 'fs';
+import * as moment from 'moment';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
@@ -206,16 +207,5 @@ export const constructHTMLMessage = (message: string) => {
 };
 
 export const getTimeNow = () => {
-  const date = new Date();
-  let hours = date.getHours().toString();
-  let minutes = date.getMinutes().toString();
-  let seconds = date.getSeconds().toString();
-  let millis = date.getMilliseconds().toString();
-
-  hours = hours.length === 1 ? 0 + hours : hours;
-  minutes = minutes.length === 1 ? 0 + minutes : minutes;
-  seconds = seconds.length === 1 ? 0 + seconds : seconds;
-  millis = (millis.length === 1 ? 0 + millis : millis).substring(0, 2);
-
-  return `${hours}:${minutes}:${seconds}.${millis}`;
+  return moment().format('HH:mm:ss.SS');
 };
