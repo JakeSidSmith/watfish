@@ -139,7 +139,7 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
   }
 };
 
-export const startProcesses = (procfileData: Buffer | string, wtfJson: ConfigProject) => {
+export const startProcesses = (procfileData: string, wtfJson: ConfigProject) => {
   const { processes } = options.args;
   let { env } = options.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
