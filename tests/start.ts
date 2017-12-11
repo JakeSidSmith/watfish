@@ -1,5 +1,9 @@
 jest.mock('../src/router', () => ({
   default: jest.fn(),
+  ACTIONS: {
+    ADD_ROUTE: 'ADD_ROUTE',
+    ADD_ROUTES: 'ADD_ROUTES',
+  },
 }));
 
 import * as childProcess from 'child_process';
@@ -8,9 +12,10 @@ import * as net from 'net';
 import * as WebSocket from 'ws';
 import { DEFAULT_ENV, UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
-import router from '../src/router';
+import router, { ACTIONS, Routes } from '../src/router';
 import * as start from '../src/start';
 import {
+  addRoute,
   applyRoutes,
   readWtfJson,
   startProcess,
@@ -115,13 +120,25 @@ describe('start.ts', () => {
 
     beforeEach(() => {
       spyOn(WebSocket.prototype, 'on').and.callThrough();
+      spyOn(start, 'applyRoutes');
     });
 
     it('should start a web socket client', () => {
       startRouterCommunication();
 
-      expect(WebSocket.prototype.on).toHaveBeenCalledWith('open', applyRoutes);
       expect(WebSocket.prototype.on).toHaveBeenCalledTimes(3);
+    });
+
+    it('should apply routes on open connection', () => {
+      jest.useFakeTimers();
+
+      startRouterCommunication();
+
+      expect(start.applyRoutes).not.toHaveBeenCalled();
+
+      (WebSocket as any)._trigger('open');
+
+      expect(start.applyRoutes).toHaveBeenCalled();
     });
 
     it('should restart the router and communication on close', () => {
@@ -436,6 +453,62 @@ describe('start.ts', () => {
       );
 
       expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
+    });
+
+  });
+
+  describe('addRoute', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'send');
+    });
+
+    it('should contact the router about a new route', () => {
+      addRoute('web', 'red', 'example.domain.com', 8080);
+
+      expect(WebSocket.prototype.send).toHaveBeenCalledWith(
+        JSON.stringify(
+          {
+            type: ACTIONS.ADD_ROUTE,
+            payload: {
+              processName: 'web',
+              color: 'red',
+              url: 'example.domain.com',
+              port: 8080,
+            },
+          }
+        )
+      );
+    });
+
+  });
+
+  describe('applyRoutes', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'send');
+    });
+
+    it('should contact the router about a new route', () => {
+      const routes: Routes = {
+        'example.domain.com': {
+          processName: 'web',
+          color: 'red',
+          url: 'example.domain.com',
+          port: 8080,
+        },
+      };
+
+      applyRoutes(routes);
+
+      expect(WebSocket.prototype.send).toHaveBeenCalledWith(
+        JSON.stringify(
+          {
+            type: ACTIONS.ADD_ROUTES,
+            payload: routes,
+          }
+        )
+      );
     });
 
   });

@@ -33,9 +33,10 @@ const routes: Routes = {};
 
 let ws: WebSocket;
 
-export const applyRoutes = () => {
+export const applyRoutes = (routesToApply: Routes) => {
+  /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routes}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routesToApply}));
   }
 };
 
@@ -47,6 +48,7 @@ export const addRoute = (processName: string, color: Colors, url: string, port: 
     color,
   };
 
+  /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
@@ -213,7 +215,9 @@ export const readWtfJson = (procfileData: string, tree: Tree) => {
 export const startRouterCommunication = () => {
   ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
 
-  ws.on('open', applyRoutes);
+  ws.on('open', () => {
+    applyRoutes(routes);
+  });
 
   ws.on('close', () => {
     router();
