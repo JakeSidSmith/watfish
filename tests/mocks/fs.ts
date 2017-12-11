@@ -18,7 +18,8 @@ jest.mock('fs', () => {
   const MATCHES_ENV_PYTHON = /env\/bin\/python/;
   const MATCHES_NODE = /node/;
   const MATCHES_NO_SHEBANG = /no-shebang/;
-  const MATCHES_EMPTY_CONFIG = /wtf\.json/;
+  const MATCHES_EMPTY_CONFIG = /empty\/wtf\.json/;
+  const MATCHES_INVALID_CONFIG = /invalid\/wtf\.json/;
 
   return {
     writeFile: jest.fn((path: string, data: string, format: string, callback: WriteFileCallback) => {
@@ -27,6 +28,10 @@ jest.mock('fs', () => {
     readFileSync: jest.fn((path: string, encoding: string): string => {
       if (MATCHES_EMPTY_CONFIG.test(path)) {
         return '{}';
+      }
+
+      if (MATCHES_INVALID_CONFIG.test(path)) {
+        return '{test: foo}';
       }
 
       if (MATCHES_PROCFILE.test(path)) {

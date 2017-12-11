@@ -50,6 +50,15 @@ describe('init.ts', () => {
       expect(init.askQuestions).toHaveBeenCalledWith(QUESTIONS, writeFile);
     });
 
+    it('should exit if config is invalid', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'invalid/wtf.json');
+
+      init.default();
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
   });
 
   describe('askQuestions', () => {
