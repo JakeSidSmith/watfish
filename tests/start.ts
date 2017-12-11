@@ -10,7 +10,13 @@ import { UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
 import router from '../src/router';
 import * as start from '../src/start';
-import { applyRoutes, startProcess, startRouterCommunication } from '../src/start';
+import {
+  applyRoutes,
+  readWtfJson,
+  startProcess,
+  startRouterCommunication,
+} from '../src/start';
+import * as utils from '../src/utils';
 
 interface NetMock {
   _trigger: (event: string, data: any) => void;
@@ -137,6 +143,42 @@ describe('start.ts', () => {
       (WebSocket as any)._trigger('message', 'Hello, World!');
 
       expect(logger.log).toHaveBeenCalledWith('Hello, World!');
+    });
+
+  });
+
+  describe('readWtfJson', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'startProcesses');
+    });
+
+    it('should read from the wtf.json and start processes', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'empty/wtf.json');
+
+      readWtfJson('procfileData');
+
+      expect(fs.existsSync).toHaveBeenCalledWith('empty/wtf.json');
+      expect(fs.readFileSync).toHaveBeenCalledWith('empty/wtf.json', UTF8);
+      expect(logger.log).toHaveBeenCalledWith('Loaded wtf.json from empty/wtf.json\n');
+      expect(start.startProcesses).toHaveBeenCalledWith('procfileData', {});
+    });
+
+    it('should instruct running "wtf init" if config does not exist', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'error/wtf.json');
+
+      readWtfJson('procfileData');
+
+      expect(fs.existsSync).toHaveBeenCalledWith('error/wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('No wtf.json found at error/wtf.json - run "wtf init" to begin setup\n');
+      expect(start.startProcesses).toHaveBeenCalledWith('procfileData', {});
+    });
+
+    it('should exit if wtf.json is invalid', () => {
+      readWtfJson('procfileData');
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
   });
