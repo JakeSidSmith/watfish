@@ -11,7 +11,12 @@ export const runCommand = (
   env: string,
   rest: string[]
 ) => {
-  const [command = '', ...commandOptions] = commandAndOptions;
+  const [command, ...commandOptions] = commandAndOptions;
+
+  if (!command) {
+    logger.log('No command supplied');
+    return process.exit(1);
+  }
 
   if (command === 'wtf') {
     logger.log(colors.red(NO));
@@ -24,7 +29,6 @@ export const runCommand = (
   const environment: {[i: string]: string} = {
     ...envVariables,
     ...process.env,
-    PORT: process.env.PORT || '',
     PYTHONUNBUFFERED: 'true',
   };
 

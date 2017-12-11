@@ -1,8 +1,20 @@
-import { DEFAULT_ENV } from '../src/constants';
+import * as childProcess from 'child_process';
+import { DEFAULT_ENV, NO } from '../src/constants';
+import * as logger from '../src/logger';
 import * as run from '../src/run';
-// import { runCommand } from '../src/run';
+import { runCommand } from '../src/run';
+import * as utils from '../src/utils';
 
 describe('run.ts', () => {
+
+  beforeEach(() => {
+    spyOn(logger, 'log');
+    spyOn(process, 'exit');
+    spyOn(process, 'cwd').and.callFake(() => 'directory/');
+    spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
+
+    (childProcess.spawn as jest.Mock<any>).mockClear();
+  });
 
   describe('run', () => {
 
@@ -49,6 +61,44 @@ describe('run.ts', () => {
       });
 
       expect(run.runCommand).toHaveBeenCalledWith(['npm', 'install'], 'custom', []);
+    });
+
+  });
+
+  describe('runCommand', () => {
+
+    it('should log "no" if running wtf inside itself', () => {
+      runCommand(['wtf'], DEFAULT_ENV, []);
+
+      expect(logger.log).toHaveBeenCalledWith(NO);
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it('should spawn a child process with the provided options', () => {
+      runCommand(['npm', 'install'], DEFAULT_ENV, ['--save']);
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'npm',
+        ['install', '--save'],
+        {
+          cwd: 'directory/',
+          shell: true,
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'inherit',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running npm install --save');
+    });
+
+    it('should exit if no command is supplied', () => {
+      runCommand([], DEFAULT_ENV, ['--save']);
+
+      expect(logger.log).toHaveBeenCalledWith('No command supplied');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
   });
