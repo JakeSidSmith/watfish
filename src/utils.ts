@@ -1,3 +1,5 @@
+import { DEFAULT_ENV, PADDING } from './constants';
+
 import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import * as net from 'net';
@@ -167,4 +169,16 @@ export const getConfigPath = () => {
 
 export const getProjectName = () => {
   return path.basename(process.cwd());
+};
+
+export const getDisplayName = (processName: string, env: string): string => {
+  return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
+};
+
+export const wrapDisplayName = (displayName: string, longestName: number): string => {
+  const diff = longestName - displayName.length;
+
+  const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
+
+  return `[ ${displayName}${padding} ] `;
 };

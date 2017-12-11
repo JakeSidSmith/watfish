@@ -10,7 +10,6 @@ import {
   Colors,
   COLORS,
   DEFAULT_ENV,
-  PADDING,
   SOCKET_PORT,
   UTF8,
 } from './constants';
@@ -20,12 +19,14 @@ import router, { ACTIONS, Routes } from './router';
 import {
   getAvailablePort,
   getConfigPath,
+  getDisplayName,
   getEnvVariables,
   getProjectName,
   handleShebang,
   injectEnvVars,
   onClose,
   PortError,
+  wrapDisplayName,
 } from './utils';
 
 const routes: Routes = {};
@@ -49,18 +50,6 @@ const addRoute = (processName: string, color: Colors, url: string, port: number)
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
-};
-
-const getDisplayName = (processName: string, env: string): string => {
-  return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
-};
-
-const wrapDisplayName = (displayName: string, longestName: number): string => {
-  const diff = longestName - displayName.length;
-
-  const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
-
-  return `[ ${displayName}${padding} ] `;
 };
 
 export const startProcessWithMaybePort = (

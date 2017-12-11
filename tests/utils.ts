@@ -1,15 +1,17 @@
 import * as net from 'net';
-import { WAT } from '../src/constants';
+import { DEFAULT_ENV, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import {
   getAvailablePort,
   getConfigPath,
+  getDisplayName,
   getEnvVariables,
   getProjectName,
   handleShebang,
   injectEnvVars,
   isPortTaken,
   onClose,
+  wrapDisplayName,
 } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
@@ -164,6 +166,25 @@ describe('utils.ts', () => {
     it('should return the directory of the project', () => {
       expect(getProjectName()).toBe('directory');
     });
+  });
+
+  describe('getDisplayName', () => {
+
+    it('should construct a process name', () => {
+      expect(getDisplayName('web', DEFAULT_ENV)).toBe('web');
+      expect(getDisplayName('web', 'production')).toBe('production:web');
+    });
+
+  });
+
+  describe('wrapDisplayName', () => {
+
+    it('should wrap a process name', () => {
+      expect(wrapDisplayName('web', 0)).toBe('[ web ] ');
+      expect(wrapDisplayName('web', 8)).toBe('[ web      ] ');
+      expect(wrapDisplayName('production:web', 14)).toBe('[ production:web ] ');
+    });
+
   });
 
 });
