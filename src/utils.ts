@@ -1,15 +1,16 @@
-import { DEFAULT_ENV, PADDING } from './constants';
-
 import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
+  DEFAULT_ENV,
   ENV_BIN,
   MATCHES_ENV_KEY_VALUE,
   MATCHES_ENV_VAR,
   MATCHES_SHEBANG,
+  PADDING,
+  TABLE_FLIP,
   UTF8,
   WAT,
 } from './constants';
@@ -159,7 +160,9 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 
 export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
-  const message = `${code ? colors.red(WAT) : ''}${prefix}${colors[exitColor](`Process exited with code ${code}`)}`;
+  const wat = code ? colors.red(WAT) : '';
+  const tableFlip = code ? ' ' + TABLE_FLIP : '';
+  const message = `${wat}${prefix}${colors[exitColor](`Process exited with code ${code}`)}${tableFlip}`;
   logger.log(message);
 };
 

@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { DEFAULT_ENV, WAT } from '../src/constants';
+import { DEFAULT_ENV, TABLE_FLIP, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import {
   constructHTMLMessage,
@@ -153,7 +153,7 @@ describe('utils.ts', () => {
       expect(logger.log).toHaveBeenCalledWith('prefix Process exited with code 0');
 
       onClose('prefix ', 1);
-      expect(logger.log).toHaveBeenCalledWith(`${WAT}prefix Process exited with code 1`);
+      expect(logger.log).toHaveBeenCalledWith(`${WAT}prefix Process exited with code 1 ${TABLE_FLIP}`);
     });
   });
 
