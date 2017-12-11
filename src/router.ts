@@ -62,6 +62,7 @@ export const addRoute = (processName: string, color: Colors, url: string, port: 
     color,
   };
 
+  /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(colors[color](`Routing process ${processName} from ${url} to port ${port}`));
   }
@@ -82,6 +83,7 @@ export const removeRoutes = (routes: Routes, ws: WebSocket) => {
       const { processName, port, color } = routes[url];
       delete globalRoutes[url];
 
+      /* istanbul ignore else */
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(colors[color](`Removing route ${processName} ${url} on port ${port}`));
       }
@@ -124,6 +126,7 @@ export const startSockets = (port: number) => {
     });
 
     // Send message
+    /* istanbul ignore else */
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(`Connected to router on port ${port}\n`);
     }
@@ -131,6 +134,7 @@ export const startSockets = (port: number) => {
 
   wss.on('close', () => {
     wss.clients.forEach((client: WebSocket) => {
+      /* istanbul ignore else */
       if (client.readyState === WebSocket.OPEN) {
         client.send('Router no longer running');
       }
