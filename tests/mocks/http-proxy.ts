@@ -1,3 +1,7 @@
+interface Events {
+  [i: string]: undefined | ((data: any) => any);
+}
+
 jest.mock('http-proxy', () => {
   const events: Events = {};
 

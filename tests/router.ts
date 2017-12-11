@@ -4,6 +4,7 @@ import * as net from 'net';
 import * as WebSocket from 'ws';
 import * as logger from '../src/logger';
 import * as router from '../src/router';
+import { ACTIONS } from '../src/router';
 import { constructHTMLMessage } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
@@ -177,6 +178,145 @@ describe('router.ts', () => {
 
       expect(ws.send).toHaveBeenCalledWith('Removing route web1 example1.domain.com on port 8080');
       expect(ws.send).toHaveBeenCalledWith('Removing route web2 example2.domain.com on port 2020');
+    });
+
+  });
+
+  describe('startSockets', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.Server.prototype, 'on').and.callThrough();
+
+      spyOn(router, 'addRoute');
+      spyOn(router, 'addRoutes');
+      spyOn(router, 'removeRoutes');
+    });
+
+    it('should start a web socket server', () => {
+      router.startSockets(1234);
+
+      expect(WebSocket.Server.prototype.on).toHaveBeenCalledTimes(2);
+    });
+
+    it('should listen to a web socket on connection', () => {
+      const ws = new WebSocket('');
+      spyOn(ws, 'on');
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+
+      expect(ws.on).toHaveBeenCalledTimes(1);
+    });
+
+    it('should add a route when messaged by a client', () => {
+      const ws = new WebSocket('');
+      spyOn(ws, 'on').and.callThrough();
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+      (WebSocket as any)._trigger(
+        'message',
+        JSON.stringify({
+          type: ACTIONS.ADD_ROUTE,
+          payload: {
+            processName: 'web',
+            url: 'example.domain.com',
+            color: 'red',
+            port: 8080,
+          },
+        })
+      );
+
+      expect(router.addRoute).toHaveBeenCalledWith('web', 'red', 'example.domain.com', 8080, ws);
+    });
+
+    it('should add routes when messaged by a client', () => {
+      const payload = {
+        'example.domain.com': {
+          processName: 'web',
+          url: 'example.domain.com',
+          color: 'red',
+          port: 8080,
+        },
+      };
+
+      const ws = new WebSocket('');
+      spyOn(ws, 'on').and.callThrough();
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+      (WebSocket as any)._trigger(
+        'message',
+        JSON.stringify({
+          type: ACTIONS.ADD_ROUTES,
+          payload,
+        })
+      );
+
+      expect(router.addRoutes).toHaveBeenCalledWith(payload, ws);
+    });
+
+    it('should remove routes when messaged by a client', () => {
+      const payload = {
+        'example.domain.com': {
+          processName: 'web',
+          url: 'example.domain.com',
+          color: 'red',
+          port: 8080,
+        },
+      };
+
+      const ws = new WebSocket('');
+      spyOn(ws, 'on').and.callThrough();
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+      (WebSocket as any)._trigger(
+        'message',
+        JSON.stringify({
+          type: ACTIONS.REMOVE_ROUTES,
+          payload,
+        })
+      );
+
+      expect(router.removeRoutes).toHaveBeenCalledWith(payload, ws);
+    });
+
+    it('should log if an unknown message is received', () => {
+      const ws = new WebSocket('');
+      spyOn(ws, 'on').and.callThrough();
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+      (WebSocket as any)._trigger(
+        'message',
+        JSON.stringify({
+          type: 'unknown',
+          payload: 'nope',
+        })
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Unknown router action {"type":"unknown","payload":"nope"}');
+    });
+
+    it('should log if invalid json is received', () => {
+      const ws = new WebSocket('');
+      spyOn(ws, 'on').and.callThrough();
+
+      router.startSockets(1234);
+
+      (WebSocket.Server as any)._trigger('connection', ws);
+      (WebSocket as any)._trigger(
+        'message',
+        '{foo:bar}'
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid router action {foo:bar}');
     });
 
   });
