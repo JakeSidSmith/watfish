@@ -309,6 +309,39 @@ describe('start.ts', () => {
       );
     });
 
+    it('should load routes from the wtf.json', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {
+          routes: {
+            web: 'example.domain.com',
+          },
+        },
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {
+            env: 'custom',
+          },
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        'custom',
+        'red',
+        'example.domain.com'
+      );
+    });
+
   });
 
   describe('startProcess', () => {
