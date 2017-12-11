@@ -40,6 +40,8 @@ export const COLORS: Colors[] = [
   'yellow',
 ];
 
+export const DISAPPROVAL = 'ಠ_ಠ';
+
 // http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=WAT!%3F
 export const WAT = `\n\n
 ██╗    ██╗ █████╗ ████████╗██╗██████╗

@@ -2,7 +2,7 @@ import * as childProcess from 'child_process';
 import * as colors from 'colors/safe';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { DEFAULT_ENV, WAT } from './constants';
+import { DEFAULT_ENV, DISAPPROVAL, WAT } from './constants';
 import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
@@ -19,7 +19,7 @@ export const runCommand = (
   }
 
   if (command === 'wtf') {
-    logger.log(colors.red(WAT + 'Don\'t do that!'));
+    logger.log(colors.red(WAT + 'Wat are you doing? ' + DISAPPROVAL));
     return process.exit(1);
   }
 

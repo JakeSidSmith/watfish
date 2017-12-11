@@ -1,5 +1,5 @@
 import * as childProcess from 'child_process';
-import { DEFAULT_ENV, WAT } from '../src/constants';
+import { DEFAULT_ENV, DISAPPROVAL, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import * as run from '../src/run';
 import { runCommand } from '../src/run';
@@ -70,7 +70,7 @@ describe('run.ts', () => {
     it('should log "no" if running wtf inside itself', () => {
       runCommand(['wtf'], DEFAULT_ENV, []);
 
-      expect(logger.log).toHaveBeenCalledWith(WAT + 'Don\'t do that!');
+      expect(logger.log).toHaveBeenCalledWith(WAT + 'Wat are you doing? ' + DISAPPROVAL);
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
