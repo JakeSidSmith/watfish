@@ -93,9 +93,7 @@ export const removeRoutes = (routes: Routes, ws: WebSocket) => {
   }
 };
 
-export const startSockets = (port: number) => {
-  const wss = new WebSocket.Server({ port: SOCKET_PORT });
-
+export const startSockets = (port: number, wss: WebSocket.Server) => {
   wss.on('connection', (ws) => {
     // Listen for messages
     ws.on('message', (data) => {
@@ -160,7 +158,9 @@ const router = () => {
       app.listen(port, () => {
         logger.log(`Router running on port ${port}`);
 
-        startSockets(port);
+        const wss = new WebSocket.Server({ port: SOCKET_PORT });
+
+        startSockets(port, wss);
       });
     }
   });

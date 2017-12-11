@@ -32,7 +32,7 @@ describe('router.ts', () => {
 
       (net as any)._trigger('listening');
 
-      expect(router.startSockets).toHaveBeenCalledWith(2020);
+      expect(router.startSockets).toHaveBeenCalledWith(2020, new WebSocket.Server());
       expect(logger.log).toHaveBeenCalledWith('Router running on port 2020');
 
       delete process.env.PORT;
@@ -43,7 +43,7 @@ describe('router.ts', () => {
 
       (net as any)._trigger('listening');
 
-      expect(router.startSockets).toHaveBeenCalledWith(8080);
+      expect(router.startSockets).toHaveBeenCalledWith(8080, new WebSocket.Server());
       expect(logger.log).toHaveBeenCalledWith('Router running on port 8080');
     });
 
@@ -193,27 +193,43 @@ describe('router.ts', () => {
     });
 
     it('should start a web socket server', () => {
-      router.startSockets(1234);
+      const wss = new WebSocket.Server();
+      router.startSockets(1234, wss);
 
       expect(WebSocket.Server.prototype.on).toHaveBeenCalledTimes(2);
     });
 
     it('should listen to a web socket on connection', () => {
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on');
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
 
       expect(ws.on).toHaveBeenCalledTimes(1);
     });
 
+    it('should message its clients on close', () => {
+      const wss = new WebSocket.Server();
+
+      wss.clients = [new WebSocket(''), new WebSocket('')];
+
+      spyOn(WebSocket.prototype, 'send');
+      router.startSockets(1234, wss);
+
+      (WebSocket.Server as any)._trigger('close');
+
+      expect((WebSocket.prototype as any).send).toHaveBeenCalledTimes(2);
+    });
+
     it('should add a route when messaged by a client', () => {
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on').and.callThrough();
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
       (WebSocket as any)._trigger(
@@ -242,10 +258,11 @@ describe('router.ts', () => {
         },
       };
 
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on').and.callThrough();
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
       (WebSocket as any)._trigger(
@@ -269,10 +286,11 @@ describe('router.ts', () => {
         },
       };
 
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on').and.callThrough();
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
       (WebSocket as any)._trigger(
@@ -287,10 +305,11 @@ describe('router.ts', () => {
     });
 
     it('should log if an unknown message is received', () => {
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on').and.callThrough();
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
       (WebSocket as any)._trigger(
@@ -305,10 +324,11 @@ describe('router.ts', () => {
     });
 
     it('should log if invalid json is received', () => {
+      const wss = new WebSocket.Server();
       const ws = new WebSocket('');
       spyOn(ws, 'on').and.callThrough();
 
-      router.startSockets(1234);
+      router.startSockets(1234, wss);
 
       (WebSocket.Server as any)._trigger('connection', ws);
       (WebSocket as any)._trigger(
