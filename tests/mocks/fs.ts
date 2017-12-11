@@ -18,12 +18,17 @@ jest.mock('fs', () => {
   const MATCHES_ENV_PYTHON = /env\/bin\/python/;
   const MATCHES_NODE = /node/;
   const MATCHES_NO_SHEBANG = /no-shebang/;
+  const MATCHES_EMPTY_CONFIG = /wtf\.json/;
 
   return {
     writeFile: jest.fn((path: string, data: string, format: string, callback: WriteFileCallback) => {
       callback();
     }),
     readFileSync: jest.fn((path: string, encoding: string): string => {
+      if (MATCHES_EMPTY_CONFIG.test(path)) {
+        return '{}';
+      }
+
       if (MATCHES_PROCFILE.test(path)) {
         return 'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js';
       }
