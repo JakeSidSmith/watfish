@@ -280,39 +280,34 @@ describe('start.ts', () => {
       expect(start.startProcess).not.toHaveBeenCalled();
     });
 
-    // it('should log the environment if not the default', () => {
-    //   start({
-    //     name: 'start',
-    //     args: {
-    //       processes: 'watch',
-    //     },
-    //     kwargs: {},
-    //     flags: {},
-    //   });
+    it('should accept a custom env', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {
+            env: 'custom',
+          },
+          flags: {},
+        }
+      );
 
-    //   _trigger('listening', undefined);
-
-    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] data');
-    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] error');
-    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] Process exited with code 7');
-
-    //   start({
-    //     name: 'start',
-    //     args: {
-    //       processes: 'watch',
-    //     },
-    //     kwargs: {
-    //       env: 'production',
-    //     },
-    //     flags: {},
-    //   });
-
-    //   _trigger('listening', undefined);
-
-    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] data');
-    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] error');
-    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
-    // });
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        'custom',
+        'red',
+        undefined
+      );
+    });
 
   });
 
