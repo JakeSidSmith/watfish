@@ -455,6 +455,38 @@ describe('start.ts', () => {
       expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
     });
 
+    it('should add start processes that don\'t require a url or port', () => {
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        0,
+        'development',
+        'red'
+      );
+
+      expect(start.addRoute).not.toHaveBeenCalled();
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'node http-server',
+        ['.', '-c-0', '-o'],
+        {
+          cwd: process.cwd(),
+          shell: true,
+          env: {
+            ...process.env,
+            PORT: '',
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'pipe',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
+    });
+
   });
 
   describe('addRoute', () => {
