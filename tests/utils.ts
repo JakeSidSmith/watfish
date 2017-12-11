@@ -8,6 +8,7 @@ import {
   getDisplayName,
   getEnvVariables,
   getProjectName,
+  getTimeNow,
   handleShebang,
   injectEnvVars,
   isPortTaken,
@@ -192,6 +193,17 @@ describe('utils.ts', () => {
 
     it('should construct an HTML message', () => {
       expect(constructHTMLMessage('Hello, World!')).toContain('Hello, World!');
+    });
+
+  });
+
+  describe('getTimeNow', () => {
+
+    it('gets the time now in a nice format', () => {
+      const MATCHES_TIME_FORMAT = /^\d\d:\d\d:\d\d\.\d\d$/;
+      const result = getTimeNow();
+
+      expect(MATCHES_TIME_FORMAT.test(result)).toBe(true);
     });
 
   });

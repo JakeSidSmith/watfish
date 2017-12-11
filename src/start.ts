@@ -22,6 +22,7 @@ import {
   getDisplayName,
   getEnvVariables,
   getProjectName,
+  getTimeNow,
   handleShebang,
   injectEnvVars,
   onClose,
@@ -60,9 +61,11 @@ export const startProcessWithMaybePort = (
   longestName: number,
   env: string,
   color: Colors,
+  tree: Tree,
   url?: string,
   port?: number
 ) => {
+  const { time } = tree.flags;
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
@@ -101,23 +104,26 @@ export const startProcessWithMaybePort = (
   logger.log(colors[color](`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
   logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
-  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env), longestName));
+  const getPrefix = () => {
+    const timeNow = time ? getTimeNow() + ' ' : '';
+    return colors[color](wrapDisplayName(timeNow + displayName, longestName + timeNow.length));
+  };
+
+  const mapOutput = (message: any, cb: any) => {
+    cb(null, `${getPrefix()}${message}\n`);
+  };
 
   subProcess.stdout
     .pipe(es.split('\n'))
-    .pipe(es.map((message: any, cb: any) => {
-      cb(null, `${prefix}${message}\n`);
-    }))
+    .pipe(es.map(mapOutput))
     .pipe(process.stderr);
 
   subProcess.stderr
     .pipe(es.split('\n'))
-    .pipe(es.map((message: any, cb: any) => {
-      cb(null, `${prefix}${message}\n`);
-    }))
+    .pipe(es.map(mapOutput))
     .pipe(process.stderr);
 
-  subProcess.on('close', (code) => onClose(prefix, code));
+  subProcess.on('close', (code) => onClose(getPrefix(), code));
 };
 
 export const startProcess = (
@@ -126,6 +132,7 @@ export const startProcess = (
   longestName: number,
   env: string,
   color: Colors,
+  tree: Tree,
   url?: string
 ) => {
   if (url) {
@@ -135,10 +142,10 @@ export const startProcess = (
         return process.exit(1);
       }
 
-      startProcessWithMaybePort(item, processName, longestName, env, color, url, port);
+      startProcessWithMaybePort(item, processName, longestName, env, color, tree, url, port);
     });
   } else {
-    startProcessWithMaybePort(item, processName, longestName, env, color);
+    startProcessWithMaybePort(item, processName, longestName, env, color, tree);
   }
 };
 
@@ -180,7 +187,7 @@ export const startProcesses = (
         const url = wtfJson.routes &&
           (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
-        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], url);
+        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], tree, url);
       }
 
       index += 1;

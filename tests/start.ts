@@ -8,9 +8,10 @@ jest.mock('../src/router', () => ({
 
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
+import * as moment from 'moment';
 import * as net from 'net';
 import * as WebSocket from 'ws';
-import { DEFAULT_ENV, UTF8 } from '../src/constants';
+import { DEFAULT_ENV, TABLE_FLIP, UTF8, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import router, { ACTIONS, Routes } from '../src/router';
 import * as start from '../src/start';
@@ -26,6 +27,13 @@ import {
 import * as utils from '../src/utils';
 
 describe('start.ts', () => {
+
+  const tree = {
+    name: 'start',
+    args: {},
+    kwargs: {},
+    flags: {},
+  };
 
   beforeEach(() => {
     process.env = {
@@ -215,12 +223,7 @@ describe('start.ts', () => {
       startProcesses(
         'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
         {},
-        {
-          name: 'start',
-          args: {},
-          kwargs: {},
-          flags: {},
-        }
+        tree
       );
 
       expect(start.startProcess).toHaveBeenCalledTimes(2);
@@ -233,6 +236,7 @@ describe('start.ts', () => {
         8,
         DEFAULT_ENV,
         'red',
+        tree,
         undefined
       );
 
@@ -245,6 +249,7 @@ describe('start.ts', () => {
         8,
         DEFAULT_ENV,
         'green',
+        tree,
         undefined
       );
     });
@@ -273,6 +278,14 @@ describe('start.ts', () => {
         3,
         DEFAULT_ENV,
         'red',
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {},
+          flags: {},
+        },
         undefined
       );
     });
@@ -320,6 +333,16 @@ describe('start.ts', () => {
         10,
         'custom',
         'red',
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {
+            env: 'custom',
+          },
+          flags: {},
+        },
         undefined
       );
     });
@@ -352,6 +375,14 @@ describe('start.ts', () => {
         3,
         'development',
         'red',
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {},
+          flags: {},
+        },
         'example.domain.com'
       );
     });
@@ -365,7 +396,7 @@ describe('start.ts', () => {
     });
 
     it('should start a process on an available port', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
 
       (net as any)._trigger('listening', 0);
 
@@ -375,13 +406,14 @@ describe('start.ts', () => {
         0,
         'development',
         'red',
+        tree,
         'example.domain.com',
         0
       );
     });
 
     it('should start a process without port if no routing', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree);
 
       (net as any)._trigger('listening');
 
@@ -390,12 +422,13 @@ describe('start.ts', () => {
         'web',
         0,
         'development',
-        'red'
+        'red',
+        tree
       );
     });
 
     it('should throw a port in use error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
 
       for (let i = 0; i <= 100; i += 1) {
         (net as any)._trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
@@ -405,7 +438,7 @@ describe('start.ts', () => {
     });
 
     it('should throw an unknown error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
 
       (net as any)._trigger('error', new Error('error'));
 
@@ -421,6 +454,56 @@ describe('start.ts', () => {
       spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
     });
 
+    it('should nicely prefix messages', () => {
+      const time = moment.utc('2000-01-01')
+        .set('hour', 1)
+        .set('minute', 23)
+        .set('second', 45)
+        .set('millisecond', 678)
+        .valueOf();
+
+      spyOn(Date, 'now').and.callFake(() => time);
+
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        0,
+        'development',
+        'red',
+        tree,
+        'example.domain.com',
+        8080
+      );
+
+      expect(logger.log).toHaveBeenCalledWith(`${WAT}[ web ] Process exited with code 7 ${TABLE_FLIP}`);
+
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        0,
+        'development',
+        'red',
+        {
+          name: 'start',
+          args: {},
+          kwargs: {},
+          flags: {
+            time: true,
+          },
+        },
+        'example.domain.com',
+        8080
+      );
+
+      expect(logger.log).toHaveBeenCalledWith(`${WAT}[ 01:23:45.67 web ] Process exited with code 7 ${TABLE_FLIP}`);
+    });
+
     it('should add routes for processes with a url and port', () => {
       startProcessWithMaybePort(
         {
@@ -431,6 +514,7 @@ describe('start.ts', () => {
         0,
         'development',
         'red',
+        tree,
         'example.domain.com',
         8080
       );
@@ -464,7 +548,8 @@ describe('start.ts', () => {
         'web',
         0,
         'development',
-        'red'
+        'red',
+        tree
       );
 
       expect(start.addRoute).not.toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import * as colors from 'colors/safe';
 import * as fs from 'fs';
+import * as moment from 'moment';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
@@ -203,4 +204,8 @@ export const constructHTMLMessage = (message: string) => {
       </body>
     </html>`
   );
+};
+
+export const getTimeNow = () => {
+  return moment().format('HH:mm:ss.SS');
 };

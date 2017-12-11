@@ -85,7 +85,14 @@ collect(
               description: 'Process to start',
             }
           ),
-          ENVIRONMENT
+          ENVIRONMENT,
+          Flag(
+            'time',
+            {
+              alias: 't',
+              description: 'Display time in logs',
+            }
+          )
         ),
         /*
         Command(
