@@ -64,7 +64,7 @@ const wrapDisplayName = (displayName: string): string => {
   return `[ ${displayName}${padding} ] `;
 };
 
-const startProcessWithMaybePort =
+export const startProcessWithMaybePort =
   (item: procfile.Command, processName: string, env: string, color: Colors, url?: string, port?: number) => {
   const displayName = getDisplayName(processName, env);
 

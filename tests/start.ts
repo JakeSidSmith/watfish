@@ -19,14 +19,7 @@ import {
 } from '../src/start';
 import * as utils from '../src/utils';
 
-interface NetMock {
-  _trigger: (event: string, data: any) => void;
-  _clear: () => void;
-}
-
 describe('start.ts', () => {
-
-  const { _clear, _trigger } = net as any as NetMock;
 
   beforeEach(() => {
     process.env = {
@@ -45,7 +38,7 @@ describe('start.ts', () => {
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(logger, 'log').and.callFake(() => null);
 
-    _clear();
+    (net as any)._clear();
   });
 
   describe('start', () => {
@@ -345,42 +338,56 @@ describe('start.ts', () => {
   });
 
   describe('startProcess', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'startProcessWithMaybePort');
+    });
+
     it('should start a process on an available port', () => {
+      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
+
+      (net as any)._trigger('listening', 0);
+
+      expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
+        {command: 'http-server', options: []},
+        'web',
+        'development',
+        'red',
+        'example.domain.com',
+        0
+      );
+    });
+
+    it('should start a process without port if no routing', () => {
       startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
 
-      _trigger('listening', undefined);
+      (net as any)._trigger('listening');
 
-      expect(childProcess.spawn).toHaveBeenCalledWith(
-        'directory/env/bin/node http-server',
-        [],
-        {
-          cwd: 'directory',
-          shell: true,
-          env: {
-            VARIABLE: 'variable',
-            VAR: 'value',
-            PORT: '0',
-          },
-        }
+      expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
+        {command: 'http-server', options: []},
+        'web',
+        'development',
+        'red'
       );
     });
 
     it('should throw a port in use error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
 
       for (let i = 0; i <= 100; i += 1) {
-        _trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
+        (net as any)._trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
       }
 
       expect(logger.log).toHaveBeenCalledWith('Could not find an available port');
     });
 
     it('should throw an unknown error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
 
-      _trigger('error', new Error('error'));
+      (net as any)._trigger('error', new Error('error'));
 
       expect(logger.log).toHaveBeenCalledWith('error');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 
