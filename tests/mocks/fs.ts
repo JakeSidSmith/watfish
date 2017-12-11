@@ -20,17 +20,14 @@ jest.mock('fs', () => {
   const MATCHES_NO_SHEBANG = /no-shebang/;
 
   return {
-    readFile: jest.fn((path: string, encoding: string, callback: Callback) => {
-      if (MATCHES_ERROR.test(path)) {
-        callback(new Error('error'), '');
-      } else if (MATCHES_PROCFILE.test(path)) {
-        callback(undefined, 'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js');
-      }
-    }),
     writeFile: jest.fn((path: string, data: string, format: string, callback: WriteFileCallback) => {
       callback();
     }),
     readFileSync: jest.fn((path: string, encoding: string): string => {
+      if (MATCHES_PROCFILE.test(path)) {
+        return 'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js';
+      }
+
       if (MATCHES_NO_SHEBANG.test(path)) {
         return 'no-shebang';
       }

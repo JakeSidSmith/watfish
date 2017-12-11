@@ -151,22 +151,17 @@ const init = () => {
   const configPath = getConfigPath();
 
   if (fs.existsSync(configPath)) {
-    fs.readFile(configPath, (error: NodeJS.ErrnoException, data) => {
-      if (error) {
-        logger.log(error.message);
-        return process.exit(1);
-      }
+    const configContent = fs.readFileSync(configPath, UTF8);
 
-      try {
-        config = JSON.parse(data.toString());
-      } catch (error) {
-        logger.log('Invalid wtf.json');
-        logger.log(error.message);
-        return process.exit(1);
-      }
+    try {
+      config = JSON.parse(configContent);
+    } catch (error) {
+      logger.log('Invalid wtf.json');
+      logger.log(error.message);
+      return process.exit(1);
+    }
 
-      askQuestions(QUESTIONS, writeFile);
-    });
+    askQuestions(QUESTIONS, writeFile);
   } else {
     logger.log(`No wtf.json found at ${configPath}. I\'ll create that for you`);
     config = {};

@@ -179,41 +179,28 @@ const startProcesses = (procfileData: Buffer | string, wtfJson: ConfigProject) =
   }
 };
 
-export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData: Buffer | string) => {
-  if (error) {
-    logger.log(error.message);
-    return process.exit(1);
-  }
-
+export const readProcfileCallback = (procfileData: string) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
+  let wtfJson: any = {};
 
   if (!fs.existsSync(configPath)) {
     logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
-    startProcesses(procfileData, {});
   } else {
-    fs.readFile(configPath, UTF8, (wtfJsonError: NodeJS.ErrnoException, data) => {
-      if (wtfJsonError) {
-        logger.log(wtfJsonError.message);
-        return process.exit(1);
-      }
+    const configContent = fs.readFileSync(configPath, UTF8);
 
-      let wtfJson;
+    try {
+      wtfJson = JSON.parse(configContent);
+    } catch (error) {
+      logger.log('Invalid wtf.json');
+      logger.log(error.message);
+      return process.exit(1);
+    }
 
-      try {
-        wtfJson = JSON.parse(data.toString());
-      } catch (error) {
-        logger.log('Invalid wtf.json');
-        logger.log(error.message);
-        return process.exit(1);
-      }
-
-      logger.log(`Loaded wtf.json from ${configPath}\n`);
-
-      startProcesses(procfileData, wtfJson[projectName] || {});
-    });
+    logger.log(`Loaded wtf.json from ${configPath}\n`);
   }
 
+  startProcesses(procfileData, wtfJson[projectName] || {});
 };
 
 const startRouterCommunication = () => {
@@ -247,7 +234,9 @@ const start = (tree: Tree) => {
     return process.exit(1);
   }
 
-  fs.readFile(procfilePath, UTF8, readProcfileCallback);
+  const procfileContent = fs.readFileSync(procfilePath, UTF8);
+
+  readProcfileCallback(procfileContent);
 };
 
 export default start;
