@@ -162,7 +162,7 @@ export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
   const wat = code ? colors.red(WAT) : '';
   const tableFlip = code ? ' ' + TABLE_FLIP : '';
-  const message = `${wat}${prefix}${colors[exitColor](`Process exited with code ${code}`)}${tableFlip}`;
+  const message = `${wat}${prefix}${colors[exitColor](`Process exited with code ${code}${tableFlip}`)}`;
   logger.log(message);
 };
 
