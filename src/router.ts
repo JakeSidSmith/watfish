@@ -83,7 +83,7 @@ const removeRoutes = (routes: Routes, ws: WebSocket) => {
   }
 };
 
-const startSockets = (port: number) => {
+export const startSockets = (port: number) => {
   const wss = new WebSocket.Server({ port: SOCKET_PORT });
 
   wss.on('connection', (ws) => {
