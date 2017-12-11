@@ -8,14 +8,16 @@ type TempRoute = Partial<{
   url: string;
 }>;
 
-export interface Routes {
+export interface ConfigRoutes {
   [i: string]: string;
 }
 
+export type ConfigProject = Partial<{
+  routes: ConfigRoutes;
+}>;
+
 export interface Config {
-  [i: string]: Partial<{
-    routes: Routes;
-  }>;
+  [i: string]: ConfigProject;
 }
 
 export type ValueOrFunction<V> = V | (() => V);

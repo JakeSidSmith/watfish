@@ -13,6 +13,7 @@ import {
   SOCKET_PORT,
   UTF8,
 } from './constants';
+import { ConfigProject, Config } from './init';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
@@ -138,7 +139,7 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
   }
 };
 
-const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
+const startProcesses = (procfileData: Buffer | string, wtfJson: ConfigProject) => {
   const { processes } = options.args;
   let { env } = options.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
@@ -167,7 +168,7 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
       if (!processes || processes === processName) {
         const item = procfileConfig[processName];
 
-        const url = wtfJson && wtfJson.routes &&
+        const url = wtfJson.routes &&
           (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
         startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
@@ -188,8 +189,8 @@ export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData:
   const projectName = getProjectName();
 
   if (!fs.existsSync(configPath)) {
-    logger.log(`No wtf.json found at ${configPath}\n`);
-    startProcesses(procfileData);
+    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
+    startProcesses(procfileData, {});
   } else {
     fs.readFile(configPath, UTF8, (wtfJsonError: NodeJS.ErrnoException, data) => {
       if (wtfJsonError) {
