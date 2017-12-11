@@ -179,7 +179,7 @@ const startProcesses = (procfileData: Buffer | string, wtfJson: ConfigProject) =
   }
 };
 
-export const readProcfileCallback = (procfileData: string) => {
+export const readWtfJson = (procfileData: string) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
   let wtfJson: any = {};
@@ -203,7 +203,7 @@ export const readProcfileCallback = (procfileData: string) => {
   startProcesses(procfileData, wtfJson[projectName] || {});
 };
 
-const startRouterCommunication = () => {
+export const startRouterCommunication = () => {
   ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
 
   ws.on('open', applyRoutes);
@@ -236,7 +236,7 @@ const start = (tree: Tree) => {
 
   const procfileContent = fs.readFileSync(procfilePath, UTF8);
 
-  readProcfileCallback(procfileContent);
+  readWtfJson(procfileContent);
 };
 
 export default start;
