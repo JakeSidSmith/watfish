@@ -13,7 +13,7 @@ import {
   SOCKET_PORT,
   UTF8,
 } from './constants';
-import { ConfigProject, Config } from './init';
+import { ConfigProject } from './init';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
