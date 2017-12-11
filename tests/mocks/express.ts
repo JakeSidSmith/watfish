@@ -1,13 +1,13 @@
 jest.mock('express', () => {
   const req = {
-    hostname: 'localhost',
+    hostname: 'example.domain.com',
   };
 
   const res = {
-    send: () => null,
+    send: jest.fn(() => null),
   };
 
-  const use = () => (callback: (req: any, res: any, next: () => any) => any) => {
+  const use = (callback: (req: any, res: any, next: () => any) => any) => {
     callback(req, res, () => null);
   };
 
@@ -15,20 +15,24 @@ jest.mock('express', () => {
     callback();
   };
 
-  const Router = () => {
-    return {
-      use,
-    };
-  };
+  const Router = jest.fn(() => {
+    const router = () => () => null;
 
-  const express = () => {
+    (router as any).use = use;
+
+    return router;
+  });
+
+  const express = jest.fn(() => {
     return {
       use,
       listen,
     };
-  };
+  });
 
   (express as any).Router = Router;
+  (express as any)._res = res;
+  (express as any)._req = req;
 
   return express;
 });

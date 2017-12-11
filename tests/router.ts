@@ -1,6 +1,10 @@
+import * as express from 'express';
+import * as httpProxy from 'http-proxy';
 import * as net from 'net';
+import * as WebSocket from 'ws';
 import * as logger from '../src/logger';
 import * as router from '../src/router';
+import { constructHTMLMessage } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
   code: 'EADDRINUSE',
@@ -10,10 +14,13 @@ const EADDRINUSE_ERROR = {
 
 describe('router.ts', () => {
 
+  beforeEach(() => {
+    spyOn(logger, 'log');
+  });
+
   describe('router', () => {
 
     beforeEach(() => {
-      spyOn(logger, 'log');
       spyOn(router, 'startSockets');
     });
 
@@ -53,6 +60,56 @@ describe('router.ts', () => {
       (net as any)._trigger('error', new Error('error'));
 
       expect(logger.log).toHaveBeenCalledWith('error');
+    });
+
+  });
+
+  describe('init', () => {
+
+    beforeEach(() => {
+      (express as any as jest.Mock<any>).mockClear();
+      (express.Router as any as jest.Mock<any>).mockClear();
+      ((express as any)._res.send).mockClear();
+
+      (httpProxy as any)._on.mockClear();
+      (httpProxy as any)._web.mockClear();
+    });
+
+    it('should create an express server, router, and proxy', () => {
+      router.init();
+
+      expect(express).toHaveBeenCalled();
+      expect(express.Router).toHaveBeenCalled();
+      expect(httpProxy.createServer).toHaveBeenCalled();
+    });
+
+    it('should error if the proxy encounters an error', () => {
+      router.init();
+
+      (httpProxy as any)._trigger('error', new Error('error'));
+
+      expect(logger.log).toHaveBeenCalledWith('error');
+      expect(logger.log).toHaveBeenCalledWith('Process may still be starting');
+    });
+
+    it('should return an HTML error for unknown hosts', () => {
+      router.init();
+
+      expect((express as any)._res.send)
+        .toHaveBeenCalledWith(constructHTMLMessage('Unknown host example.domain.com'));
+    });
+
+    it('should proxy for known hosts', () => {
+      router.addRoute('web', 'red', 'example.domain.com', 8080, new WebSocket(''));
+
+      router.init();
+
+      expect((httpProxy as any)._web).toHaveBeenCalledWith(
+        (express as any)._req,
+        (express as any)._res,
+        {target: 'http://0.0.0.0:8080'}
+      );
+
     });
 
   });
