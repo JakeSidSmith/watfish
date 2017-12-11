@@ -212,6 +212,7 @@ describe('start.ts', () => {
           options: ['.', '-c-0', '-o'],
         },
         'web',
+        8,
         DEFAULT_ENV,
         'red',
         undefined
@@ -223,6 +224,7 @@ describe('start.ts', () => {
           options: ['-t', 'babelify', 'src/index.js', '-o', 'build/index.js'],
         },
         'watch-js',
+        8,
         DEFAULT_ENV,
         'green',
         undefined
@@ -250,6 +252,7 @@ describe('start.ts', () => {
           options: ['.', '-c-0', '-o'],
         },
         'web',
+        3,
         DEFAULT_ENV,
         'red',
         undefined
@@ -296,6 +299,7 @@ describe('start.ts', () => {
           options: ['.', '-c-0', '-o'],
         },
         'web',
+        10,
         'custom',
         'red',
         undefined
@@ -315,9 +319,7 @@ describe('start.ts', () => {
           args: {
             processes: ['web'],
           },
-          kwargs: {
-            env: 'custom',
-          },
+          kwargs: {},
           flags: {},
         }
       );
@@ -329,7 +331,8 @@ describe('start.ts', () => {
           options: ['.', '-c-0', '-o'],
         },
         'web',
-        'custom',
+        3,
+        'development',
         'red',
         'example.domain.com'
       );
@@ -344,13 +347,14 @@ describe('start.ts', () => {
     });
 
     it('should start a process on an available port', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
       (net as any)._trigger('listening', 0);
 
       expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
         {command: 'http-server', options: []},
         'web',
+        0,
         'development',
         'red',
         'example.domain.com',
@@ -359,20 +363,21 @@ describe('start.ts', () => {
     });
 
     it('should start a process without port if no routing', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red');
 
       (net as any)._trigger('listening');
 
       expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
         {command: 'http-server', options: []},
         'web',
+        0,
         'development',
         'red'
       );
     });
 
     it('should throw a port in use error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
       for (let i = 0; i <= 100; i += 1) {
         (net as any)._trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
@@ -382,7 +387,7 @@ describe('start.ts', () => {
     });
 
     it('should throw an unknown error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red', 'example.domain.com');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
       (net as any)._trigger('error', new Error('error'));
 

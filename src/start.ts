@@ -31,7 +31,6 @@ import {
 const routes: Routes = {};
 
 let ws: WebSocket;
-let longestName: number = 0;
 
 export const applyRoutes = () => {
   if (ws.readyState === WebSocket.OPEN) {
@@ -56,7 +55,7 @@ const getDisplayName = (processName: string, env: string): string => {
   return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
 };
 
-const wrapDisplayName = (displayName: string): string => {
+const wrapDisplayName = (displayName: string, longestName: number): string => {
   const diff = longestName - displayName.length;
 
   const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
@@ -64,8 +63,15 @@ const wrapDisplayName = (displayName: string): string => {
   return `[ ${displayName}${padding} ] `;
 };
 
-export const startProcessWithMaybePort =
-  (item: procfile.Command, processName: string, env: string, color: Colors, url?: string, port?: number) => {
+export const startProcessWithMaybePort = (
+  item: procfile.Command,
+  processName: string,
+  longestName: number,
+  env: string,
+  color: Colors,
+  url?: string,
+  port?: number
+) => {
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
@@ -104,7 +110,7 @@ export const startProcessWithMaybePort =
   logger.log(colors[color](`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
   logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
-  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env)));
+  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env), longestName));
 
   subProcess.stdout
     .pipe(es.split('\n'))
@@ -123,7 +129,14 @@ export const startProcessWithMaybePort =
   subProcess.on('close', (code) => onClose(prefix, code));
 };
 
-export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors, url?: string) => {
+export const startProcess = (
+  item: procfile.Command,
+  processName: string,
+  longestName: number,
+  env: string,
+  color: Colors,
+  url?: string
+) => {
   if (url) {
     getAvailablePort((error: PortError | undefined, port: number) => {
       if (error) {
@@ -131,14 +144,18 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
         return process.exit(1);
       }
 
-      startProcessWithMaybePort(item, processName, env, color, url, port);
+      startProcessWithMaybePort(item, processName, longestName, env, color, url, port);
     });
   } else {
-    startProcessWithMaybePort(item, processName, env, color);
+    startProcessWithMaybePort(item, processName, longestName, env, color);
   }
 };
 
-export const startProcesses = (procfileData: string, wtfJson: constants.ConfigProject, tree: Tree) => {
+export const startProcesses = (
+  procfileData: string,
+  wtfJson: constants.ConfigProject,
+  tree: Tree
+) => {
   let { processes } = tree.args;
   let { env } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
@@ -146,6 +163,7 @@ export const startProcesses = (procfileData: string, wtfJson: constants.ConfigPr
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
+  let longestName: number = 0;
   let index = 0;
 
   for (const processName in procfileConfig) {
@@ -171,7 +189,7 @@ export const startProcesses = (procfileData: string, wtfJson: constants.ConfigPr
         const url = wtfJson.routes &&
           (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
-        startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
+        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], url);
       }
 
       index += 1;
