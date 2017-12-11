@@ -6,7 +6,7 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as WebSocket from 'ws';
-import { UTF8 } from '../src/constants';
+import { DEFAULT_ENV, UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
 import router from '../src/router';
 import * as start from '../src/start';
@@ -14,6 +14,7 @@ import {
   applyRoutes,
   readWtfJson,
   startProcess,
+  startProcesses,
   startRouterCommunication,
 } from '../src/start';
 import * as utils from '../src/utils';
@@ -193,82 +194,127 @@ describe('start.ts', () => {
 
   });
 
-  // it('should spawn child the processes that are supplied', () => {
-  //   start({
-  //     name: 'start',
-  //     args: {
-  //       processes: 'web',
-  //     },
-  //     kwargs: {},
-  //     flags: {},
-  //   });
+  describe('startProcesses', () => {
 
-  //   _trigger('listening', undefined);
+    beforeEach(() => {
+      spyOn(start, 'startProcess');
+    });
 
-  //   expect(childProcess.spawn).toHaveBeenCalledTimes(1);
-  //   expect(childProcess.spawn).toHaveBeenCalledWith(
-  //     'directory/env/bin/node http-server',
-  //     ['.', '-c-0', '-o'],
-  //     {
-  //       cwd: 'directory',
-  //       shell: true,
-  //       env: {
-  //         VARIABLE: 'variable',
-  //         VAR: 'value',
-  //         PORT: '0',
-  //       },
-  //     }
-  //   );
-  // });
+    it('should spawn all processes if none are supplied', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
+        {},
+        {
+          name: 'start',
+          args: {},
+          kwargs: {},
+          flags: {},
+        }
+      );
 
-  // it('should not spawn unknown processes', () => {
-  //   start({
-  //     name: 'start',
-  //     args: {
-  //       processes: 'unknown',
-  //     },
-  //     kwargs: {},
-  //     flags: {},
-  //   });
+      expect(start.startProcess).toHaveBeenCalledTimes(2);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        DEFAULT_ENV,
+        'red',
+        undefined
+      );
 
-  //   _trigger('listening', undefined);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'watchify',
+          options: ['-t', 'babelify', 'src/index.js', '-o', 'build/index.js'],
+        },
+        'watch-js',
+        DEFAULT_ENV,
+        'green',
+        undefined
+      );
+    });
 
-  //   expect(childProcess.spawn).not.toHaveBeenCalled();
-  // });
+    it('should spawn child the processes that are supplied', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {},
+          flags: {},
+        }
+      );
 
-  // it('should log the environment if not the default', () => {
-  //   start({
-  //     name: 'start',
-  //     args: {
-  //       processes: 'watch',
-  //     },
-  //     kwargs: {},
-  //     flags: {},
-  //   });
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        DEFAULT_ENV,
+        'red',
+        undefined
+      );
+    });
 
-  //   _trigger('listening', undefined);
+    it('should not spawn unknown processes', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['unknown'],
+          },
+          kwargs: {},
+          flags: {},
+        }
+      );
 
-  //   expect(logger.log).toHaveBeenCalledWith('[ watch ] data');
-  //   expect(logger.log).toHaveBeenCalledWith('[ watch ] error');
-  //   expect(logger.log).toHaveBeenCalledWith('[ watch ] Process exited with code 7');
+      expect(start.startProcess).not.toHaveBeenCalled();
+    });
 
-  //   start({
-  //     name: 'start',
-  //     args: {
-  //       processes: 'watch',
-  //     },
-  //     kwargs: {
-  //       env: 'production',
-  //     },
-  //     flags: {},
-  //   });
+    // it('should log the environment if not the default', () => {
+    //   start({
+    //     name: 'start',
+    //     args: {
+    //       processes: 'watch',
+    //     },
+    //     kwargs: {},
+    //     flags: {},
+    //   });
 
-  //   _trigger('listening', undefined);
+    //   _trigger('listening', undefined);
 
-  //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] data');
-  //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] error');
-  //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
-  // });
+    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] data');
+    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] error');
+    //   expect(logger.log).toHaveBeenCalledWith('[ watch ] Process exited with code 7');
+
+    //   start({
+    //     name: 'start',
+    //     args: {
+    //       processes: 'watch',
+    //     },
+    //     kwargs: {
+    //       env: 'production',
+    //     },
+    //     flags: {},
+    //   });
+
+    //   _trigger('listening', undefined);
+
+    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] data');
+    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] error');
+    //   expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
+    // });
+
+  });
 
   describe('startProcess', () => {
     it('should start a process on an available port', () => {
