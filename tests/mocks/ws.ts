@@ -21,7 +21,7 @@ jest.mock('ws', () => {
       webSocketServerEvents = {};
     }
 
-    public clients = [];
+    public clients: WebSocket[] = [];
 
     public on (type: 'connection', callback: (webSocket: WebSocket) => any): void;
     public on (type: 'close', callback: () => any): void;
