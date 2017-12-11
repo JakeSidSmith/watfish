@@ -401,13 +401,14 @@ describe('start.ts', () => {
 
     beforeEach(() => {
       spyOn(start, 'addRoute');
+      spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
     });
 
     it('should add routes for processes with a url and port', () => {
       startProcessWithMaybePort(
         {
           command: 'http-server',
-          options: [],
+          options: ['.', '-c-0', '-o'],
         },
         'web',
         0,
@@ -418,6 +419,23 @@ describe('start.ts', () => {
       );
 
       expect(start.addRoute).toHaveBeenCalledWith('web', 'red', 'example.domain.com', 8080);
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'node http-server',
+        ['.', '-c-0', '-o'],
+        {
+          cwd: process.cwd(),
+          shell: true,
+          env: {
+            ...process.env,
+            PORT: '8080',
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'pipe',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
     });
 
   });
