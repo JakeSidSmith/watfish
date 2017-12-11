@@ -70,6 +70,7 @@ export const addRoute = (processName: string, color: Colors, url: string, port: 
 
 export const addRoutes = (routes: Routes, ws: WebSocket) => {
   for (const url in routes) {
+    /* istanbul ignore else */
     if (routes.hasOwnProperty(url)) {
       const { processName, port, color } = routes[url];
       addRoute(processName, color, url, port, ws);
@@ -79,6 +80,7 @@ export const addRoutes = (routes: Routes, ws: WebSocket) => {
 
 export const removeRoutes = (routes: Routes, ws: WebSocket) => {
   for (const url in routes) {
+    /* istanbul ignore else */
     if (routes.hasOwnProperty(url)) {
       const { processName, port, color } = routes[url];
       delete globalRoutes[url];

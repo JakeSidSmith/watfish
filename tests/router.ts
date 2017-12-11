@@ -109,7 +109,74 @@ describe('router.ts', () => {
         (express as any)._res,
         {target: 'http://0.0.0.0:8080'}
       );
+    });
 
+  });
+
+  describe('addRoutes', () => {
+
+    beforeEach(() => {
+      spyOn(router, 'addRoute');
+    });
+
+    it('should add the supplied routes', () => {
+      const ws = new WebSocket('');
+
+      router.addRoutes(
+        {
+          'example1.domain.com': {
+            processName: 'web1',
+            url: 'example1.domain.com',
+            color: 'red',
+            port: 8080,
+          },
+          'example2.domain.com': {
+            processName: 'web2',
+            url: 'example2.domain.com',
+            color: 'green',
+            port: 2020,
+          },
+        },
+        ws
+      );
+
+      expect(router.addRoute).toHaveBeenCalledTimes(2);
+
+      expect(router.addRoute).toHaveBeenCalledWith('web1', 'red', 'example1.domain.com', 8080, ws);
+      expect(router.addRoute).toHaveBeenCalledWith('web2', 'green', 'example2.domain.com', 2020, ws);
+    });
+
+  });
+
+  describe('removeRoutes', () => {
+
+    it('should remove the supplied routes', () => {
+      const ws = new WebSocket('');
+
+      spyOn(ws, 'send');
+
+      router.removeRoutes(
+        {
+          'example1.domain.com': {
+            processName: 'web1',
+            url: 'example1.domain.com',
+            color: 'red',
+            port: 8080,
+          },
+          'example2.domain.com': {
+            processName: 'web2',
+            url: 'example2.domain.com',
+            color: 'green',
+            port: 2020,
+          },
+        },
+        ws
+      );
+
+      expect(ws.send).toHaveBeenCalledTimes(2);
+
+      expect(ws.send).toHaveBeenCalledWith('Removing route web1 example1.domain.com on port 8080');
+      expect(ws.send).toHaveBeenCalledWith('Removing route web2 example2.domain.com on port 2020');
     });
 
   });
