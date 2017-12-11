@@ -15,6 +15,7 @@ import {
   readWtfJson,
   startProcess,
   startProcesses,
+  startProcessWithMaybePort,
   startRouterCommunication,
 } from '../src/start';
 import * as utils from '../src/utils';
@@ -394,6 +395,31 @@ describe('start.ts', () => {
       expect(logger.log).toHaveBeenCalledWith('error');
       expect(process.exit).toHaveBeenCalledWith(1);
     });
+  });
+
+  describe('startProcessWithMaybePort', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'addRoute');
+    });
+
+    it('should add routes for processes with a url and port', () => {
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: [],
+        },
+        'web',
+        0,
+        'development',
+        'red',
+        'example.domain.com',
+        8080
+      );
+
+      expect(start.addRoute).toHaveBeenCalledWith('web', 'red', 'example.domain.com', 8080);
+    });
+
   });
 
 });

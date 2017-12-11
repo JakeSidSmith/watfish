@@ -39,7 +39,7 @@ export const applyRoutes = () => {
   }
 };
 
-const addRoute = (processName: string, color: Colors, url: string, port: number) => {
+export const addRoute = (processName: string, color: Colors, url: string, port: number) => {
   routes[url] = {
     processName,
     url,
