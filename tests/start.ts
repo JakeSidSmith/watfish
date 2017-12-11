@@ -1,5 +1,5 @@
 jest.mock('../src/router', () => ({
-  default: () => null,
+  default: jest.fn(),
 }));
 
 import * as childProcess from 'child_process';
@@ -7,10 +7,8 @@ import * as fs from 'fs';
 import * as net from 'net';
 import { UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
-import start, {
-  readProcfileCallback,
-  startProcess,
-} from '../src/start';
+import router from '../src/router';
+import start, { startProcess } from '../src/start';
 
 interface NetMock {
   _trigger: (event: string, data: any) => void;
@@ -31,6 +29,8 @@ describe('start.ts', () => {
 
     (subProcess.stderr.on as jest.Mock<any>).mockClear();
     (subProcess.stdout.on as jest.Mock<any>).mockClear();
+
+    (router as jest.Mock<any>).mockClear();
 
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
@@ -61,10 +61,9 @@ describe('start.ts', () => {
       flags: {},
     });
 
-    expect(fs.readFile).toHaveBeenCalledWith(
+    expect(fs.readFileSync).toHaveBeenCalledWith(
       'directory/etc/environments/development/procfile',
-      UTF8,
-      readProcfileCallback
+      UTF8
     );
   });
 
