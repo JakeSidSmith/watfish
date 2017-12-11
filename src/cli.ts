@@ -81,6 +81,7 @@ collect(
           Arg(
             'processes',
             {
+              multi: true,
               description: 'Process to start',
             }
           ),

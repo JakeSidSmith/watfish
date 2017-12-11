@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
+import * as constants from './constants';
 import {
   Colors,
   COLORS,
@@ -13,7 +14,6 @@ import {
   SOCKET_PORT,
   UTF8,
 } from './constants';
-import { ConfigProject } from './init';
 import * as logger from './logger';
 import * as procfile from './procfile';
 import router, { ACTIONS, Routes } from './router';
@@ -139,9 +139,10 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
   }
 };
 
-export const startProcesses = (procfileData: string, wtfJson: ConfigProject) => {
-  const { processes } = options.args;
+export const startProcesses = (procfileData: string, wtfJson: constants.ConfigProject) => {
+  let { processes } = options.args;
   let { env } = options.kwargs;
+  processes = Array.isArray(processes) ? processes : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfileConfig = procfile.parse(procfileData.toString());
@@ -154,7 +155,7 @@ export const startProcesses = (procfileData: string, wtfJson: ConfigProject) => 
       const displayName = getDisplayName(processName, env);
 
       if (
-        (!processes || processes === processName) &&
+        (!processes.length || processes.indexOf(processName) >= 0) &&
         (!longestName || displayName.length > longestName)
       ) {
         longestName = displayName.length;
@@ -165,7 +166,7 @@ export const startProcesses = (procfileData: string, wtfJson: ConfigProject) => 
   for (const processName in procfileConfig) {
     /* istanbul ignore else */
     if (procfileConfig.hasOwnProperty(processName)) {
-      if (!processes || processes === processName) {
+      if (!processes.length || processes.indexOf(processName) >= 0) {
         const item = procfileConfig[processName];
 
         const url = wtfJson.routes &&

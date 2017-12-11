@@ -1,4 +1,14 @@
-import { Config } from './init';
+export interface ConfigRoutes {
+  [i: string]: string;
+}
+
+export type ConfigProject = Partial<{
+  routes: ConfigRoutes;
+}>;
+
+export interface Config {
+  [i: string]: ConfigProject;
+}
 
 export type DataOrError = Buffer | Error | string;
 

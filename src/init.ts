@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { UTF8 } from './constants';
+import { Config, UTF8 } from './constants';
 import * as logger from './logger';
 import { getConfigPath, getProjectName } from './utils';
 
@@ -7,18 +7,6 @@ type TempRoute = Partial<{
   process: string;
   url: string;
 }>;
-
-export interface ConfigRoutes {
-  [i: string]: string;
-}
-
-export type ConfigProject = Partial<{
-  routes: ConfigRoutes;
-}>;
-
-export interface Config {
-  [i: string]: ConfigProject;
-}
 
 export type ValueOrFunction<V> = V | (() => V);
 export type Callback = (value: string | undefined) => any;
