@@ -2,7 +2,7 @@ import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
-import { Colors, SOCKET_PORT, WAT } from './constants';
+import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { constructHTMLMessage, isPortTaken, PortError } from './utils';
 

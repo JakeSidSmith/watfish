@@ -2,6 +2,7 @@ import * as net from 'net';
 import { DEFAULT_ENV, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import {
+  constructHTMLMessage,
   getAvailablePort,
   getConfigPath,
   getDisplayName,
@@ -183,6 +184,14 @@ describe('utils.ts', () => {
       expect(wrapDisplayName('web', 0)).toBe('[ web ] ');
       expect(wrapDisplayName('web', 8)).toBe('[ web      ] ');
       expect(wrapDisplayName('production:web', 14)).toBe('[ production:web ] ');
+    });
+
+  });
+
+  describe('constructHTMLMessage', () => {
+
+    it('should construct an HTML message', () => {
+      expect(constructHTMLMessage('Hello, World!')).toContain('Hello, World!');
     });
 
   });
