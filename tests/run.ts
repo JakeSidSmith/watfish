@@ -67,7 +67,7 @@ describe('run.ts', () => {
 
   describe('runCommand', () => {
 
-    it('should log "no" if running wtf inside itself', () => {
+    it('should log "WAT" if running wtf inside itself', () => {
       runCommand(['wtf'], DEFAULT_ENV, []);
 
       expect(logger.log).toHaveBeenCalledWith(WAT + 'Wat are you doing? ' + DISAPPROVAL);
