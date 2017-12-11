@@ -1,5 +1,5 @@
 interface Events {
-  [i: string]: undefined | ((error?: any) => any)
+  [i: string]: undefined | ((error?: any) => any);
 }
 
 jest.mock('net', () => {

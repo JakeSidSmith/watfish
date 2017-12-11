@@ -1,20 +1,25 @@
 import * as childProcess from 'child_process';
-import * as colors from 'colors';
+import * as colors from 'colors/safe';
 import { Tree } from 'jargs';
 import * as path from 'path';
-import { DEFAULT_ENV, NO } from './constants';
+import { DEFAULT_ENV, DISAPPROVAL, WAT } from './constants';
 import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
 export const runCommand = (
   commandAndOptions: string[],
-  env: string = DEFAULT_ENV,
-  rest: undefined | string | string[] = []
+  env: string,
+  rest: string[]
 ) => {
-  const [command = '', ...commandOptions] = commandAndOptions;
+  const [command, ...commandOptions] = commandAndOptions;
+
+  if (!command) {
+    logger.log('No command supplied');
+    return process.exit(1);
+  }
 
   if (command === 'wtf') {
-    logger.log(colors.red(NO));
+    logger.log(colors.red(WAT + 'Wat are you doing? ' + DISAPPROVAL));
     return process.exit(1);
   }
 
@@ -24,7 +29,6 @@ export const runCommand = (
   const environment: {[i: string]: string} = {
     ...envVariables,
     ...process.env,
-    PORT: process.env.PORT || '',
     PYTHONUNBUFFERED: 'true',
   };
 
@@ -49,12 +53,14 @@ export const runCommand = (
 };
 
 const run = (tree: Tree) => {
-  const { command = [] } = tree.args;
+  let { command } = tree.args;
   let { env } = tree.kwargs;
-  const { rest } = tree;
-  env = typeof env === 'string' ? env : undefined;
+  let { rest } = tree;
+  command = Array.isArray(command) ? command : [];
+  rest = Array.isArray(rest) ? rest : [];
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  runCommand(command as any, env, rest as string[]);
+  runCommand(command as string[], env, rest as string[]);
 };
 
 export default run;

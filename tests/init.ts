@@ -1,7 +1,14 @@
 import * as fs from 'fs';
 import { UTF8 } from '../src/constants';
-import init, { QUESTIONS, writeFileCallback } from '../src/init';
+import * as init from '../src/init';
+import {
+  askQuestions,
+  QUESTIONS,
+  writeFile,
+  writeFileCallback,
+} from '../src/init';
 import * as logger from '../src/logger';
+import * as utils from '../src/utils';
 import mockStd from './mocks/std';
 
 describe('init.ts', () => {
@@ -19,114 +26,141 @@ describe('init.ts', () => {
     spyOn(logger, 'log');
   });
 
-  it('should ask questions & output a config file', () => {
-    const answers = [
-      'my-process',
-      'my-url',
-      'y',
-    ];
+  describe('init', () => {
 
-    mockStd(answers);
-
-    init();
-
-    QUESTIONS.forEach((question, index) => {
-      const message = typeof question.message === 'function' ? question.message() : question.message;
-
-      expect(process.stdin.resume).toHaveBeenCalled();
-      expect(logger.log).toHaveBeenCalledWith(message + ' ');
-      if (typeof question.condition === 'function') {
-        expect(question.condition).toHaveBeenCalled();
-      }
-      expect(question.callback).toHaveBeenCalledWith(answers[index]);
+    beforeEach(() => {
+      spyOn(init, 'askQuestions');
     });
 
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      'directory/wtf.json',
-      JSON.stringify(
-        {
-          routes: [
-            {
-              process: 'my-process',
-              url: 'my-url',
-            },
-          ],
-        },
-        undefined,
-        2
-      ) + '\n',
-      UTF8,
-      writeFileCallback
-    );
+    it('should ask questions without an existing config', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'error/wtf.json');
+
+      init.default();
+
+      expect(logger.log).toHaveBeenCalledWith('No wtf.json found at error/wtf.json. I\'ll create that for you');
+      expect(init.askQuestions).toHaveBeenCalledWith(QUESTIONS, writeFile);
+    });
+
+    it('should ask questions when config exists', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'empty/wtf.json');
+
+      init.default();
+
+      expect(logger.log).not.toHaveBeenCalled();
+      expect(init.askQuestions).toHaveBeenCalledWith(QUESTIONS, writeFile);
+    });
+
+    it('should exit if config is invalid', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'invalid/wtf.json');
+
+      init.default();
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
   });
 
-  it('should ask questions & output a config file (no process value)', () => {
-    const answers = [
-      '',
-      'my-url',
-      'y',
-    ];
+  describe('askQuestions', () => {
 
-    mockStd(answers);
+    it('should ask questions & output a config file', () => {
+      const answers = [
+        'my-process',
+        'my-url',
+        'y',
+      ];
 
-    init();
+      mockStd(answers);
 
-    QUESTIONS.forEach((question, index) => {
-      if (index === 0) {
+      askQuestions(QUESTIONS, writeFile);
+
+      QUESTIONS.forEach((question, index) => {
         const message = typeof question.message === 'function' ? question.message() : question.message;
 
         expect(process.stdin.resume).toHaveBeenCalled();
         expect(logger.log).toHaveBeenCalledWith(message + ' ');
-      }
+        if (typeof question.condition === 'function') {
+          expect(question.condition).toHaveBeenCalled();
+        }
+        expect(question.callback).toHaveBeenCalledWith(answers[index]);
+      });
 
-      if (typeof question.condition === 'function') {
-        expect(question.condition).toHaveBeenCalled();
-      }
-
-      if (index === 1) {
-        expect(question.callback).not.toHaveBeenCalled();
-      }
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '~/wtf.json',
+        JSON.stringify(
+          {
+            directory: {
+              routes: {
+                'my-process': 'my-url',
+              },
+            },
+          },
+          undefined,
+          2
+        ) + '\n',
+        UTF8,
+        writeFileCallback
+      );
     });
 
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      'directory/wtf.json',
-      JSON.stringify(
-        {
-          routes: [],
-        },
-        undefined,
-        2
-      ) + '\n',
-      UTF8,
-      writeFileCallback
-    );
-  });
+    it('should ask questions & output a config file (no process value)', () => {
+      const answers = [
+        '',
+        'my-url',
+        'y',
+      ];
 
-  it('should exit if config is incorrect', () => {
-    const answers = [
-      'my-process',
-      'my-url',
-      'n',
-    ];
+      mockStd(answers);
 
-    mockStd(answers);
+      askQuestions(QUESTIONS, writeFile);
 
-    init();
+      QUESTIONS.forEach((question, index) => {
+        if (index === 0) {
+          const message = typeof question.message === 'function' ? question.message() : question.message;
 
-    expect(process.exit).toHaveBeenCalled();
-  });
+          expect(process.stdin.resume).toHaveBeenCalled();
+          expect(logger.log).toHaveBeenCalledWith(message + ' ');
+        }
 
-  it('should exit if config is incorrect (no process value)', () => {
-    const answers = [
-      '',
-      'n',
-    ];
+        if (typeof question.condition === 'function') {
+          expect(question.condition).toHaveBeenCalled();
+        }
 
-    mockStd(answers);
+        if (index === 1) {
+          expect(question.callback).not.toHaveBeenCalled();
+        }
+      });
 
-    init();
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '~/wtf.json',
+        JSON.stringify(
+          {
+            directory: {
+              routes: {},
+            },
+          },
+          undefined,
+          2
+        ) + '\n',
+        UTF8,
+        writeFileCallback
+      );
+    });
 
-    expect(process.exit).toHaveBeenCalled();
+    it('should exit if config is incorrect', () => {
+      const answers = [
+        'my-process',
+        'my-url',
+        'n',
+      ];
+
+      mockStd(answers);
+
+      askQuestions(QUESTIONS, writeFile);
+
+      expect(process.exit).toHaveBeenCalled();
+    });
+
   });
 
   describe('writeFileCallback', () => {
@@ -134,7 +168,7 @@ describe('init.ts', () => {
     it('should output a success message', () => {
       writeFileCallback();
 
-      expect(logger.log).toHaveBeenCalledWith('wtf.json written to directory/wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('wtf.json written to ~/wtf.json');
       expect(process.exit).not.toHaveBeenCalled();
     });
 

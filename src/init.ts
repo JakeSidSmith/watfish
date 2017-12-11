@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { UTF8 } from './constants';
+import { Config, UTF8 } from './constants';
 import * as logger from './logger';
 import { getConfigPath, getProjectName } from './utils';
 
@@ -7,16 +7,6 @@ type TempRoute = Partial<{
   process: string;
   url: string;
 }>;
-
-export interface Routes {
-  [i: string]: string;
-}
-
-export interface Config {
-  [i: string]: Partial<{
-    routes: Routes;
-  }>;
-}
 
 export type ValueOrFunction<V> = V | (() => V);
 export type Callback = (value: string | undefined) => any;
@@ -117,7 +107,7 @@ export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
   logger.log(`wtf.json written to ${configPath}`);
 };
 
-const askQuestions = (questions: Question[], callback: () => any) => {
+export const askQuestions = (questions: Question[], callback: () => any) => {
   const [question, ...remainingQuestions] = questions;
 
   if (!question) {
@@ -130,7 +120,7 @@ const askQuestions = (questions: Question[], callback: () => any) => {
   });
 };
 
-const writeFile = () => {
+export const writeFile = () => {
   const configPath = getConfigPath();
   const createdConfig = createConfig();
   const stringConfig = createStringFromConfig(createdConfig);
@@ -149,22 +139,17 @@ const init = () => {
   const configPath = getConfigPath();
 
   if (fs.existsSync(configPath)) {
-    fs.readFile(configPath, (error: NodeJS.ErrnoException, data) => {
-      if (error) {
-        logger.log(error.message);
-        return process.exit(1);
-      }
+    const configContent = fs.readFileSync(configPath, UTF8);
 
-      try {
-        config = JSON.parse(data.toString());
-      } catch (error) {
-        logger.log('Invalid wtf.json');
-        logger.log(error.message);
-        return process.exit(1);
-      }
+    try {
+      config = JSON.parse(configContent);
+    } catch (error) {
+      logger.log('Invalid wtf.json');
+      logger.log(error.message);
+      return process.exit(1);
+    }
 
-      askQuestions(QUESTIONS, writeFile);
-    });
+    askQuestions(QUESTIONS, writeFile);
   } else {
     logger.log(`No wtf.json found at ${configPath}. I\'ll create that for you`);
     config = {};

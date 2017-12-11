@@ -5,11 +5,11 @@ import * as fs from 'fs';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
+import * as constants from './constants';
 import {
   Colors,
   COLORS,
   DEFAULT_ENV,
-  PADDING,
   SOCKET_PORT,
   UTF8,
 } from './constants';
@@ -19,27 +19,28 @@ import router, { ACTIONS, Routes } from './router';
 import {
   getAvailablePort,
   getConfigPath,
+  getDisplayName,
   getEnvVariables,
   getProjectName,
   handleShebang,
   injectEnvVars,
   onClose,
   PortError,
+  wrapDisplayName,
 } from './utils';
 
 const routes: Routes = {};
 
 let ws: WebSocket;
-let longestName: number = 0;
-let options: Tree;
 
-const applyRoutes = () => {
+export const applyRoutes = (routesToApply: Routes) => {
+  /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routes}));
+    ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTES, payload: routesToApply}));
   }
 };
 
-const addRoute = (processName: string, color: Colors, url: string, port: number) => {
+export const addRoute = (processName: string, color: Colors, url: string, port: number) => {
   routes[url] = {
     processName,
     url,
@@ -47,25 +48,21 @@ const addRoute = (processName: string, color: Colors, url: string, port: number)
     color,
   };
 
+  /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({type: ACTIONS.ADD_ROUTE, payload: {processName, color, url, port}}));
   }
 };
 
-const getDisplayName = (processName: string, env: string): string => {
-  return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
-};
-
-const wrapDisplayName = (displayName: string): string => {
-  const diff = longestName - displayName.length;
-
-  const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
-
-  return `[ ${displayName}${padding} ] `;
-};
-
-const startProcessWithMaybePort =
-  (item: procfile.Command, processName: string, env: string, color: Colors, url?: string, port?: number) => {
+export const startProcessWithMaybePort = (
+  item: procfile.Command,
+  processName: string,
+  longestName: number,
+  env: string,
+  color: Colors,
+  url?: string,
+  port?: number
+) => {
   const displayName = getDisplayName(processName, env);
 
   logger.log(colors[color](`Starting ${displayName} process...`));
@@ -104,26 +101,33 @@ const startProcessWithMaybePort =
   logger.log(colors[color](`Running ${resolvedCommand} ${commandOptions.join(' ')}`));
   logger.log(colors[color](`PID: ${subProcess.pid}, Parent PID: ${process.pid}\n`));
 
-  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env)));
+  const prefix = colors[color](wrapDisplayName(getDisplayName(processName, env), longestName));
 
   subProcess.stdout
     .pipe(es.split('\n'))
     .pipe(es.map((message: any, cb: any) => {
-      logger.log(`${prefix}${message}`);
-      cb();
-    }));
+      cb(null, `${prefix}${message}\n`);
+    }))
+    .pipe(process.stderr);
 
   subProcess.stderr
     .pipe(es.split('\n'))
     .pipe(es.map((message: any, cb: any) => {
-      logger.log(`${prefix}${message}`);
-      cb();
-    }));
+      cb(null, `${prefix}${message}\n`);
+    }))
+    .pipe(process.stderr);
 
   subProcess.on('close', (code) => onClose(prefix, code));
 };
 
-export const startProcess = (item: procfile.Command, processName: string, env: string, color: Colors, url?: string) => {
+export const startProcess = (
+  item: procfile.Command,
+  processName: string,
+  longestName: number,
+  env: string,
+  color: Colors,
+  url?: string
+) => {
   if (url) {
     getAvailablePort((error: PortError | undefined, port: number) => {
       if (error) {
@@ -131,20 +135,26 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
         return process.exit(1);
       }
 
-      startProcessWithMaybePort(item, processName, env, color, url, port);
+      startProcessWithMaybePort(item, processName, longestName, env, color, url, port);
     });
   } else {
-    startProcessWithMaybePort(item, processName, env, color);
+    startProcessWithMaybePort(item, processName, longestName, env, color);
   }
 };
 
-const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
-  const { processes } = options.args;
-  let { env } = options.kwargs;
+export const startProcesses = (
+  procfileData: string,
+  wtfJson: constants.ConfigProject,
+  tree: Tree
+) => {
+  let { processes } = tree.args;
+  let { env } = tree.kwargs;
+  processes = Array.isArray(processes) ? processes : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
+  let longestName: number = 0;
   let index = 0;
 
   for (const processName in procfileConfig) {
@@ -153,7 +163,7 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
       const displayName = getDisplayName(processName, env);
 
       if (
-        (!processes || processes === processName) &&
+        (!processes.length || processes.indexOf(processName) >= 0) &&
         (!longestName || displayName.length > longestName)
       ) {
         longestName = displayName.length;
@@ -164,13 +174,13 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
   for (const processName in procfileConfig) {
     /* istanbul ignore else */
     if (procfileConfig.hasOwnProperty(processName)) {
-      if (!processes || processes === processName) {
+      if (!processes.length || processes.indexOf(processName) >= 0) {
         const item = procfileConfig[processName];
 
-        const url = wtfJson && wtfJson.routes &&
+        const url = wtfJson.routes &&
           (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
 
-        startProcess(item, processName, env, COLORS[index % (COLORS.length)], url);
+        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], url);
       }
 
       index += 1;
@@ -178,47 +188,36 @@ const startProcesses = (procfileData: Buffer | string, wtfJson?: any) => {
   }
 };
 
-export const readProcfileCallback = (error: NodeJS.ErrnoException, procfileData: Buffer | string) => {
-  if (error) {
-    logger.log(error.message);
-    return process.exit(1);
-  }
-
+export const readWtfJson = (procfileData: string, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
+  let wtfJson: any = {};
 
   if (!fs.existsSync(configPath)) {
-    logger.log(`No wtf.json found at ${configPath}\n`);
-    startProcesses(procfileData);
+    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
   } else {
-    fs.readFile(configPath, UTF8, (wtfJsonError: NodeJS.ErrnoException, data) => {
-      if (wtfJsonError) {
-        logger.log(wtfJsonError.message);
-        return process.exit(1);
-      }
+    const configContent = fs.readFileSync(configPath, UTF8);
 
-      let wtfJson;
+    try {
+      wtfJson = JSON.parse(configContent);
+    } catch (error) {
+      logger.log('Invalid wtf.json');
+      logger.log(error.message);
+      return process.exit(1);
+    }
 
-      try {
-        wtfJson = JSON.parse(data.toString());
-      } catch (error) {
-        logger.log('Invalid wtf.json');
-        logger.log(error.message);
-        return process.exit(1);
-      }
-
-      logger.log(`Loaded wtf.json from ${configPath}\n`);
-
-      startProcesses(procfileData, wtfJson[projectName] || {});
-    });
+    logger.log(`Loaded wtf.json from ${configPath}\n`);
   }
 
+  startProcesses(procfileData, wtfJson[projectName] || {}, tree);
 };
 
-const startRouterCommunication = () => {
+export const startRouterCommunication = () => {
   ws = new WebSocket(`ws://localhost:${SOCKET_PORT}`);
 
-  ws.on('open', applyRoutes);
+  ws.on('open', () => {
+    applyRoutes(routes);
+  });
 
   ws.on('close', () => {
     router();
@@ -235,8 +234,7 @@ const start = (tree: Tree) => {
   router();
   startRouterCommunication();
 
-  options = tree;
-  let { env } = options.kwargs;
+  let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
@@ -246,7 +244,9 @@ const start = (tree: Tree) => {
     return process.exit(1);
   }
 
-  fs.readFile(procfilePath, UTF8, readProcfileCallback);
+  const procfileContent = fs.readFileSync(procfilePath, UTF8);
+
+  readWtfJson(procfileContent, tree);
 };
 
 export default start;

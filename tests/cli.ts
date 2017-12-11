@@ -1,3 +1,8 @@
+jest.mock('../src/init', () => ({default: () => null}));
+jest.mock('../src/program', () => ({default: () => null}));
+jest.mock('../src/run', () => ({default: () => null}));
+jest.mock('../src/start', () => ({default: () => null}));
+
 describe('cli.js', () => {
   beforeEach(() => {
     spyOn(process, 'exit');

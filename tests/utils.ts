@@ -1,5 +1,19 @@
 import * as net from 'net';
-import { getAvailablePort, isPortTaken } from '../src/utils';
+import { DEFAULT_ENV, TABLE_FLIP, WAT } from '../src/constants';
+import * as logger from '../src/logger';
+import {
+  constructHTMLMessage,
+  getAvailablePort,
+  getConfigPath,
+  getDisplayName,
+  getEnvVariables,
+  getProjectName,
+  handleShebang,
+  injectEnvVars,
+  isPortTaken,
+  onClose,
+  wrapDisplayName,
+} from '../src/utils';
 
 const EADDRINUSE_ERROR = {
   code: 'EADDRINUSE',
@@ -18,6 +32,9 @@ describe('utils.ts', () => {
 
   beforeEach(() => {
     spyOn(process.stderr, 'write');
+    spyOn(process, 'cwd').and.callFake(() => '/directory/');
+    spyOn(process, 'exit');
+    spyOn(logger, 'log');
 
     _clear();
   });
@@ -75,7 +92,108 @@ describe('utils.ts', () => {
 
       _trigger('listening', undefined);
 
-      expect(callback).toHaveBeenCalledWith(undefined, '0');
+      expect(callback).toHaveBeenCalledWith(undefined, 0);
+    });
+
+    it('should output unknown errors', () => {
+      const callback = jest.fn();
+      getAvailablePort(callback);
+
+      _trigger('error', 'error');
+
+      expect(callback).toHaveBeenCalledWith('error');
+    });
+
+    it('should exit if after 100 attempts it cannot find a free port', () => {
+      getAvailablePort(jest.fn());
+
+      for (let i = 0; i < 101; i += 1) {
+        _trigger('error', EADDRINUSE_ERROR);
+      }
+
+      expect(logger.log).toHaveBeenCalledWith('Could not find an available port');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
+
+  describe('injectEnvVars', () => {
+    it('should inject env vars into procfile', () => {
+      const result = injectEnvVars(['wat', '0.0.0.0:$WAT', '$NOPE'], {WAT: '1234'});
+
+      expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
+    });
+  });
+
+  describe('getEnvVariables', () => {
+    it('returns an empty object if no env file found', () => {
+      expect(getEnvVariables('nope', 'nope')).toEqual({});
+    });
+
+    it('returns the env variables from the env file', () => {
+      expect(getEnvVariables('development', 'etc/environments/development/env')).toEqual({VAR: 'value'});
+    });
+  });
+
+  describe('handleShebang', () => {
+    it('should return the program from a shebang', () => {
+      expect(handleShebang('manage.py')).toBe('/directory/env/bin/python manage.py');
+      expect(handleShebang('python')).toBe('/directory/env/bin/python');
+      expect(handleShebang('start.js')).toBe('node start.js');
+      expect(handleShebang('npm')).toBe('npm');
+      expect(handleShebang('empty')).toBe('empty');
+      expect(handleShebang('no-shebang')).toBe('no-shebang');
+    });
+  });
+
+  describe('onClose', () => {
+    it('should log that a process exited', () => {
+      expect(logger.log).not.toHaveBeenCalled();
+
+      onClose('prefix ', 0);
+      expect(logger.log).toHaveBeenCalledWith('prefix Process exited with code 0');
+
+      onClose('prefix ', 1);
+      expect(logger.log).toHaveBeenCalledWith(`${WAT}prefix Process exited with code 1 ${TABLE_FLIP}`);
+    });
+  });
+
+  describe('getConfigPath', () => {
+    it('should return the config path', () => {
+      expect(getConfigPath()).toBe('~/wtf.json');
+    });
+  });
+
+  describe('getProjectName', () => {
+    it('should return the directory of the project', () => {
+      expect(getProjectName()).toBe('directory');
+    });
+  });
+
+  describe('getDisplayName', () => {
+
+    it('should construct a process name', () => {
+      expect(getDisplayName('web', DEFAULT_ENV)).toBe('web');
+      expect(getDisplayName('web', 'production')).toBe('production:web');
+    });
+
+  });
+
+  describe('wrapDisplayName', () => {
+
+    it('should wrap a process name', () => {
+      expect(wrapDisplayName('web', 0)).toBe('[ web ] ');
+      expect(wrapDisplayName('web', 8)).toBe('[ web      ] ');
+      expect(wrapDisplayName('production:web', 14)).toBe('[ production:web ] ');
+    });
+
+  });
+
+  describe('constructHTMLMessage', () => {
+
+    it('should construct an HTML message', () => {
+      expect(constructHTMLMessage('Hello, World!')).toContain('Hello, World!');
+    });
+
+  });
+
 });

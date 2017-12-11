@@ -1,4 +1,14 @@
-import { Config } from './init';
+export interface ConfigRoutes {
+  [i: string]: string;
+}
+
+export type ConfigProject = Partial<{
+  routes: ConfigRoutes;
+}>;
+
+export interface Config {
+  [i: string]: ConfigProject;
+}
 
 export type DataOrError = Buffer | Error | string;
 
@@ -30,6 +40,10 @@ export const COLORS: Colors[] = [
   'yellow',
 ];
 
+export const TABLE_FLIP = '(╯°□°）╯︵ ┻━┻';
+
+export const DISAPPROVAL = 'ಠ_ಠ';
+
 // http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=WAT!%3F
 export const WAT = `\n\n
 ██╗    ██╗ █████╗ ████████╗██╗██████╗
@@ -38,13 +52,4 @@ export const WAT = `\n\n
 ██║███╗██║██╔══██║   ██║   ╚═╝  ▀▀══╝
 ╚███╔███╔╝██║  ██║   ██║   ██╗  ██╗
  ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
-\n\n\n`;
-
-export const NO = `\n\n
-███╗   ██╗ ██████╗
-████╗  ██║██╔═══██╗
-██╔██╗ ██║██║   ██║
-██║╚██╗██║██║   ██║
-██║ ╚████║╚██████╔╝██╗
-╚═╝  ╚═══╝ ╚═════╝ ╚═╝
 \n\n\n`;

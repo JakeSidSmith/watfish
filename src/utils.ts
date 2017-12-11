@@ -1,13 +1,16 @@
-import * as colors from 'colors';
+import * as colors from 'colors/safe';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
+  DEFAULT_ENV,
   ENV_BIN,
   MATCHES_ENV_KEY_VALUE,
   MATCHES_ENV_VAR,
   MATCHES_SHEBANG,
+  PADDING,
+  TABLE_FLIP,
   UTF8,
   WAT,
 } from './constants';
@@ -157,7 +160,10 @@ export const injectEnvVars = (commandOptions: string[], environment: {[i: string
 
 export const onClose = (prefix: string, code: number) => {
   const exitColor = code ? 'red' : 'green';
-  logger.log(`${code ? colors.red(WAT) : ''}${prefix}${colors[exitColor](`Process exited with code ${code}`)}`);
+  const wat = code ? colors.red(WAT) : '';
+  const tableFlip = code ? ' ' + TABLE_FLIP : '';
+  const message = `${wat}${prefix}${colors[exitColor](`Process exited with code ${code}${tableFlip}`)}`;
+  logger.log(message);
 };
 
 export const getConfigPath = () => {
@@ -166,4 +172,35 @@ export const getConfigPath = () => {
 
 export const getProjectName = () => {
   return path.basename(process.cwd());
+};
+
+export const getDisplayName = (processName: string, env: string): string => {
+  return `${env === DEFAULT_ENV ? '' : `${env}:`}${processName}`;
+};
+
+export const wrapDisplayName = (displayName: string, longestName: number): string => {
+  const diff = longestName - displayName.length;
+
+  const padding = diff >= 0 ? PADDING.substring(0, diff) : '';
+
+  return `[ ${displayName}${padding} ] `;
+};
+
+export const constructHTMLMessage = (message: string) => {
+  return (
+    `<html>
+      <head>
+        <title>WAT</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+      </head>
+      <body>
+        <div style="font-family: arial, helvetica, sans-serif; color: #333; text-align: center;">
+          <pre style="display: inline-block; color: red; font-size: 10px; line-height: 1; text-align: left;">
+            ${WAT}
+          </pre>
+          <p style="font-size: 16px;">${message}</p>
+        </div>
+      </body>
+    </html>`
+  );
 };

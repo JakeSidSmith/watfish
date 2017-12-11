@@ -1,24 +1,31 @@
+jest.mock('../src/router', () => ({
+  default: jest.fn(),
+  ACTIONS: {
+    ADD_ROUTE: 'ADD_ROUTE',
+    ADD_ROUTES: 'ADD_ROUTES',
+  },
+}));
+
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as net from 'net';
-import { UTF8 } from '../src/constants';
+import * as WebSocket from 'ws';
+import { DEFAULT_ENV, UTF8 } from '../src/constants';
 import * as logger from '../src/logger';
-import start, {
-  getEnvVariables,
-  handleShebang,
-  injectEnvVars,
-  readFileCallback,
+import router, { ACTIONS, Routes } from '../src/router';
+import * as start from '../src/start';
+import {
+  addRoute,
+  applyRoutes,
+  readWtfJson,
   startProcess,
+  startProcesses,
+  startProcessWithMaybePort,
+  startRouterCommunication,
 } from '../src/start';
-
-interface NetMock {
-  _trigger: (event: string, data: any) => void;
-  _clear: () => void;
-}
+import * as utils from '../src/utils';
 
 describe('start.ts', () => {
-
-  const { _clear, _trigger } = net as any as NetMock;
 
   beforeEach(() => {
     process.env = {
@@ -31,216 +38,511 @@ describe('start.ts', () => {
     (subProcess.stderr.on as jest.Mock<any>).mockClear();
     (subProcess.stdout.on as jest.Mock<any>).mockClear();
 
+    (router as jest.Mock<any>).mockClear();
+
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.returnValue('directory');
     spyOn(logger, 'log').and.callFake(() => null);
 
-    _clear();
+    (net as any)._clear();
   });
 
-  it('should exit if it cannot find a procfile', () => {
-    start({
-      name: 'start',
-      command: null,
-      args: {},
-      kwargs: {
-        env: 'error',
-      },
-      flags: {},
+  describe('start', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'readWtfJson');
+      spyOn(start, 'startRouterCommunication');
     });
 
-    expect(fs.readFile).toHaveBeenCalledWith(
-      'directory/etc/environments/error/procfile',
-      UTF8,
-      readFileCallback
-    );
+    it('should start the router and communication', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {},
+        flags: {},
+      });
 
-    expect(logger.log).toHaveBeenCalledWith('error');
-    expect(process.exit).toHaveBeenCalledWith(1);
-  });
-
-  it('should read from a procfile', () => {
-    start({
-      name: 'start',
-      command: null,
-      args: {},
-      kwargs: {},
-      flags: {},
+      expect(start.startRouterCommunication).toHaveBeenCalled();
+      expect(router).toHaveBeenCalled();
     });
 
-    expect(fs.readFile).toHaveBeenCalledWith(
-      'directory/etc/environments/development/procfile',
-      UTF8,
-      readFileCallback
-    );
-
-    _trigger('listening', undefined);
-
-    expect(childProcess.spawn).toHaveBeenCalled();
-  });
-
-  it('should spawn child the processes that are supplied', () => {
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'web',
-      },
-      kwargs: {},
-      flags: {},
-    });
-
-    _trigger('listening', undefined);
-
-    expect(childProcess.spawn).toHaveBeenCalledTimes(1);
-    expect(childProcess.spawn).toHaveBeenCalledWith(
-      'directory/env/bin/node http-server',
-      ['.', '-c-0', '-o'],
-      {
-        cwd: 'directory',
-        shell: true,
-        env: {
-          VARIABLE: 'variable',
-          VAR: 'value',
-          PORT: '0',
+    it('should exit if it cannot find a procfile', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {
+          env: 'error',
         },
-      }
-    );
+        flags: {},
+      });
+
+      expect(logger.log).toHaveBeenCalledWith('No procfile found at directory/etc/environments/error/procfile');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it('should read from a procfile', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {},
+        flags: {},
+      });
+
+      expect(fs.readFileSync).toHaveBeenCalledWith(
+        'directory/etc/environments/development/procfile',
+        UTF8
+      );
+    });
+
+    it('should call readWtfJson', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {},
+        flags: {},
+      });
+
+      expect(start.readWtfJson)
+        .toHaveBeenCalledWith(
+          'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js',
+          {
+            name: 'start',
+            args: {},
+            kwargs: {},
+            flags: {},
+          }
+        );
+    });
+
   });
 
-  it('should not spawn unknown processes', () => {
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'unknown',
-      },
-      kwargs: {},
-      flags: {},
+  describe('startRouterCommunication', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'on').and.callThrough();
+      spyOn(start, 'applyRoutes');
     });
 
-    _trigger('listening', undefined);
+    it('should start a web socket client', () => {
+      startRouterCommunication();
 
-    expect(childProcess.spawn).not.toHaveBeenCalled();
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(3);
+    });
+
+    it('should apply routes on open connection', () => {
+      jest.useFakeTimers();
+
+      startRouterCommunication();
+
+      expect(start.applyRoutes).not.toHaveBeenCalled();
+
+      (WebSocket as any)._trigger('open');
+
+      expect(start.applyRoutes).toHaveBeenCalled();
+    });
+
+    it('should restart the router and communication on close', () => {
+      jest.useFakeTimers();
+
+      startRouterCommunication();
+
+      expect(router).not.toHaveBeenCalled();
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(3);
+
+      (WebSocket as any)._trigger('close');
+
+      jest.runAllTimers();
+
+      expect(router).toHaveBeenCalled();
+      expect(WebSocket.prototype.on).toHaveBeenCalledTimes(6);
+    });
+
+    it('should log messages from the router', () => {
+      startRouterCommunication();
+
+      (WebSocket as any)._trigger('message', 'Hello, World!');
+
+      expect(logger.log).toHaveBeenCalledWith('Hello, World!');
+    });
+
   });
 
-  it('should log the environment if not the default', () => {
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'watch',
-      },
-      kwargs: {},
-      flags: {},
+  describe('readWtfJson', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'startProcesses');
     });
 
-    _trigger('listening', undefined);
+    it('should read from the wtf.json and start processes', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'empty/wtf.json');
 
-    expect(logger.log).toHaveBeenCalledWith('[ watch ] data');
-    expect(logger.log).toHaveBeenCalledWith('[ watch ] error');
-    expect(logger.log).toHaveBeenCalledWith('[ watch ] Process exited with code 7');
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
 
-    start({
-      name: 'start',
-      command: null,
-      args: {
-        processes: 'watch',
-      },
-      kwargs: {
-        env: 'production',
-      },
-      flags: {},
+      expect(fs.existsSync).toHaveBeenCalledWith('empty/wtf.json');
+      expect(fs.readFileSync).toHaveBeenCalledWith('empty/wtf.json', UTF8);
+      expect(logger.log).toHaveBeenCalledWith('Loaded wtf.json from empty/wtf.json\n');
+      expect(start.startProcesses)
+        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
     });
 
-    _trigger('listening', undefined);
+    it('should instruct running "wtf init" if config does not exist', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => 'error/wtf.json');
 
-    expect(logger.log).toHaveBeenCalledWith('[ production:watch ] data');
-    expect(logger.log).toHaveBeenCalledWith('[ production:watch ] error');
-    expect(logger.log).toHaveBeenCalledWith('[ production:watch ] Process exited with code 7');
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+
+      expect(fs.existsSync).toHaveBeenCalledWith('error/wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('No wtf.json found at error/wtf.json - run "wtf init" to begin setup\n');
+      expect(start.startProcesses)
+        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+    });
+
+    it('should exit if wtf.json is invalid', () => {
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
   });
 
-  describe('handleShebang', () => {
-    it('should return the program from a shebang', () => {
-      expect(handleShebang('#!'))
-        .toBe('#!');
+  describe('startProcesses', () => {
 
-      expect(handleShebang('#!/usr/bin/env node'))
-        .toBe('directory/env/bin/node #!/usr/bin/env node');
-      expect(handleShebang('#!    /usr/bin/env   node  '))
-        .toBe('directory/env/bin/node #!    /usr/bin/env   node  ');
-      expect(handleShebang('#!/usr/bin/env node  '))
-        .toBe('directory/env/bin/node #!/usr/bin/env node  ');
-      expect(handleShebang('#!   /usr/bin/env        node'))
-        .toBe('directory/env/bin/node #!   /usr/bin/env        node');
-      expect(handleShebang('#! /usr/bin/env  node   '))
-        .toBe('directory/env/bin/node #! /usr/bin/env  node   ');
-
-      expect(handleShebang('#!   nope  '))
-        .toBe('#!   nope  ');
-      expect(handleShebang('#!nope'))
-        .toBe('#!nope');
-
-      expect(handleShebang('#! /usr/bin/env no-env'))
-        .toBe('no-env/env-no #! /usr/bin/env no-env');
-    });
-  });
-
-  describe('getEnvVariables', () => {
-    it('returns an empty object if no env file found', () => {
-      expect(getEnvVariables('nope', 'red')).toEqual({});
+    beforeEach(() => {
+      spyOn(start, 'startProcess');
     });
 
-    it('returns the env variables from the env file', () => {
-      expect(getEnvVariables('development', 'red')).toEqual({VAR: 'value'});
+    it('should spawn all processes if none are supplied', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
+        {},
+        {
+          name: 'start',
+          args: {},
+          kwargs: {},
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(2);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        8,
+        DEFAULT_ENV,
+        'red',
+        undefined
+      );
+
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'watchify',
+          options: ['-t', 'babelify', 'src/index.js', '-o', 'build/index.js'],
+        },
+        'watch-js',
+        8,
+        DEFAULT_ENV,
+        'green',
+        undefined
+      );
     });
+
+    it('should spawn child the processes that are supplied', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {},
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        3,
+        DEFAULT_ENV,
+        'red',
+        undefined
+      );
+    });
+
+    it('should not spawn unknown processes', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['unknown'],
+          },
+          kwargs: {},
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).not.toHaveBeenCalled();
+    });
+
+    it('should accept a custom env', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {},
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {
+            env: 'custom',
+          },
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        10,
+        'custom',
+        'red',
+        undefined
+      );
+    });
+
+    it('should load routes from the wtf.json', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o',
+        {
+          routes: {
+            web: 'example.domain.com',
+          },
+        },
+        {
+          name: 'start',
+          args: {
+            processes: ['web'],
+          },
+          kwargs: {},
+          flags: {},
+        }
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        3,
+        'development',
+        'red',
+        'example.domain.com'
+      );
+    });
+
   });
 
   describe('startProcess', () => {
+
+    beforeEach(() => {
+      spyOn(start, 'startProcessWithMaybePort');
+    });
+
     it('should start a process on an available port', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
-      _trigger('listening', undefined);
+      (net as any)._trigger('listening', 0);
 
-      expect(childProcess.spawn).toHaveBeenCalledWith(
-        'directory/env/bin/node http-server',
-        [],
-        {
-          cwd: 'directory',
-          shell: true,
-          env: {
-            VARIABLE: 'variable',
-            VAR: 'value',
-            PORT: '0',
-          },
-        }
+      expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red',
+        'example.domain.com',
+        0
+      );
+    });
+
+    it('should start a process without port if no routing', () => {
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red');
+
+      (net as any)._trigger('listening');
+
+      expect(start.startProcessWithMaybePort).toHaveBeenCalledWith(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red'
       );
     });
 
     it('should throw a port in use error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
       for (let i = 0; i <= 100; i += 1) {
-        _trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
+        (net as any)._trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
       }
 
       expect(logger.log).toHaveBeenCalledWith('Could not find an available port');
     });
 
     it('should throw an unknown error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 'development', 'red');
+      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', 'example.domain.com');
 
-      _trigger('error', new Error('error'));
+      (net as any)._trigger('error', new Error('error'));
 
       expect(logger.log).toHaveBeenCalledWith('error');
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 
-  describe('injectEnvVars', () => {
-    it('should inject env vars into procfile', () => {
-      const result = injectEnvVars(['wat', '0.0.0.0:$WAT', '$NOPE'], {WAT: '1234'});
+  describe('startProcessWithMaybePort', () => {
 
-      expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
+    beforeEach(() => {
+      spyOn(start, 'addRoute');
+      spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
     });
+
+    it('should add routes for processes with a url and port', () => {
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        0,
+        'development',
+        'red',
+        'example.domain.com',
+        8080
+      );
+
+      expect(start.addRoute).toHaveBeenCalledWith('web', 'red', 'example.domain.com', 8080);
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'node http-server',
+        ['.', '-c-0', '-o'],
+        {
+          cwd: process.cwd(),
+          shell: true,
+          env: {
+            ...process.env,
+            PORT: '8080',
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'pipe',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
+    });
+
+    it('should add start processes that don\'t require a url or port', () => {
+      startProcessWithMaybePort(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        0,
+        'development',
+        'red'
+      );
+
+      expect(start.addRoute).not.toHaveBeenCalled();
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'node http-server',
+        ['.', '-c-0', '-o'],
+        {
+          cwd: process.cwd(),
+          shell: true,
+          env: {
+            ...process.env,
+            PORT: '',
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'pipe',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running node http-server . -c-0 -o');
+    });
+
   });
+
+  describe('addRoute', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'send');
+    });
+
+    it('should contact the router about a new route', () => {
+      addRoute('web', 'red', 'example.domain.com', 8080);
+
+      expect(WebSocket.prototype.send).toHaveBeenCalledWith(
+        JSON.stringify(
+          {
+            type: ACTIONS.ADD_ROUTE,
+            payload: {
+              processName: 'web',
+              color: 'red',
+              url: 'example.domain.com',
+              port: 8080,
+            },
+          }
+        )
+      );
+    });
+
+  });
+
+  describe('applyRoutes', () => {
+
+    beforeEach(() => {
+      spyOn(WebSocket.prototype, 'send');
+    });
+
+    it('should contact the router about a new route', () => {
+      const routes: Routes = {
+        'example.domain.com': {
+          processName: 'web',
+          color: 'red',
+          url: 'example.domain.com',
+          port: 8080,
+        },
+      };
+
+      applyRoutes(routes);
+
+      expect(WebSocket.prototype.send).toHaveBeenCalledWith(
+        JSON.stringify(
+          {
+            type: ACTIONS.ADD_ROUTES,
+            payload: routes,
+          }
+        )
+      );
+    });
+
+  });
+
 });
