@@ -2,9 +2,9 @@ import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
-import { Colors, SOCKET_PORT } from './constants';
+import { Colors, SOCKET_PORT, WAT } from './constants';
 import * as logger from './logger';
-import { isPortTaken, PortError } from './utils';
+import { constructHTMLMessage, isPortTaken, PortError } from './utils';
 
 export interface Routes {
   [i: string]: {
@@ -23,32 +23,38 @@ export const ACTIONS = {
 
 const globalRoutes: Routes = {};
 
-const app = express();
-const expressRouter = express.Router();
-const proxy = httpProxy.createServer();
+let app: express.Express;
+let expressRouter: express.Router;
+let proxy: httpProxy;
 
-proxy.on('error', (error) => {
-  logger.log(error.message);
-  logger.log('Process may still be starting');
-});
+export const init = () => {
+  app = express();
+  expressRouter = express.Router();
+  proxy = httpProxy.createServer();
 
-expressRouter.use((req, res) => {
-  const route = globalRoutes[req.hostname];
+  proxy.on('error', (error) => {
+    logger.log(error.message);
+    logger.log('Process may still be starting');
+  });
 
-  if (route) {
-    proxy.web(req, res, {
-      target: `http://0.0.0.0:${route.port}`,
-    });
-  } else {
-    res.send(`Unknown host ${req.hostname}`);
-  }
-});
+  expressRouter.use((req, res) => {
+    const route = globalRoutes[req.hostname];
 
-app.use((req, res, next) => {
-  return expressRouter(req, res, next);
-});
+    if (route) {
+      proxy.web(req, res, {
+        target: `http://0.0.0.0:${route.port}`,
+      });
+    } else {
+      res.send(constructHTMLMessage(`Unknown host ${req.hostname}`));
+    }
+  });
 
-const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
+  app.use((req, res, next) => {
+    return expressRouter(req, res, next);
+  });
+};
+
+export const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
   globalRoutes[url] = {
     processName,
     url,
@@ -61,7 +67,7 @@ const addRoute = (processName: string, color: Colors, url: string, port: number,
   }
 };
 
-const addRoutes = (routes: Routes, ws: WebSocket) => {
+export const addRoutes = (routes: Routes, ws: WebSocket) => {
   for (const url in routes) {
     if (routes.hasOwnProperty(url)) {
       const { processName, port, color } = routes[url];
@@ -70,7 +76,7 @@ const addRoutes = (routes: Routes, ws: WebSocket) => {
   }
 };
 
-const removeRoutes = (routes: Routes, ws: WebSocket) => {
+export const removeRoutes = (routes: Routes, ws: WebSocket) => {
   for (const url in routes) {
     if (routes.hasOwnProperty(url)) {
       const { processName, port, color } = routes[url];
@@ -153,5 +159,7 @@ const router = () => {
     }
   });
 };
+
+init();
 
 export default router;

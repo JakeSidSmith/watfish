@@ -182,3 +182,22 @@ export const wrapDisplayName = (displayName: string, longestName: number): strin
 
   return `[ ${displayName}${padding} ] `;
 };
+
+export const constructHTMLMessage = (message: string) => {
+  return (
+    `<html>
+      <head>
+        <title>WAT</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+      </head>
+      <body>
+        <div style="font-family: arial, helvetica, sans-serif; color: #333; text-align: center;">
+          <pre style="display: inline-block; color: red; font-size: 10px; line-height: 1; text-align: left;">
+            ${WAT}
+          </pre>
+          <p style="font-size: 16px;">${message}</p>
+        </div>
+      </body>
+    </html>`
+  );
+};
