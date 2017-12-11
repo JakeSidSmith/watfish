@@ -32,7 +32,6 @@ const routes: Routes = {};
 
 let ws: WebSocket;
 let longestName: number = 0;
-let options: Tree;
 
 export const applyRoutes = () => {
   if (ws.readyState === WebSocket.OPEN) {
@@ -139,9 +138,9 @@ export const startProcess = (item: procfile.Command, processName: string, env: s
   }
 };
 
-export const startProcesses = (procfileData: string, wtfJson: constants.ConfigProject) => {
-  let { processes } = options.args;
-  let { env } = options.kwargs;
+export const startProcesses = (procfileData: string, wtfJson: constants.ConfigProject, tree: Tree) => {
+  let { processes } = tree.args;
+  let { env } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
@@ -180,7 +179,7 @@ export const startProcesses = (procfileData: string, wtfJson: constants.ConfigPr
   }
 };
 
-export const readWtfJson = (procfileData: string) => {
+export const readWtfJson = (procfileData: string, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
   let wtfJson: any = {};
@@ -201,7 +200,7 @@ export const readWtfJson = (procfileData: string) => {
     logger.log(`Loaded wtf.json from ${configPath}\n`);
   }
 
-  startProcesses(procfileData, wtfJson[projectName] || {});
+  startProcesses(procfileData, wtfJson[projectName] || {}, tree);
 };
 
 export const startRouterCommunication = () => {
@@ -224,8 +223,7 @@ const start = (tree: Tree) => {
   router();
   startRouterCommunication();
 
-  options = tree;
-  let { env } = options.kwargs;
+  let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
@@ -237,7 +235,7 @@ const start = (tree: Tree) => {
 
   const procfileContent = fs.readFileSync(procfilePath, UTF8);
 
-  readWtfJson(procfileContent);
+  readWtfJson(procfileContent, tree);
 };
 
 export default start;

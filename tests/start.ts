@@ -103,7 +103,15 @@ describe('start.ts', () => {
       });
 
       expect(start.readWtfJson)
-        .toHaveBeenCalledWith('web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js');
+        .toHaveBeenCalledWith(
+          'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js',
+          {
+            name: 'start',
+            args: {},
+            kwargs: {},
+            flags: {},
+          }
+        );
     });
 
   });
@@ -156,26 +164,28 @@ describe('start.ts', () => {
     it('should read from the wtf.json and start processes', () => {
       spyOn(utils, 'getConfigPath').and.callFake(() => 'empty/wtf.json');
 
-      readWtfJson('procfileData');
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
 
       expect(fs.existsSync).toHaveBeenCalledWith('empty/wtf.json');
       expect(fs.readFileSync).toHaveBeenCalledWith('empty/wtf.json', UTF8);
       expect(logger.log).toHaveBeenCalledWith('Loaded wtf.json from empty/wtf.json\n');
-      expect(start.startProcesses).toHaveBeenCalledWith('procfileData', {});
+      expect(start.startProcesses)
+        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
     });
 
     it('should instruct running "wtf init" if config does not exist', () => {
       spyOn(utils, 'getConfigPath').and.callFake(() => 'error/wtf.json');
 
-      readWtfJson('procfileData');
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
 
       expect(fs.existsSync).toHaveBeenCalledWith('error/wtf.json');
       expect(logger.log).toHaveBeenCalledWith('No wtf.json found at error/wtf.json - run "wtf init" to begin setup\n');
-      expect(start.startProcesses).toHaveBeenCalledWith('procfileData', {});
+      expect(start.startProcesses)
+        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
     });
 
     it('should exit if wtf.json is invalid', () => {
-      readWtfJson('procfileData');
+      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
 
       expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
       expect(process.exit).toHaveBeenCalledWith(1);
