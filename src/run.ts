@@ -8,8 +8,8 @@ import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils'
 
 export const runCommand = (
   commandAndOptions: string[],
-  env: string = DEFAULT_ENV,
-  rest: undefined | string | string[] = []
+  env: string,
+  rest: string[]
 ) => {
   const [command = '', ...commandOptions] = commandAndOptions;
 
@@ -49,12 +49,14 @@ export const runCommand = (
 };
 
 const run = (tree: Tree) => {
-  const { command = [] } = tree.args;
+  let { command } = tree.args;
   let { env } = tree.kwargs;
-  const { rest } = tree;
-  env = typeof env === 'string' ? env : undefined;
+  let { rest } = tree;
+  command = Array.isArray(command) ? command : [];
+  rest = Array.isArray(rest) ? rest : [];
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  runCommand(command as any, env, rest as string[]);
+  runCommand(command as string[], env, rest as string[]);
 };
 
 export default run;
