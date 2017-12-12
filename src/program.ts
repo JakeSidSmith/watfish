@@ -4,7 +4,7 @@ import * as logger from './logger';
 import { runCommand } from './run';
 const json = require('../package.json'); // tslint:disable-line:no-var-requires
 
-const version = (tree: Tree) => {
+const program = (tree: Tree) => {
   let { command } = tree.args;
   let { env } = tree.kwargs;
   const { rest } = tree;
@@ -13,9 +13,9 @@ const version = (tree: Tree) => {
 
   if (tree.flags.version) {
     logger.log(json.version);
-  } else if (command) {
+  } else {
     runCommand(command as (string[] | undefined), env, rest as (string[] | undefined));
   }
 };
 
-export default version;
+export default program;

@@ -94,8 +94,35 @@ describe('run.ts', () => {
       expect(logger.log).toHaveBeenCalledWith('Running npm install --save');
     });
 
+    it('should spawn a child process without a rest parameter', () => {
+      runCommand(['npm', 'install'], DEFAULT_ENV, undefined);
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'npm',
+        ['install'],
+        {
+          cwd: 'directory/',
+          shell: true,
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'inherit',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Running npm install');
+    });
+
     it('should exit if no command is supplied', () => {
       runCommand([], DEFAULT_ENV, ['--save']);
+
+      expect(logger.log).toHaveBeenCalledWith('No command supplied');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it('should exit if no command is supplied (undefined)', () => {
+      runCommand(undefined, DEFAULT_ENV, undefined);
 
       expect(logger.log).toHaveBeenCalledWith('No command supplied');
       expect(process.exit).toHaveBeenCalledWith(1);
