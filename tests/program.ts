@@ -38,7 +38,7 @@ describe('program.ts', () => {
     program({
       name: 'watfish',
       args: {
-        command: 'npm',
+        command: ['npm'],
       },
       kwargs: {},
       flags: {
@@ -55,21 +55,21 @@ describe('program.ts', () => {
     program({
       name: 'watfish',
       args: {
-        command: 'npm',
+        command: ['npm'],
       },
       kwargs: {},
       flags: {},
       rest: ['install'],
     });
 
-    expect(run.runCommand).toHaveBeenCalledWith('npm', DEFAULT_ENV, ['install']);
+    expect(run.runCommand).toHaveBeenCalledWith(['npm'], DEFAULT_ENV, ['install']);
   });
 
   it('should run a command in the supplied environment', () => {
     program({
       name: 'watfish',
       args: {
-        command: 'npm',
+        command: ['npm'],
       },
       kwargs: {
         env: 'custom',
@@ -78,6 +78,6 @@ describe('program.ts', () => {
       rest: ['install'],
     });
 
-    expect(run.runCommand).toHaveBeenCalledWith('npm', 'custom', ['install']);
+    expect(run.runCommand).toHaveBeenCalledWith(['npm'], 'custom', ['install']);
   });
 });
