@@ -7,9 +7,9 @@ import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
 export const runCommand = (
-  commandAndOptions: string[],
+  commandAndOptions: string[] = [],
   env: string,
-  rest: string[]
+  rest: string[] = []
 ) => {
   const [command, ...commandOptions] = commandAndOptions;
 
@@ -33,7 +33,7 @@ export const runCommand = (
   };
 
   const resolvedCommand = handleShebang(command);
-  const resolvedCommandOptions = injectEnvVars(commandOptions.concat(rest), environment);
+  const resolvedCommandOptions = injectEnvVars ([...commandOptions, ...rest], environment);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
@@ -60,7 +60,7 @@ const run = (tree: Tree) => {
   rest = Array.isArray(rest) ? rest : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  runCommand(command as string[], env, rest as string[]);
+  runCommand(command as (string[] | undefined), env, rest as (string[] | undefined));
 };
 
 export default run;

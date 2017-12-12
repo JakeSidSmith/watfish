@@ -5,15 +5,16 @@ import { runCommand } from './run';
 const json = require('../package.json'); // tslint:disable-line:no-var-requires
 
 const version = (tree: Tree) => {
-  const { command } = tree.args;
+  let { command } = tree.args;
   let { env } = tree.kwargs;
   const { rest } = tree;
+  command = Array.isArray(command) ? command : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   if (tree.flags.version) {
     logger.log(json.version);
   } else if (command) {
-    runCommand(command as any, env, rest as string[]);
+    runCommand(command as (string[] | undefined), env, rest as (string[] | undefined));
   }
 };
 
