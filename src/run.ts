@@ -9,7 +9,7 @@ import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils'
 export const runCommand = (
   commandAndOptions: undefined | Array<string | undefined> = [],
   env: string,
-  rest: undefiend | Array<string | undefined> = []
+  rest: undefined | Array<string | undefined> = []
 ) => {
   const [command, ...commandOptions] = commandAndOptions;
 
@@ -33,7 +33,7 @@ export const runCommand = (
   };
 
   const resolvedCommand = handleShebang(command);
-  const resolvedCommandOptions = injectEnvVars ([...commandOptions, ...rest], environment);
+  const resolvedCommandOptions = injectEnvVars ([...commandOptions as string[], ...rest as string[]], environment);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
