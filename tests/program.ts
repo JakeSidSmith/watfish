@@ -80,4 +80,5 @@ describe('program.ts', () => {
 
     expect(run.runCommand).toHaveBeenCalledWith(['npm'], 'custom', ['install']);
   });
+
 });

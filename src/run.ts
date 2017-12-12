@@ -7,13 +7,13 @@ import * as logger from './logger';
 import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
 
 export const runCommand = (
-  commandAndOptions: string[] = [],
+  commandAndOptions: undefined | Array<string | undefined> = [],
   env: string,
-  rest: string[] = []
+  rest: undefiend | Array<string | undefined> = []
 ) => {
   const [command, ...commandOptions] = commandAndOptions;
 
-  if (!command) {
+  if (typeof command === 'undefined') {
     logger.log('No command supplied');
     return process.exit(1);
   }
