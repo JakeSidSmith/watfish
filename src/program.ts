@@ -14,7 +14,7 @@ const program = (tree: Tree) => {
 
   if (tree.flags.version) {
     logger.log(json.version);
-  } else if (tree.name === 'run') {
+  } else if (tree.name === 'watfish' && (!tree.command || tree.command.name !== 'run') && tree.args.command) {
     runCommand(command as (string[] | undefined), env, rest as (string[] | undefined));
   }
 };
