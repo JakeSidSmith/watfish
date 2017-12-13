@@ -53,7 +53,7 @@ describe('program.ts', () => {
 
   it('should run a command if supplied', () => {
     program({
-      name: 'watfish',
+      name: 'run',
       args: {
         command: ['npm'],
       },
@@ -67,7 +67,7 @@ describe('program.ts', () => {
 
   it('should run a command in the supplied environment', () => {
     program({
-      name: 'watfish',
+      name: 'run',
       args: {
         command: ['npm'],
       },
