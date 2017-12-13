@@ -33,7 +33,7 @@ export const runCommand = (
   };
 
   const resolvedCommand = handleShebang(command);
-  const resolvedCommandOptions = injectEnvVars ([...commandOptions as string[], ...rest as string[]], environment);
+  const resolvedCommandOptions = injectEnvVars([...commandOptions as string[], ...rest as string[]], environment);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
