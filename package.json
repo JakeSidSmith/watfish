@@ -8,7 +8,7 @@
     "wtf": "dist/cli.js"
   },
   "scripts": {
-    "prepublish": "npm run dist",
+    "prepublish": "npm run test && npm run dist",
     "dist": "./scripts/dist",
     "lint": "tslint --project tsconfig.json '@(src|tests|types|docs)/**/*.@(ts|tsx)'",
     "tests": "jest",
