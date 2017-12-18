@@ -138,7 +138,7 @@ export const startProcess = (
   url?: string
 ) => {
   if (url) {
-    getAvailablePort((error: PortError | undefined, port: number) => {
+    getAvailablePort((error: PortError | undefined, port?: number) => {
       if (error) {
         logger.log(error.message);
         return process.exit(1);
