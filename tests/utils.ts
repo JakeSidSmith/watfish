@@ -3,10 +3,12 @@ import { DEFAULT_ENV, TABLE_FLIP, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import {
   constructHTMLMessage,
+  delIn,
   getAvailablePort,
   getConfigPath,
   getDisplayName,
   getEnvVariables,
+  getIn,
   getProjectName,
   getRouterPort,
   getTimeNow,
@@ -15,6 +17,7 @@ import {
   isPortTaken,
   loadWtfJson,
   onClose,
+  setIn,
   wrapDisplayName,
 } from '../src/utils';
 
@@ -247,6 +250,84 @@ describe('utils.ts', () => {
       expect(getRouterPort()).toBe(1234);
 
       delete process.env.PORT;
+    });
+
+  });
+
+  describe('setIn', () => {
+
+    it('should set a single depth', () => {
+      const obj = {};
+
+      setIn(obj, ['a'], 'b');
+
+      expect(obj).toEqual({a: 'b'});
+    });
+
+    it('should set in multiple depths', () => {
+      const obj = {};
+
+      setIn(obj, ['a', 'b'], 'c');
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
+    it('should set in and overwrite existing values', () => {
+      const obj = {a: {b: 'd'}};
+
+      setIn(obj, ['a', 'b'], 'c');
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
+  });
+
+  describe('getIn', () => {
+
+    it('should return undefined if it cannot find a value at single depth', () => {
+      const obj = {};
+
+      expect(getIn(obj, ['a'])).toEqual(undefined);
+    });
+
+    it('should return undefined if it cannot find value multi depth', () => {
+      const obj = {c: {b: 'a'}};
+
+      expect(getIn(obj, ['a', 'b', 'c'])).toEqual(undefined);
+
+      expect(getIn(obj, ['c', 'b', 'a'])).toEqual(undefined);
+    });
+
+    it('should return a value at a single depth', () => {
+      const obj = {a: 'b'};
+
+      expect(getIn(obj, ['a'])).toEqual('b');
+    });
+
+    it('should return a value at multiple depths', () => {
+      const obj = {a: {b: 'c'}};
+
+      expect(getIn(obj, ['a', 'b'])).toEqual('c');
+    });
+
+  });
+
+  describe('delIn', () => {
+
+    it('should delete a value at a single depth', () => {
+      const obj = {a: 'b'};
+
+      delIn(obj, ['a']);
+
+      expect(obj).toEqual({});
+    });
+
+    it('should delete a value at multiple depths', () => {
+      const obj = {a: {b: 'c'}};
+
+      delIn(obj, ['a', 'b']);
+
+      expect(obj).toEqual({a: {}});
     });
 
   });

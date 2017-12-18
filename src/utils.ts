@@ -235,7 +235,7 @@ export const getRouterPort = () => {
 export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
   const [first, ...rest] = setPath;
 
-  if (rest.length === 1) {
+  if (!rest.length) {
     obj[first] = value;
   } else {
     if (!(first in obj)) {
@@ -249,7 +249,7 @@ export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) =>
 export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
   const [first, ...rest] = setPath;
 
-  if (rest.length === 1) {
+  if (!rest.length) {
     return obj[first];
   } else {
     if (!(first in obj)) {
@@ -263,7 +263,7 @@ export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
 export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
   const [first, ...rest] = setPath;
 
-  if (rest.length === 1) {
+  if (!rest.length) {
     delete obj[first];
   } else {
     if (!(first in obj)) {
