@@ -8,7 +8,7 @@ import {
   Help,
   KWArg,
   Program,
-  // RequireAll,
+  RequireAll,
   RequireAny,
   Required,
 } from 'jargs';
@@ -94,7 +94,6 @@ collect(
             }
           )
         ),
-        /*
         Command(
           'config',
           {
@@ -121,7 +120,6 @@ collect(
                 `${PROGRAM} config set key value -g`,
               ],
             },
-            GLOBAL_FLAG,
             RequireAll(
               Arg(
                 'key',
@@ -148,7 +146,6 @@ collect(
                 `${PROGRAM} config get key -g`,
               ],
             },
-            GLOBAL_FLAG,
             Arg(
               'key',
               {
@@ -167,17 +164,14 @@ collect(
                 `${PROGRAM} config del key -g`,
               ],
             },
-            GLOBAL_FLAG,
             Arg(
               'key',
               {
                 description: 'Key to remove from config',
               }
             )
-          ),
-          GLOBAL_FLAG
+          )
         ),
-        */
         Command(
           'run',
           {
