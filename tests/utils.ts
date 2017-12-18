@@ -8,10 +8,12 @@ import {
   getDisplayName,
   getEnvVariables,
   getProjectName,
+  getRouterPort,
   getTimeNow,
   handleShebang,
   injectEnvVars,
   isPortTaken,
+  loadWtfJson,
   onClose,
   wrapDisplayName,
 } from '../src/utils';
@@ -204,6 +206,47 @@ describe('utils.ts', () => {
       const result = getTimeNow();
 
       expect(MATCHES_TIME_FORMAT.test(result)).toBe(true);
+    });
+
+  });
+
+  describe('loadWtfJson', () => {
+
+    it('should the wtf.json', () => {
+      expect(loadWtfJson('valid/wtf.json')).toEqual({
+        project: {
+          routes: {
+            web: 'example.domain.com',
+          },
+        },
+      });
+    });
+
+    it('should empty wtf.json', () => {
+      expect(loadWtfJson('empty/wtf.json')).toEqual({});
+    });
+
+    it('should exit if config is invalid', () => {
+      loadWtfJson('invalid/wtf.json');
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at invalid/wtf.json');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+  });
+
+  describe('getRouterPort', () => {
+
+    it('should return the default router port', () => {
+      expect(getRouterPort()).toBe(8080);
+    });
+
+    it('should return a custom router port', () => {
+      process.env.PORT = '1234';
+
+      expect(getRouterPort()).toBe(1234);
+
+      delete process.env.PORT;
     });
 
   });
