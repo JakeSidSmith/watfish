@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import { Tree } from 'jargs';
-import { Config, ConfigProject, DEFAULT_ENV, UTF8 } from './constants';
+import { Config, ConfigProject, DEFAULT_ENV } from './constants';
 import * as logger from './logger';
-import { getConfigPath, getProjectName } from './utils';
+import { getConfigPath, getProjectName, loadWtfJson } from './utils';
 
 const envCommand = (tree: Tree) => {
-  let config: Config = {};
+  let config: Config | undefined = {};
   let projectConfig: ConfigProject = {};
   const configPath = getConfigPath();
   const projectName = getProjectName();
@@ -20,16 +20,13 @@ const envCommand = (tree: Tree) => {
       process.exit(1);
     }
   } else {
-    const configContent = fs.readFileSync(configPath, UTF8);
+    config = loadWtfJson(configPath);
 
-    try {
-      config = JSON.parse(configContent);
-      projectConfig = config[projectName];
-    } catch (error) {
-      logger.log(`Invalid wtf.json at ${configPath}`);
-      logger.log(error.message);
-      return process.exit(1);
+    if (!config) {
+      return;
     }
+
+    projectConfig = config[projectName];
   }
 
   if (!tree.command) {

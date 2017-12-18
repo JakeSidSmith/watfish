@@ -207,7 +207,7 @@ describe('start.ts', () => {
     it('should exit if wtf.json is invalid', () => {
       readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
 
-      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at ~/wtf.json');
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 

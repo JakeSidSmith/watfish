@@ -5,6 +5,7 @@ import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
+  Config,
   DEFAULT_ENV,
   ENV_BIN,
   MATCHES_ENV_KEY_VALUE,
@@ -208,4 +209,25 @@ export const constructHTMLMessage = (message: string) => {
 
 export const getTimeNow = () => {
   return moment().format('HH:mm:ss.SS');
+};
+
+export const loadWtfJson = (configPath: string): Config | undefined => {
+  let config: Config = {};
+  const configContent = fs.readFileSync(configPath, UTF8);
+
+  try {
+    config = JSON.parse(configContent);
+  } catch (error) {
+    logger.log(`Invalid wtf.json at ${configPath}`);
+    logger.log(error.message);
+    return process.exit(1);
+  }
+
+  return config;
+};
+
+export const getRouterPort = () => {
+  const { PORT } = process.env;
+
+  return PORT ? parseInt(PORT, 10) : 8080;
 };

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { Config, UTF8 } from './constants';
 import * as logger from './logger';
-import { getConfigPath, getProjectName } from './utils';
+import { getConfigPath, getProjectName, loadWtfJson } from './utils';
 
 type TempRoute = Partial<{
   process: string;
@@ -18,7 +18,7 @@ export interface Question {
   condition: Condition;
 }
 
-let config: Config = {};
+let config: Config | undefined = {};
 let tempRoute: TempRoute = {};
 
 const createStringFromConfig = (createdConfig: {} | undefined): string => {
@@ -139,14 +139,10 @@ const init = () => {
   const configPath = getConfigPath();
 
   if (fs.existsSync(configPath)) {
-    const configContent = fs.readFileSync(configPath, UTF8);
+    config = loadWtfJson(configPath);
 
-    try {
-      config = JSON.parse(configContent);
-    } catch (error) {
-      logger.log(`Invalid wtf.json at ${configPath}`);
-      logger.log(error.message);
-      return process.exit(1);
+    if (!config) {
+      return;
     }
 
     askQuestions(QUESTIONS, writeFile);

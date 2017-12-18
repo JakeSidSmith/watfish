@@ -4,11 +4,7 @@ import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
 import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
-import { constructHTMLMessage, isPortTaken, PortError } from './utils';
-
-const { PORT } = process.env;
-
-const routerPort = PORT ? parseInt(PORT, 10) : 8080;
+import { constructHTMLMessage, getRouterPort, isPortTaken, PortError } from './utils';
 
 export interface Routes {
   [i: string]: {
@@ -59,6 +55,8 @@ export const init = () => {
 };
 
 export const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
+  const routerPort = getRouterPort;
+
   globalRoutes[url] = {
     processName,
     url,
@@ -83,6 +81,8 @@ export const addRoutes = (routes: Routes, ws: WebSocket) => {
 };
 
 export const removeRoutes = (routes: Routes, ws: WebSocket) => {
+  const routerPort = getRouterPort();
+
   for (const url in routes) {
     /* istanbul ignore else */
     if (routes.hasOwnProperty(url)) {
@@ -111,11 +111,11 @@ export const startSockets = (port: number, wss: WebSocket.Server) => {
         return;
       }
 
-      const { type, payload, payload: { processName, color, url, port: routePort } } = json;
+      const { type, payload, payload: { processName, color, url, port: routerPort } } = json;
 
       switch (type) {
         case ACTIONS.ADD_ROUTE:
-          addRoute(processName, color, url, routePort, ws);
+          addRoute(processName, color, url, routerPort, ws);
           break;
         case ACTIONS.ADD_ROUTES:
           addRoutes(payload, ws);
@@ -147,6 +147,8 @@ export const startSockets = (port: number, wss: WebSocket.Server) => {
 };
 
 const router = () => {
+  const routerPort = getRouterPort();
+
   isPortTaken(routerPort, (error: PortError | undefined, inUse?: boolean) => {
     if (error) {
       logger.log(error.message);

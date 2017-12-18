@@ -9,6 +9,7 @@ import * as constants from './constants';
 import {
   Colors,
   COLORS,
+  Config,
   DEFAULT_ENV,
   SOCKET_PORT,
   UTF8,
@@ -25,6 +26,7 @@ import {
   getTimeNow,
   handleShebang,
   injectEnvVars,
+  loadWtfJson,
   onClose,
   PortError,
   wrapDisplayName,
@@ -198,25 +200,21 @@ export const startProcesses = (
 export const readWtfJson = (procfileData: string, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
-  let wtfJson: any = {};
+  let config: Config | undefined = {};
 
   if (!fs.existsSync(configPath)) {
     logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
   } else {
-    const configContent = fs.readFileSync(configPath, UTF8);
+    config = loadWtfJson(configPath);
 
-    try {
-      wtfJson = JSON.parse(configContent);
-    } catch (error) {
-      logger.log(`Invalid wtf.json at ${configPath}`);
-      logger.log(error.message);
-      return process.exit(1);
+    if (!config) {
+      return;
     }
 
     logger.log(`Loaded wtf.json from ${configPath}\n`);
   }
 
-  startProcesses(procfileData, wtfJson[projectName] || {}, tree);
+  startProcesses(procfileData, config[projectName] || {}, tree);
 };
 
 export const startRouterCommunication = () => {

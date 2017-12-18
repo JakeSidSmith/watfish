@@ -176,8 +176,8 @@ describe('router.ts', () => {
 
       expect(ws.send).toHaveBeenCalledTimes(2);
 
-      expect(ws.send).toHaveBeenCalledWith('Removing route web1 example1.domain.com on port 8080');
-      expect(ws.send).toHaveBeenCalledWith('Removing route web2 example2.domain.com on port 2020');
+      expect(ws.send).toHaveBeenCalledWith('Removing route web1 http://example1.domain.com:8080 on port 8080');
+      expect(ws.send).toHaveBeenCalledWith('Removing route web2 http://example2.domain.com:8080 on port 2020');
     });
 
   });
