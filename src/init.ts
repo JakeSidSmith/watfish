@@ -18,7 +18,7 @@ export interface Question {
   condition: Condition;
 }
 
-let config: Config | undefined = {};
+let config: Config | undefined;
 let tempRoute: TempRoute = {};
 
 const createStringFromConfig = (createdConfig: {} | undefined): string => {

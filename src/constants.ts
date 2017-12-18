@@ -1,23 +1,23 @@
-export interface ConfigRoutes {
+export type ConfigRoutes = Partial<{
   [i: string]: string;
-}
+}>;
 
-export interface ConfigEnv {
+export type ConfigEnv = Partial<{
   [i: string]: string;
-}
+}>;
 
-export interface ConfigEnvs {
-  [i: string]: ConfigEnv;
-}
+export type ConfigEnvs = Partial<{
+  [i: string]: ConfigEnv | undefined;
+}>;
 
 export type ConfigProject = Partial<{
   routes: ConfigRoutes;
   env: ConfigEnvs;
 }>;
 
-export interface Config {
+export type Config = Partial<{
   [i: string]: ConfigProject;
-}
+}>;
 
 export type DataOrError = Buffer | Error | string;
 

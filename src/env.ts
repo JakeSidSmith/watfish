@@ -5,10 +5,12 @@ import * as logger from './logger';
 import { getConfigPath, getProjectName, loadWtfJson } from './utils';
 
 const envCommand = (tree: Tree) => {
-  let config: Config | undefined = {};
-  let projectConfig: ConfigProject = {};
+  let config: Config | undefined;
+  let projectConfig: ConfigProject | undefined;
+
   const configPath = getConfigPath();
   const projectName = getProjectName();
+
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
