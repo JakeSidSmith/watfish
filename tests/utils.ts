@@ -314,6 +314,14 @@ describe('utils.ts', () => {
 
   describe('delIn', () => {
 
+    it('should do nothing if the value does not exist', () => {
+      const obj = {a: {b: 'c'}};
+
+      delIn(obj, ['a', 'c', 'd']);
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
     it('should delete a value at a single depth', () => {
       const obj = {a: 'b'};
 
