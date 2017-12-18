@@ -2,8 +2,17 @@ export interface ConfigRoutes {
   [i: string]: string;
 }
 
+export interface ConfigEnv {
+  [i: string]: string;
+}
+
+export interface ConfigEnvs {
+  [i: string]: ConfigEnv;
+}
+
 export type ConfigProject = Partial<{
   routes: ConfigRoutes;
+  env: ConfigEnvs;
 }>;
 
 export interface Config {

@@ -12,6 +12,7 @@ import {
   RequireAny,
   Required,
 } from 'jargs';
+import env from './env';
 import init from './init';
 import program from './program';
 import run from './run';
@@ -107,6 +108,7 @@ collect(
               `${PROGRAM} env del key`,
               `${PROGRAM} env set key value --env production`,
             ],
+            callback: env,
           },
           Command(
             'set',
