@@ -208,7 +208,7 @@ export const readWtfJson = (procfileData: string, tree: Tree) => {
     try {
       wtfJson = JSON.parse(configContent);
     } catch (error) {
-      logger.log('Invalid wtf.json');
+      logger.log(`Invalid wtf.json at ${configPath}`);
       logger.log(error.message);
       return process.exit(1);
     }
