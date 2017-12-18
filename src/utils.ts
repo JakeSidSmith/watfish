@@ -231,3 +231,45 @@ export const getRouterPort = () => {
 
   return PORT ? parseInt(PORT, 10) : 8080;
 };
+
+export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
+  const [first, ...rest] = setPath;
+
+  if (rest.length === 1) {
+    obj[first] = value;
+  } else {
+    if (!(first in obj)) {
+      obj[first] = {};
+    }
+
+    setIn(obj[first], rest as [string], value);
+  }
+};
+
+export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
+  const [first, ...rest] = setPath;
+
+  if (rest.length === 1) {
+    return obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    }
+
+    return getIn(obj[first], rest as [string]);
+  }
+};
+
+export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
+  const [first, ...rest] = setPath;
+
+  if (rest.length === 1) {
+    delete obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    } else {
+      delIn(obj[first], rest as [string]);
+    }
+  }
+};
