@@ -24,7 +24,7 @@ const ENVIRONMENT = KWArg(
   'env',
   {
     alias: 'e',
-    description: 'Environment to run in',
+    description: 'Environment to use or configure',
   }
 );
 
@@ -95,18 +95,17 @@ collect(
           )
         ),
         Command(
-          'config',
+          'env',
           {
-            alias: 'c',
-            description: 'View or edit project config',
-            usage: `${PROGRAM} config [<sub-command>] [options]`,
+            alias: 'e',
+            description: 'Change local project environment variables',
+            usage: `${PROGRAM} env [options]`,
             examples: [
-              `${PROGRAM} config`,
-              `${PROGRAM} config -g`,
-              `${PROGRAM} config set key value`,
-              `${PROGRAM} config get key`,
-              `${PROGRAM} config del key`,
-              `${PROGRAM} config set key value --global`,
+              `${PROGRAM} env`,
+              `${PROGRAM} env set key value`,
+              `${PROGRAM} env get key`,
+              `${PROGRAM} env del key`,
+              `${PROGRAM} env set key value --env production`,
             ],
           },
           Command(
@@ -117,7 +116,7 @@ collect(
               usage: `${PROGRAM} config set [options]`,
               examples: [
                 `${PROGRAM} config set key value`,
-                `${PROGRAM} config set key value -g`,
+                `${PROGRAM} config set key value --env production`,
               ],
             },
             RequireAll(
@@ -133,7 +132,8 @@ collect(
                   description: 'Value to set in config',
                 }
               )
-            )
+            ),
+            ENVIRONMENT
           ),
           Command(
             'get',
@@ -143,15 +143,18 @@ collect(
               usage: `${PROGRAM} config get [options]`,
               examples: [
                 `${PROGRAM} config get key`,
-                `${PROGRAM} config get key -g`,
+                `${PROGRAM} config set key --env production`,
               ],
             },
-            Arg(
-              'key',
-              {
-                description: 'Key to get from config',
-              }
-            )
+            Required(
+              Arg(
+                'key',
+                {
+                  description: 'Key to get from config',
+                }
+              )
+            ),
+            ENVIRONMENT
           ),
           Command(
             'del',
@@ -161,15 +164,18 @@ collect(
               usage: `${PROGRAM} config del [options]`,
               examples: [
                 `${PROGRAM} config del key`,
-                `${PROGRAM} config del key -g`,
+                `${PROGRAM} config del key --env production`,
               ],
             },
-            Arg(
-              'key',
-              {
-                description: 'Key to remove from config',
-              }
-            )
+            Required(
+              Arg(
+                'key',
+                {
+                  description: 'Key to remove from config',
+                }
+              )
+            ),
+            ENVIRONMENT
           )
         ),
         Command(
