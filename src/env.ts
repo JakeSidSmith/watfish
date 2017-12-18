@@ -4,11 +4,13 @@ import { Config, ConfigProject, DEFAULT_ENV, UTF8 } from './constants';
 import * as logger from './logger';
 import { getConfigPath, getProjectName } from './utils';
 
-const env = (tree: Tree) => {
+const envCommand = (tree: Tree) => {
   let config: Config = {};
   let projectConfig: ConfigProject = {};
   const configPath = getConfigPath();
   const projectName = getProjectName();
+  let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   if (!fs.existsSync(configPath)) {
     if (tree.command && tree.command.name === 'set') {
@@ -55,4 +57,4 @@ const env = (tree: Tree) => {
   }
 };
 
-export default env;
+export default envCommand;
