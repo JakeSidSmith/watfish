@@ -72,7 +72,6 @@ const envCommand = (tree: Tree) => {
     case 'get':
       logger.log(getIn(config, [projectName, 'env', env, key]));
       return process.exit(0);
-      break;
     case 'del':
       delIn(config, [projectName, 'env', env, key]);
       break;

@@ -15,7 +15,7 @@ type TempRoute = Partial<{
 }>;
 
 export type ValueOrFunction<V> = V | (() => V);
-export type Callback = (value: string | undefined) => any;
+export type Callback = (input: string) => any;
 export type Condition = ValueOrFunction<boolean>;
 
 export interface Question {
@@ -26,18 +26,6 @@ export interface Question {
 
 let config: Config | undefined;
 let tempRoute: TempRoute = {};
-
-const createConfig = (): Config => {
-  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
-  const projectName = getProjectName();
-
-  return {
-    ...config,
-    [projectName]: {
-      routes,
-    },
-  };
-};
 
 export const QUESTIONS: Question[] = [
   {
@@ -70,6 +58,18 @@ export const QUESTIONS: Question[] = [
     },
   },
 ];
+
+const createConfig = (): Config => {
+  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
+  const projectName = getProjectName();
+
+  return {
+    ...config,
+    [projectName]: {
+      routes,
+    },
+  };
+};
 
 const askForInput = (question: Question, callback: () => any) => {
   if (
