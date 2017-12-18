@@ -5,7 +5,6 @@ import {
   askQuestions,
   QUESTIONS,
   writeFile,
-  writeFileCallback,
 } from '../src/init';
 import * as logger from '../src/logger';
 import * as utils from '../src/utils';
@@ -99,7 +98,7 @@ describe('init.ts', () => {
           2
         ) + '\n',
         UTF8,
-        writeFileCallback
+        utils.writeConfigCallback
       );
     });
 
@@ -143,7 +142,7 @@ describe('init.ts', () => {
           2
         ) + '\n',
         UTF8,
-        writeFileCallback
+        utils.writeConfigCallback
       );
     });
 
@@ -163,20 +162,4 @@ describe('init.ts', () => {
 
   });
 
-  describe('writeFileCallback', () => {
-
-    it('should output a success message', () => {
-      writeFileCallback();
-
-      expect(logger.log).toHaveBeenCalledWith('wtf.json written to ~/wtf.json');
-      expect(process.exit).not.toHaveBeenCalled();
-    });
-
-    it('should exit on error', () => {
-      writeFileCallback(new Error('WTF'));
-
-      expect(logger.log).toHaveBeenCalledWith('WTF');
-      expect(process.exit).toHaveBeenCalledWith(1);
-    });
-  });
 });

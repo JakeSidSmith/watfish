@@ -273,3 +273,22 @@ export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
     }
   }
 };
+
+export const createStringFromConfig = (createdConfig: {} | undefined): string => {
+  return JSON.stringify(
+    createdConfig,
+    undefined,
+    2
+  ) + '\n';
+};
+
+export const writeConfigCallback = (error?: NodeJS.ErrnoException) => {
+  if (error) {
+    logger.log(error.message);
+    return process.exit(1);
+  }
+
+  const configPath = getConfigPath();
+
+  logger.log(`wtf.json written to ${configPath}`);
+};

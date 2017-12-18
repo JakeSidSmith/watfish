@@ -1,8 +1,17 @@
 import * as fs from 'fs';
 import { Tree } from 'jargs';
-import { Config, ConfigProject, DEFAULT_ENV } from './constants';
+import { Config, ConfigProject, DEFAULT_ENV, UTF8 } from './constants';
 import * as logger from './logger';
-import { getConfigPath, getProjectName, loadWtfJson } from './utils';
+import {
+  createStringFromConfig,
+  delIn,
+  getConfigPath,
+  getIn,
+  getProjectName,
+  loadWtfJson,
+  setIn,
+  writeConfigCallback,
+} from './utils';
 
 const envCommand = (tree: Tree) => {
   let config: Config | undefined;
@@ -11,6 +20,7 @@ const envCommand = (tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
 
+  const { key, value } = tree.args;
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
@@ -43,15 +53,54 @@ const envCommand = (tree: Tree) => {
     return process.exit(0);
   }
 
+  config = config ? config : {};
+
+  if (typeof key !== 'string') {
+    logger.log('No key provided');
+    return process.exit(1);
+  }
+
   switch (tree.command.name) {
     case 'set':
+      if (typeof value !== 'string') {
+        logger.log('No value provided');
+        return process.exit(1);
+      }
+
+      setIn(config, [projectName, 'env', env, key], value);
+      break;
     case 'get':
+      logger.log(getIn(config, [projectName, 'env', env, key]));
+      return process.exit(0);
+      break;
     case 'del':
-    return process.exit(0);
+      delIn(config, [projectName, 'env', env, key]);
+      break;
     default:
       logger.log(`Unknown command ${tree.command.name}`);
       return process.exit(1);
   }
+
+  const stringConfig = createStringFromConfig(getIn(config, [projectName, 'env']));
+
+  process.stdin.resume();
+
+  logger.log(`\nCreated config:\n\n${stringConfig}\nIs this correct? [y]`);
+
+  process.stdin.once('data', (data) => {
+    process.stdin.pause();
+
+    const input: string = (data || '').toString().trim();
+
+    if (input !== 'n' && input !== 'N') {
+      fs.writeFile(
+        configPath,
+        stringConfig,
+        UTF8,
+        writeConfigCallback
+      );
+    }
+  });
 };
 
 export default envCommand;

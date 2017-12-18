@@ -19,6 +19,7 @@ import {
   onClose,
   setIn,
   wrapDisplayName,
+  writeConfigCallback,
 } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
@@ -338,6 +339,23 @@ describe('utils.ts', () => {
       expect(obj).toEqual({a: {}});
     });
 
+  });
+
+  describe('writeConfigCallback', () => {
+
+    it('should output a success message', () => {
+      writeConfigCallback();
+
+      expect(logger.log).toHaveBeenCalledWith('wtf.json written to ~/wtf.json');
+      expect(process.exit).not.toHaveBeenCalled();
+    });
+
+    it('should exit on error', () => {
+      writeConfigCallback(new Error('WTF'));
+
+      expect(logger.log).toHaveBeenCalledWith('WTF');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
   });
 
 });
