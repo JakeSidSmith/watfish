@@ -1,6 +1,6 @@
 {
   "name": "watfish",
-  "version": "0.0.0-alpha.3",
+  "version": "0.0.0-alpha.5",
   "description": "Simple development platform with process management & router",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
     "wtf": "dist/cli.js"
   },
   "scripts": {
-    "prepublish": "npm run dist",
+    "prepublish": "npm run test && npm run dist",
     "dist": "./scripts/dist",
     "lint": "tslint --project tsconfig.json '@(src|tests|types|docs)/**/*.@(ts|tsx)'",
     "tests": "jest",
