@@ -6,6 +6,10 @@ import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { constructHTMLMessage, isPortTaken, PortError } from './utils';
 
+const { PORT } = process.env;
+
+const routerPort = PORT ? parseInt(PORT, 10) : 8080;
+
 export interface Routes {
   [i: string]: {
     url: string;
@@ -64,7 +68,7 @@ export const addRoute = (processName: string, color: Colors, url: string, port: 
 
   /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(colors[color](`Routing process ${processName} from ${url} to port ${port}`));
+    ws.send(colors[color](`Routing process ${processName} from http://${url}:${routerPort} to port ${port}`));
   }
 };
 
@@ -87,7 +91,7 @@ export const removeRoutes = (routes: Routes, ws: WebSocket) => {
 
       /* istanbul ignore else */
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(colors[color](`Removing route ${processName} ${url} on port ${port}`));
+        ws.send(colors[color](`Removing route ${processName} http://${url}:${routerPort} on port ${port}`));
       }
     }
   }
@@ -143,24 +147,20 @@ export const startSockets = (port: number, wss: WebSocket.Server) => {
 };
 
 const router = () => {
-  const { PORT } = process.env;
-
-  const port = PORT ? parseInt(PORT, 10) : 8080;
-
-  isPortTaken(port, (error: PortError | undefined, inUse?: boolean) => {
+  isPortTaken(routerPort, (error: PortError | undefined, inUse?: boolean) => {
     if (error) {
       logger.log(error.message);
     } else if (inUse) {
-      logger.log(`Router port ${port} is already in use`);
+      logger.log(`Router port ${routerPort} is already in use`);
     } else {
-      logger.log(`Router starting on port ${port}...`);
+      logger.log(`Router starting on port ${routerPort}...`);
 
-      app.listen(port, () => {
-        logger.log(`Router running on port ${port}`);
+      app.listen(routerPort, () => {
+        logger.log(`Router running on port ${routerPort}`);
 
         const wss = new WebSocket.Server({ port: SOCKET_PORT });
 
-        startSockets(port, wss);
+        startSockets(routerPort, wss);
       });
     }
   });
