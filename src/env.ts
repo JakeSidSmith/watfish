@@ -34,12 +34,10 @@ const envCommand = (tree: Tree) => {
   if (!tree.command) {
     if (!projectConfig) {
       logger.log(`No config for project ${projectName} in wtf.json at ${configPath}`);
+    } else if (!projectConfig.env) {
+      logger.log(`No environments for project ${projectName} at ${configPath}`);
     } else {
-      if (!projectConfig.env) {
-        logger.log(`No environments for project ${projectName} at ${configPath}`);
-      } else {
-        logger.log(JSON.stringify(projectConfig.env));
-      }
+      logger.log(JSON.stringify(projectConfig.env));
     }
 
     return process.exit(0);
