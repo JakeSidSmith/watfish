@@ -55,7 +55,7 @@ export const init = () => {
 };
 
 export const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
-  const routerPort = getRouterPort;
+  const routerPort = getRouterPort();
 
   globalRoutes[url] = {
     processName,
