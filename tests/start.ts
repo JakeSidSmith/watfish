@@ -1,3 +1,6 @@
+jest.mock('../src/env', () => ({default: jest.fn()}));
+jest.mock('../src/init', () => ({default: jest.fn()}));
+jest.mock('../src/program', () => ({default: jest.fn()}));
 jest.mock('../src/router', () => ({
   default: jest.fn(),
   ACTIONS: {
