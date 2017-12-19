@@ -27,6 +27,18 @@ export interface Question {
 let config: Config | undefined;
 let tempRoute: TempRoute = {};
 
+const createConfig = (): Config => {
+  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
+  const projectName = getProjectName();
+
+  return {
+    ...config,
+    [projectName]: {
+      routes,
+    },
+  };
+};
+
 export const QUESTIONS: Question[] = [
   {
     message: 'What is the name of the process you would like to route?',
@@ -58,18 +70,6 @@ export const QUESTIONS: Question[] = [
     },
   },
 ];
-
-const createConfig = (): Config => {
-  const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
-  const projectName = getProjectName();
-
-  return {
-    ...config,
-    [projectName]: {
-      routes,
-    },
-  };
-};
 
 const askForInput = (question: Question, callback: () => any) => {
   if (
