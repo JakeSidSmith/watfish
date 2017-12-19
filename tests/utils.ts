@@ -222,6 +222,11 @@ describe('utils.ts', () => {
           routes: {
             web: 'example.domain.com',
           },
+          env: {
+            development: {
+              KEY: 'value',
+            },
+          },
         },
       });
     });

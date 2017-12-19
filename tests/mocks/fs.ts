@@ -21,12 +21,17 @@ jest.mock('fs', () => {
   const MATCHES_EMPTY_CONFIG = /empty\/wtf\.json/;
   const MATCHES_INVALID_CONFIG = /invalid\/wtf\.json/;
   const MATCHES_VALID_CONFIG = /valid\/wtf\.json/;
+  const MATCHES_NO_ENV_CONFIG = /no-env\/wtf\.json/;
 
   return {
     writeFile: jest.fn((path: string, data: string, format: string, callback: WriteFileCallback) => {
       callback();
     }),
     readFileSync: jest.fn((path: string, encoding: string): string => {
+      if (MATCHES_NO_ENV_CONFIG.test(path)) {
+        return '{"project": {}}';
+      }
+
       if (MATCHES_EMPTY_CONFIG.test(path)) {
         return '{}';
       }
@@ -36,7 +41,7 @@ jest.mock('fs', () => {
       }
 
       if (MATCHES_VALID_CONFIG.test(path)) {
-        return '{"project": {"routes": {"web": "example.domain.com"}}}';
+        return '{"project": {"routes": {"web": "example.domain.com"}, "env": {"development": {"KEY": "value"}}}}';
       }
 
       if (MATCHES_PROCFILE.test(path)) {
