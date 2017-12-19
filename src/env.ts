@@ -33,13 +33,10 @@ const envCommand = (tree: Tree) => {
     }
   } else {
     config = loadWtfJson(configPath);
-
-    if (!config) {
-      return;
-    }
-
-    projectConfig = config[projectName];
   }
+
+  config = config ? config : {};
+  projectConfig = config[projectName];
 
   if (!tree.command) {
     if (!projectConfig) {
@@ -52,8 +49,6 @@ const envCommand = (tree: Tree) => {
 
     return process.exit(0);
   }
-
-  config = config ? config : {};
 
   const { key, value } = tree.command.args;
 
