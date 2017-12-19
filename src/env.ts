@@ -20,8 +20,8 @@ const envCommand = (tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
 
-  const { key, value } = tree.args;
   let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : tree.command && tree.command.kwargs.env;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   if (!fs.existsSync(configPath)) {
@@ -54,6 +54,8 @@ const envCommand = (tree: Tree) => {
   }
 
   config = config ? config : {};
+
+  const { key, value } = tree.command.args;
 
   if (typeof key !== 'string') {
     logger.log('No key provided');
@@ -94,7 +96,7 @@ const envCommand = (tree: Tree) => {
     if (input !== 'n' && input !== 'N') {
       fs.writeFile(
         configPath,
-        stringConfig,
+        createStringFromConfig(config),
         UTF8,
         writeConfigCallback
       );

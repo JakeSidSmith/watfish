@@ -110,6 +110,7 @@ collect(
             ],
             callback: env,
           },
+          ENVIRONMENT,
           Command(
             'set',
             {
@@ -117,10 +118,11 @@ collect(
               description: 'Set config value',
               usage: `${PROGRAM} config set [options]`,
               examples: [
-                `${PROGRAM} config set key value`,
-                `${PROGRAM} config set key value --env production`,
+                `${PROGRAM} env set key value`,
+                `${PROGRAM} env set key value --env production`,
               ],
             },
+            ENVIRONMENT,
             RequireAll(
               Arg(
                 'key',
@@ -134,8 +136,7 @@ collect(
                   description: 'Value to set in config',
                 }
               )
-            ),
-            ENVIRONMENT
+            )
           ),
           Command(
             'get',
@@ -144,10 +145,11 @@ collect(
               description: 'Get config value',
               usage: `${PROGRAM} config get [options]`,
               examples: [
-                `${PROGRAM} config get key`,
-                `${PROGRAM} config set key --env production`,
+                `${PROGRAM} env get key`,
+                `${PROGRAM} env set key --env production`,
               ],
             },
+            ENVIRONMENT,
             Required(
               Arg(
                 'key',
@@ -155,8 +157,7 @@ collect(
                   description: 'Key to get from config',
                 }
               )
-            ),
-            ENVIRONMENT
+            )
           ),
           Command(
             'del',
@@ -169,6 +170,7 @@ collect(
                 `${PROGRAM} config del key --env production`,
               ],
             },
+            ENVIRONMENT,
             Required(
               Arg(
                 'key',
@@ -176,8 +178,7 @@ collect(
                   description: 'Key to remove from config',
                 }
               )
-            ),
-            ENVIRONMENT
+            )
           )
         ),
         Command(
