@@ -100,6 +100,30 @@ describe('router.ts', () => {
         .toHaveBeenCalledWith(constructHTMLMessage('Unknown host example.domain.com'));
     });
 
+    it('should return an text error for unknown hosts if python request', () => {
+      const expressMock = express as any;
+
+      expressMock._req.headers['user-agent'] = 'python-requests-0.0.0';
+
+      router.init();
+
+      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+
+      delete expressMock._req.headers['user-agent'];
+    });
+
+    it('should handle user agent arrays', () => {
+      const expressMock = express as any;
+
+      expressMock._req.headers['user-agent'] = ['python-requests', '0.0.0'];
+
+      router.init();
+
+      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+
+      delete expressMock._req.headers['user-agent'];
+    });
+
     it('should proxy for known hosts', () => {
       router.addRoute('web', 'red', 'example.domain.com', 8080, new WebSocket(''));
 

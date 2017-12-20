@@ -1,6 +1,7 @@
 jest.mock('express', () => {
   const req = {
     hostname: 'example.domain.com',
+    headers: {},
   };
 
   const res = {
