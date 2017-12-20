@@ -206,7 +206,7 @@ describe('start.ts', () => {
 
       expect(fs.existsSync).toHaveBeenCalledWith('empty/wtf.json');
       expect(fs.readFileSync).toHaveBeenCalledWith('empty/wtf.json', UTF8);
-      expect(logger.log).toHaveBeenCalledWith('Loaded wtf.json from empty/wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('Loading wtf.json from empty/wtf.json');
       expect(start.startProcesses).toHaveBeenCalledWith(
         'procfileData',
         {},

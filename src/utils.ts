@@ -263,8 +263,8 @@ export const readWtfJson = (configPath: string): Config => {
   try {
     config = JSON.parse(configContent);
   } catch (error) {
-    logger.log(`Invalid wtf.json at ${configPath}`);
-    logger.log(error.message);
+    logger.log(colors.red(`Invalid wtf.json at ${configPath}`));
+    logger.log(colors.red(`${error.message}`));
     return {};
   }
 
@@ -276,9 +276,9 @@ export const loadWtfJson = (configPath: string, projectName: string, env: string
     logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
     return {};
   } else {
-    const config = readWtfJson(configPath);
+    logger.log(`Loading wtf.json from ${configPath}`);
 
-    logger.log(`Loaded wtf.json from ${configPath}`);
+    const config = readWtfJson(configPath);
 
     const configEnvVariables = getIn(config, [projectName, 'env', env]) || {};
 
