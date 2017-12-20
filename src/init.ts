@@ -1,7 +1,17 @@
 import * as fs from 'fs';
-import { Config, UTF8 } from './constants';
+import {
+  Config,
+  MATCHES_NO,
+  UTF8,
+} from './constants';
 import * as logger from './logger';
-import { getConfigPath, getProjectName } from './utils';
+import {
+  createStringFromConfig,
+  getConfigPath,
+  getProjectName,
+  readWtfJson,
+  writeConfigCallback,
+} from './utils';
 
 type TempRoute = Partial<{
   process: string;
@@ -9,7 +19,7 @@ type TempRoute = Partial<{
 }>;
 
 export type ValueOrFunction<V> = V | (() => V);
-export type Callback = (value: string | undefined) => any;
+export type Callback = (input: string) => any;
 export type Condition = ValueOrFunction<boolean>;
 
 export interface Question {
@@ -18,16 +28,8 @@ export interface Question {
   condition: Condition;
 }
 
-let config: Config = {};
+let config: Config | undefined;
 let tempRoute: TempRoute = {};
-
-const createStringFromConfig = (createdConfig: {} | undefined): string => {
-  return JSON.stringify(
-    createdConfig,
-    undefined,
-    2
-  ) + '\n';
-};
 
 const createConfig = (): Config => {
   const routes = tempRoute.process ? {[tempRoute.process]: tempRoute.url as string} : {};
@@ -65,8 +67,8 @@ export const QUESTIONS: Question[] = [
       return `\nCreated config:\n\n${stringConfig}\nIs this correct? [y]`;
     },
     condition: true,
-    callback: (value: string | undefined) => {
-      if (value === 'n' || value === 'N') {
+    callback: (input: string) => {
+      if (MATCHES_NO.test(input)) {
         process.exit(0);
       }
     },
@@ -83,28 +85,17 @@ const askForInput = (question: Question, callback: () => any) => {
     logger.log((typeof question.message === 'function' ? question.message() : question.message) + ' ');
 
     process.stdin.once('data', (data) => {
-      const value: string | undefined = (data || '').toString().trim();
-
-      question.callback(value);
-
       process.stdin.pause();
+
+      const input: string = (data || '').toString().trim();
+
+      question.callback(input);
 
       callback();
     });
   } else {
     callback();
   }
-};
-
-export const writeFileCallback = (error?: NodeJS.ErrnoException) => {
-  if (error) {
-    logger.log(error.message);
-    return process.exit(1);
-  }
-
-  const configPath = getConfigPath();
-
-  logger.log(`wtf.json written to ${configPath}`);
 };
 
 export const askQuestions = (questions: Question[], callback: () => any) => {
@@ -129,7 +120,7 @@ export const writeFile = () => {
     configPath,
     stringConfig,
     UTF8,
-    writeFileCallback
+    writeConfigCallback
   );
 };
 
@@ -139,16 +130,7 @@ const init = () => {
   const configPath = getConfigPath();
 
   if (fs.existsSync(configPath)) {
-    const configContent = fs.readFileSync(configPath, UTF8);
-
-    try {
-      config = JSON.parse(configContent);
-    } catch (error) {
-      logger.log('Invalid wtf.json');
-      logger.log(error.message);
-      return process.exit(1);
-    }
-
+    config = readWtfJson(configPath);
     askQuestions(QUESTIONS, writeFile);
   } else {
     logger.log(`No wtf.json found at ${configPath}. I\'ll create that for you`);

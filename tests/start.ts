@@ -1,3 +1,6 @@
+jest.mock('../src/env', () => ({default: jest.fn()}));
+jest.mock('../src/init', () => ({default: jest.fn()}));
+jest.mock('../src/program', () => ({default: jest.fn()}));
 jest.mock('../src/router', () => ({
   default: jest.fn(),
   ACTIONS: {
@@ -18,7 +21,7 @@ import * as start from '../src/start';
 import {
   addRoute,
   applyRoutes,
-  readWtfJson,
+  readWtfJsonAndEnv,
   startProcess,
   startProcesses,
   startProcessWithMaybePort,
@@ -53,13 +56,28 @@ describe('start.ts', () => {
     spyOn(logger, 'log').and.callFake(() => null);
 
     (net as any)._clear();
+
+    spyOn(process.stdout, 'setMaxListeners');
+    spyOn(process.stderr, 'setMaxListeners');
   });
 
   describe('start', () => {
 
     beforeEach(() => {
-      spyOn(start, 'readWtfJson');
+      spyOn(start, 'readWtfJsonAndEnv');
       spyOn(start, 'startRouterCommunication');
+    });
+
+    it('should increase the max stream listeners', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {},
+        flags: {},
+      });
+
+      expect(process.stdout.setMaxListeners).toHaveBeenCalledWith(20);
+      expect(process.stderr.setMaxListeners).toHaveBeenCalledWith(20);
     });
 
     it('should start the router and communication', () => {
@@ -102,7 +120,7 @@ describe('start.ts', () => {
       );
     });
 
-    it('should call readWtfJson', () => {
+    it('should call readWtfJsonAndEnv', () => {
       start.default({
         name: 'start',
         args: {},
@@ -110,7 +128,7 @@ describe('start.ts', () => {
         flags: {},
       });
 
-      expect(start.readWtfJson)
+      expect(start.readWtfJsonAndEnv)
         .toHaveBeenCalledWith(
           'web: http-server . -c-0 -o\nwatch: watchify src/index.js build/index.js',
           {
@@ -175,7 +193,7 @@ describe('start.ts', () => {
 
   });
 
-  describe('readWtfJson', () => {
+  describe('readWtfJsonAndEnv', () => {
 
     beforeEach(() => {
       spyOn(start, 'startProcesses');
@@ -184,31 +202,50 @@ describe('start.ts', () => {
     it('should read from the wtf.json and start processes', () => {
       spyOn(utils, 'getConfigPath').and.callFake(() => 'empty/wtf.json');
 
-      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+      readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}});
 
       expect(fs.existsSync).toHaveBeenCalledWith('empty/wtf.json');
       expect(fs.readFileSync).toHaveBeenCalledWith('empty/wtf.json', UTF8);
-      expect(logger.log).toHaveBeenCalledWith('Loaded wtf.json from empty/wtf.json\n');
-      expect(start.startProcesses)
-        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+      expect(logger.log).toHaveBeenCalledWith('Loading wtf.json from empty/wtf.json');
+      expect(start.startProcesses).toHaveBeenCalledWith(
+        'procfileData',
+        {},
+        'development',
+        {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}},
+        {VAR: 'value'}
+      );
     });
 
     it('should instruct running "wtf init" if config does not exist', () => {
       spyOn(utils, 'getConfigPath').and.callFake(() => 'error/wtf.json');
 
-      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+      readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}});
 
       expect(fs.existsSync).toHaveBeenCalledWith('error/wtf.json');
       expect(logger.log).toHaveBeenCalledWith('No wtf.json found at error/wtf.json - run "wtf init" to begin setup\n');
-      expect(start.startProcesses)
-        .toHaveBeenCalledWith('procfileData', {}, {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+      expect(start.startProcesses).toHaveBeenCalledWith(
+        'procfileData',
+        {},
+        'development',
+        {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}},
+        {VAR: 'value'}
+      );
     });
 
-    it('should exit if wtf.json is invalid', () => {
-      readWtfJson('procfileData', {name: 'readWtfJson', args: {}, kwargs: {}, flags: {}});
+    it('should log if wtf.json is invalid', () => {
+      readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}});
 
-      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json');
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at ~/wtf.json');
+      expect(process.exit).not.toHaveBeenCalled();
+    });
+
+    it('should accept a custom env', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => '~/wtf.json');
+      spyOn(utils, 'loadWtfJson').and.callThrough();
+
+      readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {env: 'custom'}, flags: {}});
+
+      expect(utils.loadWtfJson).toHaveBeenCalledWith('~/wtf.json', 'directory', 'custom');
     });
 
   });
@@ -223,7 +260,9 @@ describe('start.ts', () => {
       startProcesses(
         'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
         {},
-        tree
+        'development',
+        tree,
+        {}
       );
 
       expect(start.startProcess).toHaveBeenCalledTimes(2);
@@ -237,6 +276,8 @@ describe('start.ts', () => {
         DEFAULT_ENV,
         'red',
         tree,
+        {},
+        {},
         undefined
       );
 
@@ -250,6 +291,8 @@ describe('start.ts', () => {
         DEFAULT_ENV,
         'green',
         tree,
+        {},
+        {},
         undefined
       );
     });
@@ -258,6 +301,7 @@ describe('start.ts', () => {
       startProcesses(
         'web: http-server . -c-0 -o',
         {},
+        'development',
         {
           name: 'start',
           args: {
@@ -265,7 +309,8 @@ describe('start.ts', () => {
           },
           kwargs: {},
           flags: {},
-        }
+        },
+        {}
       );
 
       expect(start.startProcess).toHaveBeenCalledTimes(1);
@@ -286,6 +331,8 @@ describe('start.ts', () => {
           kwargs: {},
           flags: {},
         },
+        {},
+        {},
         undefined
       );
     });
@@ -294,6 +341,7 @@ describe('start.ts', () => {
       startProcesses(
         'web: http-server . -c-0 -o',
         {},
+        'development',
         {
           name: 'start',
           args: {
@@ -301,7 +349,8 @@ describe('start.ts', () => {
           },
           kwargs: {},
           flags: {},
-        }
+        },
+        {}
       );
 
       expect(start.startProcess).not.toHaveBeenCalled();
@@ -311,6 +360,7 @@ describe('start.ts', () => {
       startProcesses(
         'web: http-server . -c-0 -o',
         {},
+        'custom',
         {
           name: 'start',
           args: {
@@ -320,7 +370,8 @@ describe('start.ts', () => {
             env: 'custom',
           },
           flags: {},
-        }
+        },
+        {}
       );
 
       expect(start.startProcess).toHaveBeenCalledTimes(1);
@@ -343,6 +394,8 @@ describe('start.ts', () => {
           },
           flags: {},
         },
+        {},
+        {},
         undefined
       );
     });
@@ -355,6 +408,7 @@ describe('start.ts', () => {
             web: 'example.domain.com',
           },
         },
+        'development',
         {
           name: 'start',
           args: {
@@ -362,7 +416,8 @@ describe('start.ts', () => {
           },
           kwargs: {},
           flags: {},
-        }
+        },
+        {}
       );
 
       expect(start.startProcess).toHaveBeenCalledTimes(1);
@@ -383,6 +438,8 @@ describe('start.ts', () => {
           kwargs: {},
           flags: {},
         },
+        {},
+        {},
         'example.domain.com'
       );
     });
@@ -396,7 +453,17 @@ describe('start.ts', () => {
     });
 
     it('should start a process on an available port', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
+      startProcess(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red',
+        tree,
+        {},
+        {},
+        'example.domain.com'
+      );
 
       (net as any)._trigger('listening', 0);
 
@@ -407,13 +474,24 @@ describe('start.ts', () => {
         'development',
         'red',
         tree,
+        {},
+        {},
         'example.domain.com',
         0
       );
     });
 
     it('should start a process without port if no routing', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree);
+      startProcess(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red',
+        tree,
+        {},
+        {}
+      );
 
       (net as any)._trigger('listening');
 
@@ -423,12 +501,24 @@ describe('start.ts', () => {
         0,
         'development',
         'red',
-        tree
+        tree,
+        {},
+        {}
       );
     });
 
     it('should throw a port in use error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
+      startProcess(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red',
+        tree,
+        {},
+        {},
+        'example.domain.com'
+      );
 
       for (let i = 0; i <= 100; i += 1) {
         (net as any)._trigger('error', {code: 'EADDRINUSE', message: 'port in use'});
@@ -438,7 +528,17 @@ describe('start.ts', () => {
     });
 
     it('should throw an unknown error', () => {
-      startProcess({command: 'http-server', options: []}, 'web', 0, 'development', 'red', tree, 'example.domain.com');
+      startProcess(
+        {command: 'http-server', options: []},
+        'web',
+        0,
+        'development',
+        'red',
+        tree,
+        {},
+        {},
+        'example.domain.com'
+      );
 
       (net as any)._trigger('error', new Error('error'));
 
@@ -474,6 +574,8 @@ describe('start.ts', () => {
         'development',
         'red',
         tree,
+        {},
+        {},
         'example.domain.com',
         8080
       );
@@ -497,6 +599,8 @@ describe('start.ts', () => {
             time: true,
           },
         },
+        {},
+        {},
         'example.domain.com',
         8080
       );
@@ -515,6 +619,8 @@ describe('start.ts', () => {
         'development',
         'red',
         tree,
+        {},
+        {},
         'example.domain.com',
         8080
       );
@@ -549,7 +655,9 @@ describe('start.ts', () => {
         0,
         'development',
         'red',
-        tree
+        tree,
+        {},
+        {}
       );
 
       expect(start.addRoute).not.toHaveBeenCalled();

@@ -21,10 +21,12 @@ import {
   getConfigPath,
   getDisplayName,
   getEnvVariables,
+  getIn,
   getProjectName,
   getTimeNow,
   handleShebang,
   injectEnvVars,
+  loadWtfJson,
   onClose,
   PortError,
   wrapDisplayName,
@@ -62,6 +64,8 @@ export const startProcessWithMaybePort = (
   env: string,
   color: Colors,
   tree: Tree,
+  envVariables: {[i: string]: string},
+  configEnvVariables: {[i: string]: string},
   url?: string,
   port?: number
 ) => {
@@ -70,13 +74,9 @@ export const startProcessWithMaybePort = (
 
   logger.log(colors[color](`Starting ${displayName} process...`));
 
-  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-  const envVariables = getEnvVariables(env, envPath);
-
-  logger.log(colors[color](`Found ${Object.keys(envVariables).length} variables in ${envPath}`));
-
   const environment: {[i: string]: string} = {
     ...envVariables,
+    ...configEnvVariables,
     ...process.env,
     PORT: process.env.PORT || '',
     PYTHONUNBUFFERED: 'true',
@@ -133,31 +133,53 @@ export const startProcess = (
   env: string,
   color: Colors,
   tree: Tree,
+  envVariables: {[i: string]: string},
+  configEnvVariables: {[i: string]: string},
   url?: string
 ) => {
   if (url) {
-    getAvailablePort((error: PortError | undefined, port: number) => {
+    getAvailablePort((error: PortError | undefined, port?: number) => {
       if (error) {
         logger.log(error.message);
         return process.exit(1);
       }
 
-      startProcessWithMaybePort(item, processName, longestName, env, color, tree, url, port);
+      startProcessWithMaybePort(
+        item,
+        processName,
+        longestName,
+        env,
+        color,
+        tree,
+        envVariables,
+        configEnvVariables,
+        url,
+        port
+      );
     });
   } else {
-    startProcessWithMaybePort(item, processName, longestName, env, color, tree);
+    startProcessWithMaybePort(
+      item,
+      processName,
+      longestName,
+      env,
+      color,
+      tree,
+      envVariables,
+      configEnvVariables
+    );
   }
 };
 
 export const startProcesses = (
   procfileData: string,
   wtfJson: constants.ConfigProject,
-  tree: Tree
+  env: string,
+  tree: Tree,
+  envVariables: {[i: string]: string}
 ) => {
   let { processes } = tree.args;
-  let { env } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
-  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
@@ -184,10 +206,20 @@ export const startProcesses = (
       if (!processes.length || processes.indexOf(processName) >= 0) {
         const item = procfileConfig[processName];
 
-        const url = wtfJson.routes &&
-          (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
+        const url = getIn(wtfJson, ['routes', processName]);
+        const configEnvVariables = getIn(wtfJson, ['env', env]) || {};
 
-        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], tree, url);
+        startProcess(
+          item,
+          processName,
+          longestName,
+          env,
+          COLORS[index % (COLORS.length)],
+          tree,
+          envVariables,
+          configEnvVariables,
+          url
+        );
       }
 
       index += 1;
@@ -195,28 +227,18 @@ export const startProcesses = (
   }
 };
 
-export const readWtfJson = (procfileData: string, tree: Tree) => {
+export const readWtfJsonAndEnv = (procfileData: string, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
-  let wtfJson: any = {};
+  let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  if (!fs.existsSync(configPath)) {
-    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
-  } else {
-    const configContent = fs.readFileSync(configPath, UTF8);
+  const config = loadWtfJson(configPath, projectName, env);
 
-    try {
-      wtfJson = JSON.parse(configContent);
-    } catch (error) {
-      logger.log('Invalid wtf.json');
-      logger.log(error.message);
-      return process.exit(1);
-    }
+  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+  const envVariables = getEnvVariables(envPath);
 
-    logger.log(`Loaded wtf.json from ${configPath}\n`);
-  }
-
-  startProcesses(procfileData, wtfJson[projectName] || {}, tree);
+  startProcesses(procfileData, getIn(config, [projectName]) || {}, env, tree, envVariables);
 };
 
 export const startRouterCommunication = () => {
@@ -241,6 +263,9 @@ const start = (tree: Tree) => {
   router();
   startRouterCommunication();
 
+  process.stdout.setMaxListeners(20);
+  process.stderr.setMaxListeners(20);
+
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
@@ -253,7 +278,7 @@ const start = (tree: Tree) => {
 
   const procfileContent = fs.readFileSync(procfilePath, UTF8);
 
-  readWtfJson(procfileContent, tree);
+  readWtfJsonAndEnv(procfileContent, tree);
 };
 
 export default start;

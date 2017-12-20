@@ -1,7 +1,8 @@
-jest.mock('../src/init', () => ({default: () => null}));
-jest.mock('../src/program', () => ({default: () => null}));
-jest.mock('../src/run', () => ({default: () => null}));
-jest.mock('../src/start', () => ({default: () => null}));
+jest.mock('../src/env', () => ({default: jest.fn()}));
+jest.mock('../src/init', () => ({default: jest.fn()}));
+jest.mock('../src/program', () => ({default: jest.fn()}));
+jest.mock('../src/run', () => ({default: jest.fn()}));
+jest.mock('../src/start', () => ({default: jest.fn()}));
 
 describe('cli.js', () => {
   beforeEach(() => {

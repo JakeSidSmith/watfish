@@ -1,14 +1,23 @@
-export interface ConfigRoutes {
+export type ConfigRoutes = Partial<{
   [i: string]: string;
-}
+}>;
+
+export type ConfigEnv = Partial<{
+  [i: string]: string;
+}>;
+
+export type ConfigEnvs = Partial<{
+  [i: string]: ConfigEnv | undefined;
+}>;
 
 export type ConfigProject = Partial<{
   routes: ConfigRoutes;
+  env: ConfigEnvs;
 }>;
 
-export interface Config {
+export type Config = Partial<{
   [i: string]: ConfigProject;
-}
+}>;
 
 export type DataOrError = Buffer | Error | string;
 
@@ -16,6 +25,8 @@ export const PADDING = '                       ';
 export const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
 export const MATCHES_ENV_KEY_VALUE = /^(\w+)=(\S+)$/;
 export const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
+export const MATCHES_NO = /n/i;
+export const MATCHES_PYTHON_REQUEST = /python-request/;
 
 export const CONFIG_KEYS: Array<keyof Config> = [
   'routes',

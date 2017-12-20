@@ -2,9 +2,9 @@ import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
-import { Colors, SOCKET_PORT } from './constants';
+import { Colors, MATCHES_PYTHON_REQUEST, SOCKET_PORT } from './constants';
 import * as logger from './logger';
-import { constructHTMLMessage, isPortTaken, PortError } from './utils';
+import { constructHTMLMessage, getRouterPort, isPortTaken, PortError } from './utils';
 
 export interface Routes {
   [i: string]: {
@@ -34,18 +34,26 @@ export const init = () => {
 
   proxy.on('error', (error) => {
     logger.log(error.message);
-    logger.log('Process may still be starting');
+    logger.log('Process may still be starting\n');
   });
 
   expressRouter.use((req, res) => {
     const route = globalRoutes[req.hostname];
+    let agent = req.headers['user-agent'] || '';
+    agent = Array.isArray(agent) ? agent.join(' ') : agent;
 
     if (route) {
       proxy.web(req, res, {
         target: `http://0.0.0.0:${route.port}`,
       });
     } else {
-      res.send(constructHTMLMessage(`Unknown host ${req.hostname}`));
+      const message = `Unknown host ${req.hostname}`;
+
+      if (MATCHES_PYTHON_REQUEST.test(agent)) {
+        res.send(colors.red(message));
+      } else {
+        res.send(constructHTMLMessage(message));
+      }
     }
   });
 
@@ -55,6 +63,8 @@ export const init = () => {
 };
 
 export const addRoute = (processName: string, color: Colors, url: string, port: number, ws: WebSocket) => {
+  const routerPort = getRouterPort();
+
   globalRoutes[url] = {
     processName,
     url,
@@ -64,7 +74,7 @@ export const addRoute = (processName: string, color: Colors, url: string, port: 
 
   /* istanbul ignore else */
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(colors[color](`Routing process ${processName} from ${url} to port ${port}`));
+    ws.send(colors[color](`Routing process ${processName} from http://${url}:${routerPort} to port ${port}`));
   }
 };
 
@@ -79,6 +89,8 @@ export const addRoutes = (routes: Routes, ws: WebSocket) => {
 };
 
 export const removeRoutes = (routes: Routes, ws: WebSocket) => {
+  const routerPort = getRouterPort();
+
   for (const url in routes) {
     /* istanbul ignore else */
     if (routes.hasOwnProperty(url)) {
@@ -87,7 +99,7 @@ export const removeRoutes = (routes: Routes, ws: WebSocket) => {
 
       /* istanbul ignore else */
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(colors[color](`Removing route ${processName} ${url} on port ${port}`));
+        ws.send(colors[color](`Removing route ${processName} http://${url}:${routerPort} on port ${port}`));
       }
     }
   }
@@ -107,11 +119,11 @@ export const startSockets = (port: number, wss: WebSocket.Server) => {
         return;
       }
 
-      const { type, payload, payload: { processName, color, url, port: routePort } } = json;
+      const { type, payload, payload: { processName, color, url, port: routerPort } } = json;
 
       switch (type) {
         case ACTIONS.ADD_ROUTE:
-          addRoute(processName, color, url, routePort, ws);
+          addRoute(processName, color, url, routerPort, ws);
           break;
         case ACTIONS.ADD_ROUTES:
           addRoutes(payload, ws);
@@ -143,24 +155,22 @@ export const startSockets = (port: number, wss: WebSocket.Server) => {
 };
 
 const router = () => {
-  const { PORT } = process.env;
+  const routerPort = getRouterPort();
 
-  const port = PORT ? parseInt(PORT, 10) : 8080;
-
-  isPortTaken(port, (error: PortError | undefined, inUse?: boolean) => {
+  isPortTaken(routerPort, (error: PortError | undefined, inUse?: boolean) => {
     if (error) {
       logger.log(error.message);
     } else if (inUse) {
-      logger.log(`Router port ${port} is already in use`);
+      logger.log(`Router port ${routerPort} is already in use\n`);
     } else {
-      logger.log(`Router starting on port ${port}...`);
+      logger.log(`Router starting on port ${routerPort}...\n`);
 
-      app.listen(port, () => {
-        logger.log(`Router running on port ${port}`);
+      app.listen(routerPort, () => {
+        logger.log(`Router running on port ${routerPort}\n`);
 
         const wss = new WebSocket.Server({ port: SOCKET_PORT });
 
-        startSockets(port, wss);
+        startSockets(routerPort, wss);
       });
     }
   });

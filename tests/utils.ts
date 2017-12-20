@@ -1,19 +1,26 @@
+import * as colors from 'colors/safe';
 import * as net from 'net';
 import { DEFAULT_ENV, TABLE_FLIP, WAT } from '../src/constants';
 import * as logger from '../src/logger';
 import {
   constructHTMLMessage,
+  delIn,
   getAvailablePort,
   getConfigPath,
   getDisplayName,
   getEnvVariables,
+  getIn,
   getProjectName,
+  getRouterPort,
   getTimeNow,
   handleShebang,
   injectEnvVars,
   isPortTaken,
   onClose,
+  readWtfJson,
+  setIn,
   wrapDisplayName,
+  writeConfigCallback,
 } from '../src/utils';
 
 const EADDRINUSE_ERROR = {
@@ -38,6 +45,8 @@ describe('utils.ts', () => {
     spyOn(logger, 'log');
 
     _clear();
+
+    spyOn(colors, 'red').and.callThrough();
   });
 
   describe('isPortTaken', () => {
@@ -127,11 +136,13 @@ describe('utils.ts', () => {
 
   describe('getEnvVariables', () => {
     it('returns an empty object if no env file found', () => {
-      expect(getEnvVariables('nope', 'nope')).toEqual({});
+      expect(getEnvVariables('nope')).toEqual({});
+      expect(logger.log).toHaveBeenCalledWith('No environment file at nope\n');
     });
 
     it('returns the env variables from the env file', () => {
-      expect(getEnvVariables('development', 'etc/environments/development/env')).toEqual({VAR: 'value'});
+      expect(getEnvVariables('etc/environments/development/env')).toEqual({VAR: 'value'});
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env\n');
     });
   });
 
@@ -206,6 +217,155 @@ describe('utils.ts', () => {
       expect(MATCHES_TIME_FORMAT.test(result)).toBe(true);
     });
 
+  });
+
+  describe('readWtfJson', () => {
+
+    it('should read the wtf.json', () => {
+      expect(readWtfJson('valid/wtf.json')).toEqual({
+        project: {
+          routes: {
+            web: 'example.domain.com',
+          },
+          env: {
+            development: {
+              KEY: 'value',
+            },
+          },
+        },
+      });
+    });
+
+    it('should empty wtf.json', () => {
+      expect(readWtfJson('empty/wtf.json')).toEqual({});
+    });
+
+    it('should log if config is invalid', () => {
+      readWtfJson('invalid/wtf.json');
+
+      expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at invalid/wtf.json');
+      expect(process.exit).not.toHaveBeenCalledWith();
+    });
+
+  });
+
+  describe('getRouterPort', () => {
+
+    it('should return the default router port', () => {
+      expect(getRouterPort()).toBe(8080);
+    });
+
+    it('should return a custom router port', () => {
+      process.env.PORT = '1234';
+
+      expect(getRouterPort()).toBe(1234);
+
+      delete process.env.PORT;
+    });
+
+  });
+
+  describe('setIn', () => {
+
+    it('should set a single depth', () => {
+      const obj = {};
+
+      setIn(obj, ['a'], 'b');
+
+      expect(obj).toEqual({a: 'b'});
+    });
+
+    it('should set in multiple depths', () => {
+      const obj = {};
+
+      setIn(obj, ['a', 'b'], 'c');
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
+    it('should set in and overwrite existing values', () => {
+      const obj = {a: {b: 'd'}};
+
+      setIn(obj, ['a', 'b'], 'c');
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
+  });
+
+  describe('getIn', () => {
+
+    it('should return undefined if it cannot find a value at single depth', () => {
+      const obj = {};
+
+      expect(getIn(obj, ['a'])).toEqual(undefined);
+    });
+
+    it('should return undefined if it cannot find value multi depth', () => {
+      const obj = {c: {b: 'a'}};
+
+      expect(getIn(obj, ['a', 'b', 'c'])).toEqual(undefined);
+
+      expect(getIn(obj, ['c', 'b', 'a'])).toEqual(undefined);
+    });
+
+    it('should return a value at a single depth', () => {
+      const obj = {a: 'b'};
+
+      expect(getIn(obj, ['a'])).toEqual('b');
+    });
+
+    it('should return a value at multiple depths', () => {
+      const obj = {a: {b: 'c'}};
+
+      expect(getIn(obj, ['a', 'b'])).toEqual('c');
+    });
+
+  });
+
+  describe('delIn', () => {
+
+    it('should do nothing if the value does not exist', () => {
+      const obj = {a: {b: 'c'}};
+
+      delIn(obj, ['a', 'c', 'd']);
+
+      expect(obj).toEqual({a: {b: 'c'}});
+    });
+
+    it('should delete a value at a single depth', () => {
+      const obj = {a: 'b'};
+
+      delIn(obj, ['a']);
+
+      expect(obj).toEqual({});
+    });
+
+    it('should delete a value at multiple depths', () => {
+      const obj = {a: {b: 'c'}};
+
+      delIn(obj, ['a', 'b']);
+
+      expect(obj).toEqual({a: {}});
+    });
+
+  });
+
+  describe('writeConfigCallback', () => {
+
+    it('should output a success message', () => {
+      writeConfigCallback();
+
+      expect(logger.log).toHaveBeenCalledWith('wtf.json written to ~/wtf.json');
+      expect(process.exit).not.toHaveBeenCalled();
+    });
+
+    it('should exit on error', () => {
+      writeConfigCallback(new Error('WTF'));
+
+      expect(logger.log).toHaveBeenCalledWith('WTF');
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
   });
 
 });

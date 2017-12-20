@@ -5,6 +5,7 @@ import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
+  Config,
   DEFAULT_ENV,
   ENV_BIN,
   MATCHES_ENV_KEY_VALUE,
@@ -23,6 +24,48 @@ export interface PortError extends Error {
 }
 
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
+
+export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    obj[first] = value;
+  } else {
+    if (!(first in obj)) {
+      obj[first] = {};
+    }
+
+    setIn(obj[first], rest as [string], value);
+  }
+};
+
+export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    return obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    }
+
+    return getIn(obj[first], rest as [string]);
+  }
+};
+
+export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    delete obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    } else {
+      delIn(obj[first], rest as [string]);
+    }
+  }
+};
 
 export const isPortTaken = (port: number, callback: PortCallback) => {
   const tester = net.createServer();
@@ -125,8 +168,9 @@ export const handleShebang = (command: string): string => {
   return command;
 };
 
-export const getEnvVariables = (env: string, envPath: string): {[i: string]: string} => {
+export const getEnvVariables = (envPath: string): {[i: string]: string} => {
   if (!fs.existsSync(envPath)) {
+    logger.log(`No environment file at ${envPath}\n`);
     return {};
   }
 
@@ -141,6 +185,8 @@ export const getEnvVariables = (env: string, envPath: string): {[i: string]: str
       envVariables[match[1]] = match[2];
     }
   });
+
+  logger.log(`Found ${Object.keys(envVariables).length} variables in ${envPath}\n`);
 
   return envVariables;
 };
@@ -208,4 +254,61 @@ export const constructHTMLMessage = (message: string) => {
 
 export const getTimeNow = () => {
   return moment().format('HH:mm:ss.SS');
+};
+
+export const readWtfJson = (configPath: string): Config => {
+  let config: Config = {};
+  const configContent = fs.readFileSync(configPath, UTF8);
+
+  try {
+    config = JSON.parse(configContent);
+  } catch (error) {
+    logger.log(colors.red(`Invalid wtf.json at ${configPath}`));
+    logger.log(colors.red(`${error.message}`));
+    return {};
+  }
+
+  return config;
+};
+
+export const loadWtfJson = (configPath: string, projectName: string, env: string): Config => {
+  if (!fs.existsSync(configPath)) {
+    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
+    return {};
+  } else {
+    logger.log(`Loading wtf.json from ${configPath}`);
+
+    const config = readWtfJson(configPath);
+
+    const configEnvVariables = getIn(config, [projectName, 'env', env]) || {};
+
+    logger.log(`Found ${Object.keys(configEnvVariables).length} variables in wtf.json\n`);
+
+    return config;
+  }
+};
+
+export const getRouterPort = () => {
+  const { PORT } = process.env;
+
+  return PORT ? parseInt(PORT, 10) : 8080;
+};
+
+export const createStringFromConfig = (createdConfig: {} | undefined): string => {
+  return JSON.stringify(
+    createdConfig,
+    undefined,
+    2
+  ) + '\n';
+};
+
+export const writeConfigCallback = (error?: NodeJS.ErrnoException) => {
+  if (error) {
+    logger.log(error.message);
+    return process.exit(1);
+  }
+
+  const configPath = getConfigPath();
+
+  logger.log(`wtf.json written to ${configPath}`);
 };
