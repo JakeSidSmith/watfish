@@ -14,7 +14,7 @@ import {
   getConfigPath,
   getIn,
   getProjectName,
-  loadWtfJson,
+  readWtfJson,
   setIn,
   writeConfigCallback,
 } from './utils';
@@ -38,7 +38,7 @@ const envCommand = (tree: Tree) => {
       process.exit(1);
     }
   } else {
-    config = loadWtfJson(configPath);
+    config = readWtfJson(configPath);
   }
 
   config = config ? config : {};

@@ -4,7 +4,16 @@ import { Tree } from 'jargs';
 import * as path from 'path';
 import { DEFAULT_ENV, DISAPPROVAL, WAT } from './constants';
 import * as logger from './logger';
-import { getEnvVariables, handleShebang, injectEnvVars, onClose } from './utils';
+import {
+  getConfigPath,
+  getEnvVariables,
+  getIn,
+  getProjectName,
+  handleShebang,
+  injectEnvVars,
+  loadWtfJson,
+  onClose,
+} from './utils';
 
 export const runCommand = (
   commandAndOptions: undefined | Array<string | undefined> = [],
@@ -26,8 +35,15 @@ export const runCommand = (
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
   const envVariables = getEnvVariables(envPath);
 
+  const configPath = getConfigPath();
+  const projectName = getProjectName();
+
+  const wtfJson = loadWtfJson(configPath, projectName, env);
+  const configEnvVariables = getIn(wtfJson, [projectName, 'env', env]) || {};
+
   const environment: {[i: string]: string} = {
     ...envVariables,
+    ...configEnvVariables,
     ...process.env,
     PYTHONUNBUFFERED: 'true',
   };

@@ -9,7 +9,6 @@ import * as constants from './constants';
 import {
   Colors,
   COLORS,
-  Config,
   DEFAULT_ENV,
   SOCKET_PORT,
   UTF8,
@@ -65,6 +64,8 @@ export const startProcessWithMaybePort = (
   env: string,
   color: Colors,
   tree: Tree,
+  envVariables: {[i: string]: string},
+  configEnvVariables: {[i: string]: string},
   url?: string,
   port?: number
 ) => {
@@ -73,11 +74,9 @@ export const startProcessWithMaybePort = (
 
   logger.log(colors[color](`Starting ${displayName} process...`));
 
-  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-  const envVariables = getEnvVariables(envPath, color);
-
   const environment: {[i: string]: string} = {
     ...envVariables,
+    ...configEnvVariables,
     ...process.env,
     PORT: process.env.PORT || '',
     PYTHONUNBUFFERED: 'true',
@@ -134,6 +133,8 @@ export const startProcess = (
   env: string,
   color: Colors,
   tree: Tree,
+  envVariables: {[i: string]: string},
+  configEnvVariables: {[i: string]: string},
   url?: string
 ) => {
   if (url) {
@@ -143,22 +144,42 @@ export const startProcess = (
         return process.exit(1);
       }
 
-      startProcessWithMaybePort(item, processName, longestName, env, color, tree, url, port);
+      startProcessWithMaybePort(
+        item,
+        processName,
+        longestName,
+        env,
+        color,
+        tree,
+        envVariables,
+        configEnvVariables,
+        url,
+        port
+      );
     });
   } else {
-    startProcessWithMaybePort(item, processName, longestName, env, color, tree);
+    startProcessWithMaybePort(
+      item,
+      processName,
+      longestName,
+      env,
+      color,
+      tree,
+      envVariables,
+      configEnvVariables
+    );
   }
 };
 
 export const startProcesses = (
   procfileData: string,
   wtfJson: constants.ConfigProject,
-  tree: Tree
+  env: string,
+  tree: Tree,
+  envVariables: {[i: string]: string}
 ) => {
   let { processes } = tree.args;
-  let { env } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
-  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
@@ -186,8 +207,19 @@ export const startProcesses = (
         const item = procfileConfig[processName];
 
         const url = getIn(wtfJson, ['routes', processName]);
+        const configEnvVariables = getIn(wtfJson, ['env', env]) || {};
 
-        startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], tree, url);
+        startProcess(
+          item,
+          processName,
+          longestName,
+          env,
+          COLORS[index % (COLORS.length)],
+          tree,
+          envVariables,
+          configEnvVariables,
+          url
+        );
       }
 
       index += 1;
@@ -195,24 +227,18 @@ export const startProcesses = (
   }
 };
 
-export const readWtfJson = (procfileData: string, tree: Tree) => {
+export const readWtfJsonAndEnv = (procfileData: string, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
-  let config: Config | undefined = {};
+  let { env } = tree.kwargs;
+  env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  if (!fs.existsSync(configPath)) {
-    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
-  } else {
-    config = loadWtfJson(configPath);
+  const config = loadWtfJson(configPath, projectName, env);
 
-    if (!config) {
-      return;
-    }
+  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+  const envVariables = getEnvVariables(envPath);
 
-    logger.log(`Loaded wtf.json from ${configPath}\n`);
-  }
-
-  startProcesses(procfileData, config[projectName] || {}, tree);
+  startProcesses(procfileData, getIn(config, [projectName]) || {}, env, tree, envVariables);
 };
 
 export const startRouterCommunication = () => {
@@ -249,7 +275,7 @@ const start = (tree: Tree) => {
 
   const procfileContent = fs.readFileSync(procfilePath, UTF8);
 
-  readWtfJson(procfileContent, tree);
+  readWtfJsonAndEnv(procfileContent, tree);
 };
 
 export default start;

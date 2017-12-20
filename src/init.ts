@@ -9,7 +9,7 @@ import {
   createStringFromConfig,
   getConfigPath,
   getProjectName,
-  loadWtfJson,
+  readWtfJson,
   writeConfigCallback,
 } from './utils';
 
@@ -130,12 +130,7 @@ const init = () => {
   const configPath = getConfigPath();
 
   if (fs.existsSync(configPath)) {
-    config = loadWtfJson(configPath);
-
-    if (!config) {
-      return;
-    }
-
+    config = readWtfJson(configPath);
     askQuestions(QUESTIONS, writeFile);
   } else {
     logger.log(`No wtf.json found at ${configPath}. I\'ll create that for you`);

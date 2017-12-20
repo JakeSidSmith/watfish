@@ -5,7 +5,6 @@ import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
-  Colors,
   Config,
   DEFAULT_ENV,
   ENV_BIN,
@@ -25,6 +24,48 @@ export interface PortError extends Error {
 }
 
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
+
+export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    obj[first] = value;
+  } else {
+    if (!(first in obj)) {
+      obj[first] = {};
+    }
+
+    setIn(obj[first], rest as [string], value);
+  }
+};
+
+export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    return obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    }
+
+    return getIn(obj[first], rest as [string]);
+  }
+};
+
+export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
+  const [first, ...rest] = setPath;
+
+  if (!rest.length) {
+    delete obj[first];
+  } else {
+    if (!(first in obj)) {
+      return;
+    } else {
+      delIn(obj[first], rest as [string]);
+    }
+  }
+};
 
 export const isPortTaken = (port: number, callback: PortCallback) => {
   const tester = net.createServer();
@@ -127,11 +168,9 @@ export const handleShebang = (command: string): string => {
   return command;
 };
 
-export const getEnvVariables = (envPath: string, color?: Colors): {[i: string]: string} => {
+export const getEnvVariables = (envPath: string): {[i: string]: string} => {
   if (!fs.existsSync(envPath)) {
-    let noEnvMessage = `No environment file at ${envPath}`;
-    noEnvMessage = typeof color === 'string' ? colors[color](noEnvMessage) : noEnvMessage;
-    logger.log(noEnvMessage);
+    logger.log(`No environment file at ${envPath}`);
     return {};
   }
 
@@ -147,9 +186,7 @@ export const getEnvVariables = (envPath: string, color?: Colors): {[i: string]: 
     }
   });
 
-  let envVariablesMessage = `Found ${Object.keys(envVariables).length} variables in ${envPath}`;
-  envVariablesMessage = typeof color === 'string' ? colors[color](envVariablesMessage) : envVariablesMessage;
-  logger.log(envVariablesMessage);
+  logger.log(`Found ${Object.keys(envVariables).length} variables in ${envPath}`);
 
   return envVariables;
 };
@@ -219,67 +256,43 @@ export const getTimeNow = () => {
   return moment().format('HH:mm:ss.SS');
 };
 
-export const loadWtfJson = (configPath: string): Config | undefined => {
-  let config: Config = {};
+export const readWtfJson = (configPath: string): Config => {
+  let config: Config | undefined = {};
   const configContent = fs.readFileSync(configPath, UTF8);
 
   try {
-    config = JSON.parse(configContent);
+    config = JSON.parse(configContent) || {};
   } catch (error) {
     logger.log(`Invalid wtf.json at ${configPath}`);
     logger.log(error.message);
-    return process.exit(1);
+    process.exit(1);
+    return {};
   }
 
-  return config;
+  return config || {};
+};
+
+export const loadWtfJson = (configPath: string, projectName: string, env: string): Config => {
+  if (!fs.existsSync(configPath)) {
+    logger.log(`No wtf.json found at ${configPath} - run "wtf init" to begin setup\n`);
+    return {};
+  } else {
+    const config = readWtfJson(configPath);
+
+    logger.log(`Loaded wtf.json from ${configPath}\n`);
+
+    const configEnvVariables = getIn(config, [projectName, 'env', env]) || {};
+
+    logger.log(`Found ${Object.keys(configEnvVariables).length} variables in wtf.json`);
+  }
+
+  return {};
 };
 
 export const getRouterPort = () => {
   const { PORT } = process.env;
 
   return PORT ? parseInt(PORT, 10) : 8080;
-};
-
-export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
-  const [first, ...rest] = setPath;
-
-  if (!rest.length) {
-    obj[first] = value;
-  } else {
-    if (!(first in obj)) {
-      obj[first] = {};
-    }
-
-    setIn(obj[first], rest as [string], value);
-  }
-};
-
-export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
-  const [first, ...rest] = setPath;
-
-  if (!rest.length) {
-    return obj[first];
-  } else {
-    if (!(first in obj)) {
-      return;
-    }
-
-    return getIn(obj[first], rest as [string]);
-  }
-};
-
-export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
-  const [first, ...rest] = setPath;
-
-  if (!rest.length) {
-    delete obj[first];
-  } else {
-    if (!(first in obj)) {
-      return;
-    } else {
-      delIn(obj[first], rest as [string]);
-    }
-  }
 };
 
 export const createStringFromConfig = (createdConfig: {} | undefined): string => {

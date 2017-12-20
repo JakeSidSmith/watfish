@@ -16,8 +16,8 @@ import {
   handleShebang,
   injectEnvVars,
   isPortTaken,
-  loadWtfJson,
   onClose,
+  readWtfJson,
   setIn,
   wrapDisplayName,
   writeConfigCallback,
@@ -144,18 +144,6 @@ describe('utils.ts', () => {
       expect(getEnvVariables('etc/environments/development/env')).toEqual({VAR: 'value'});
       expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env');
     });
-
-    it('should accept and utilize a process color (no env variables)', () => {
-      expect(getEnvVariables('nope', 'red')).toEqual({});
-      expect(logger.log).toHaveBeenCalledWith('No environment file at nope');
-      expect(colors.red).toHaveBeenCalled();
-    });
-
-    it('should accept and utilize a process color (with env variables)', () => {
-      expect(getEnvVariables('etc/environments/development/env', 'red')).toEqual({VAR: 'value'});
-      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env');
-      expect(colors.red).toHaveBeenCalled();
-    });
   });
 
   describe('handleShebang', () => {
@@ -231,10 +219,10 @@ describe('utils.ts', () => {
 
   });
 
-  describe('loadWtfJson', () => {
+  describe('readWtfJson', () => {
 
     it('should the wtf.json', () => {
-      expect(loadWtfJson('valid/wtf.json')).toEqual({
+      expect(readWtfJson('valid/wtf.json')).toEqual({
         project: {
           routes: {
             web: 'example.domain.com',
@@ -249,11 +237,11 @@ describe('utils.ts', () => {
     });
 
     it('should empty wtf.json', () => {
-      expect(loadWtfJson('empty/wtf.json')).toEqual({});
+      expect(readWtfJson('empty/wtf.json')).toEqual({});
     });
 
     it('should exit if config is invalid', () => {
-      loadWtfJson('invalid/wtf.json');
+      readWtfJson('invalid/wtf.json');
 
       expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at invalid/wtf.json');
       expect(process.exit).toHaveBeenCalledWith(1);
