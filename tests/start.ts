@@ -56,6 +56,9 @@ describe('start.ts', () => {
     spyOn(logger, 'log').and.callFake(() => null);
 
     (net as any)._clear();
+
+    spyOn(process.stdout, 'setMaxListeners');
+    spyOn(process.stderr, 'setMaxListeners');
   });
 
   describe('start', () => {
@@ -63,6 +66,18 @@ describe('start.ts', () => {
     beforeEach(() => {
       spyOn(start, 'readWtfJsonAndEnv');
       spyOn(start, 'startRouterCommunication');
+    });
+
+    it('should increase the max stream listeners', () => {
+      start.default({
+        name: 'start',
+        args: {},
+        kwargs: {},
+        flags: {},
+      });
+
+      expect(process.stdout.setMaxListeners).toHaveBeenCalledWith(20);
+      expect(process.stderr.setMaxListeners).toHaveBeenCalledWith(20);
     });
 
     it('should start the router and communication', () => {

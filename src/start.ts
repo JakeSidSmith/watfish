@@ -263,6 +263,9 @@ const start = (tree: Tree) => {
   router();
   startRouterCommunication();
 
+  process.stdout.setMaxListeners(20);
+  process.stderr.setMaxListeners(20);
+
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
