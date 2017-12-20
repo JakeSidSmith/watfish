@@ -1,5 +1,9 @@
 import * as fs from 'fs';
-import { Config, UTF8 } from './constants';
+import {
+  Config,
+  MATCHES_NO,
+  UTF8,
+} from './constants';
 import * as logger from './logger';
 import {
   createStringFromConfig,
@@ -64,7 +68,7 @@ export const QUESTIONS: Question[] = [
     },
     condition: true,
     callback: (input: string) => {
-      if (input === 'n' || input === 'N') {
+      if (MATCHES_NO.test(input)) {
         process.exit(0);
       }
     },
