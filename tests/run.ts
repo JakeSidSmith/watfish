@@ -142,8 +142,8 @@ describe('run.ts', () => {
         }
       );
 
-      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in directory/etc/environments/development/env');
-      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in wtf.json');
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in directory/etc/environments/development/env\n');
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in wtf.json\n');
     });
 
     it('should exit if no command is supplied', () => {

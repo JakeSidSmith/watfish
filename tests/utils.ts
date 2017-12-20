@@ -137,12 +137,12 @@ describe('utils.ts', () => {
   describe('getEnvVariables', () => {
     it('returns an empty object if no env file found', () => {
       expect(getEnvVariables('nope')).toEqual({});
-      expect(logger.log).toHaveBeenCalledWith('No environment file at nope');
+      expect(logger.log).toHaveBeenCalledWith('No environment file at nope\n');
     });
 
     it('returns the env variables from the env file', () => {
       expect(getEnvVariables('etc/environments/development/env')).toEqual({VAR: 'value'});
-      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env');
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env\n');
     });
   });
 

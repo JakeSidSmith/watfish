@@ -33,7 +33,7 @@ describe('router.ts', () => {
       (net as any)._trigger('listening');
 
       expect(router.startSockets).toHaveBeenCalledWith(2020, new WebSocket.Server());
-      expect(logger.log).toHaveBeenCalledWith('Router running on port 2020');
+      expect(logger.log).toHaveBeenCalledWith('Router running on port 2020\n');
 
       delete process.env.PORT;
     });
@@ -44,7 +44,7 @@ describe('router.ts', () => {
       (net as any)._trigger('listening');
 
       expect(router.startSockets).toHaveBeenCalledWith(8080, new WebSocket.Server());
-      expect(logger.log).toHaveBeenCalledWith('Router running on port 8080');
+      expect(logger.log).toHaveBeenCalledWith('Router running on port 8080\n');
     });
 
     it('should log that the port is in use if this is the case', () => {
@@ -52,7 +52,7 @@ describe('router.ts', () => {
 
       (net as any)._trigger('error', EADDRINUSE_ERROR);
 
-      expect(logger.log).toHaveBeenCalledWith('Router port 8080 is already in use');
+      expect(logger.log).toHaveBeenCalledWith('Router port 8080 is already in use\n');
     });
 
     it('should exit if an unknown error is thrown', () => {
@@ -90,7 +90,7 @@ describe('router.ts', () => {
       (httpProxy as any)._trigger('error', new Error('error'));
 
       expect(logger.log).toHaveBeenCalledWith('error');
-      expect(logger.log).toHaveBeenCalledWith('Process may still be starting');
+      expect(logger.log).toHaveBeenCalledWith('Process may still be starting\n');
     });
 
     it('should return an HTML error for unknown hosts', () => {

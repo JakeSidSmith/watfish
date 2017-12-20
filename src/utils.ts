@@ -170,7 +170,7 @@ export const handleShebang = (command: string): string => {
 
 export const getEnvVariables = (envPath: string): {[i: string]: string} => {
   if (!fs.existsSync(envPath)) {
-    logger.log(`No environment file at ${envPath}`);
+    logger.log(`No environment file at ${envPath}\n`);
     return {};
   }
 
@@ -186,7 +186,7 @@ export const getEnvVariables = (envPath: string): {[i: string]: string} => {
     }
   });
 
-  logger.log(`Found ${Object.keys(envVariables).length} variables in ${envPath}`);
+  logger.log(`Found ${Object.keys(envVariables).length} variables in ${envPath}\n`);
 
   return envVariables;
 };
@@ -279,11 +279,11 @@ export const loadWtfJson = (configPath: string, projectName: string, env: string
   } else {
     const config = readWtfJson(configPath);
 
-    logger.log(`Loaded wtf.json from ${configPath}\n`);
+    logger.log(`Loaded wtf.json from ${configPath}`);
 
     const configEnvVariables = getIn(config, [projectName, 'env', env]) || {};
 
-    logger.log(`Found ${Object.keys(configEnvVariables).length} variables in wtf.json`);
+    logger.log(`Found ${Object.keys(configEnvVariables).length} variables in wtf.json\n`);
 
     return config;
   }

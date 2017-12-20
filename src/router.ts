@@ -34,7 +34,7 @@ export const init = () => {
 
   proxy.on('error', (error) => {
     logger.log(error.message);
-    logger.log('Process may still be starting');
+    logger.log('Process may still be starting\n');
   });
 
   expressRouter.use((req, res) => {
@@ -153,12 +153,12 @@ const router = () => {
     if (error) {
       logger.log(error.message);
     } else if (inUse) {
-      logger.log(`Router port ${routerPort} is already in use`);
+      logger.log(`Router port ${routerPort} is already in use\n`);
     } else {
-      logger.log(`Router starting on port ${routerPort}...`);
+      logger.log(`Router starting on port ${routerPort}...\n`);
 
       app.listen(routerPort, () => {
-        logger.log(`Router running on port ${routerPort}`);
+        logger.log(`Router running on port ${routerPort}\n`);
 
         const wss = new WebSocket.Server({ port: SOCKET_PORT });
 
