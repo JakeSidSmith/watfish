@@ -71,9 +71,10 @@ Here's some of the commands that are available
   Usage: wtf command [<sub-command>] [options]
 
   Commands:
-    init, i    Generate a watfish config file
-    run, r     Run arbitrary commands in the environment
-    start, s   Start project processes
+    env, e    Change local project environment variables
+    init, i   Generate a watfish config file
+    run, r    Run arbitrary commands in the environment
+    start, s  Start project processes
 
   Options:
     --help, -h     Display help and usage info
@@ -81,7 +82,11 @@ Here's some of the commands that are available
     <command>      Arbitrary command to run in the environment
 
   Examples:
-    wtf start --env dev
+    wtf init
+    wtf env set KEY value
+    wtf start
+    wtf start --env production
+    wtf run manage.py migrate
 ```
 
 ## procfile and env
@@ -210,11 +215,13 @@ This will have created a `wtf.json` in your home directory with the following co
     "routes": {
       "web": "example.domain.com"
     },
+    "env": {
       "development": {
-      "SECRET_KEY": "my-secret-key"
-    },
-    "production" : {
-      "SECRET_KEY": "another-secret-key"
+        "SECRET_KEY": "my-secret-key"
+      },
+      "production" : {
+        "SECRET_KEY": "another-secret-key"
+      }
     }
   }
 }
