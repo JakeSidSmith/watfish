@@ -5,6 +5,7 @@ import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import {
+  Colors,
   Config,
   DEFAULT_ENV,
   ENV_BIN,
@@ -126,8 +127,11 @@ export const handleShebang = (command: string): string => {
   return command;
 };
 
-export const getEnvVariables = (env: string, envPath: string): {[i: string]: string} => {
+export const getEnvVariables = (envPath: string, color?: Colors): {[i: string]: string} => {
   if (!fs.existsSync(envPath)) {
+    let noEnvMessage = `No environment file at ${envPath}`;
+    noEnvMessage = typeof color === 'string' ? colors[color](noEnvMessage) : noEnvMessage;
+    logger.log(noEnvMessage);
     return {};
   }
 
@@ -142,6 +146,10 @@ export const getEnvVariables = (env: string, envPath: string): {[i: string]: str
       envVariables[match[1]] = match[2];
     }
   });
+
+  let envVariablesMessage = `Found ${Object.keys(envVariables).length} variables in ${envPath}`;
+  envVariablesMessage = typeof color === 'string' ? colors[color](envVariablesMessage) : envVariablesMessage;
+  logger.log(envVariablesMessage);
 
   return envVariables;
 };

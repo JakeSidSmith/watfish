@@ -73,9 +73,7 @@ export const startProcessWithMaybePort = (
   logger.log(colors[color](`Starting ${displayName} process...`));
 
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-  const envVariables = getEnvVariables(env, envPath);
-
-  logger.log(colors[color](`Found ${Object.keys(envVariables).length} variables in ${envPath}`));
+  const envVariables = getEnvVariables(envPath, color);
 
   const environment: {[i: string]: string} = {
     ...envVariables,

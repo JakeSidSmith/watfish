@@ -1,3 +1,4 @@
+import * as colors from 'colors/safe';
 import * as net from 'net';
 import { DEFAULT_ENV, TABLE_FLIP, WAT } from '../src/constants';
 import * as logger from '../src/logger';
@@ -44,6 +45,8 @@ describe('utils.ts', () => {
     spyOn(logger, 'log');
 
     _clear();
+
+    spyOn(colors, 'red').and.callThrough();
   });
 
   describe('isPortTaken', () => {
@@ -133,11 +136,25 @@ describe('utils.ts', () => {
 
   describe('getEnvVariables', () => {
     it('returns an empty object if no env file found', () => {
-      expect(getEnvVariables('nope', 'nope')).toEqual({});
+      expect(getEnvVariables('nope')).toEqual({});
+      expect(logger.log).toHaveBeenCalledWith('No environment file at nope');
     });
 
     it('returns the env variables from the env file', () => {
-      expect(getEnvVariables('development', 'etc/environments/development/env')).toEqual({VAR: 'value'});
+      expect(getEnvVariables('etc/environments/development/env')).toEqual({VAR: 'value'});
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env');
+    });
+
+    it('should accept and utilize a process color (no env variables)', () => {
+      expect(getEnvVariables('nope', 'red')).toEqual({});
+      expect(logger.log).toHaveBeenCalledWith('No environment file at nope');
+      expect(colors.red).toHaveBeenCalled();
+    });
+
+    it('should accept and utilize a process color (with env variables)', () => {
+      expect(getEnvVariables('etc/environments/development/env', 'red')).toEqual({VAR: 'value'});
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env');
+      expect(colors.red).toHaveBeenCalled();
     });
   });
 

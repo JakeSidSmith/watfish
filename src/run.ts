@@ -24,7 +24,7 @@ export const runCommand = (
   }
 
   const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-  const envVariables = getEnvVariables(env, envPath);
+  const envVariables = getEnvVariables(envPath);
 
   const environment: {[i: string]: string} = {
     ...envVariables,
