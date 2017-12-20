@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as os from 'os';
+import { UTF8 } from '../src/constants';
 import env from '../src/env';
 import * as logger from '../src/logger';
 import * as utils from '../src/utils';
@@ -171,6 +172,60 @@ describe('env.ts', () => {
 
     expect(logger.log).toHaveBeenCalledWith(`\nCreated config:\n\n${expected}\nIs this correct? [y]`);
     expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should set a value in the default environment and write a file', () => {
+    const answers = [''];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {},
+      flags: {},
+      args: {},
+      command: {
+        name: 'set',
+        kwargs: {},
+        flags: {},
+        args: {
+          key: 'FOO',
+          value: 'bar',
+        },
+      },
+    });
+
+    const expected = utils.createStringFromConfig({
+      development: {
+        KEY: 'value',
+        FOO: 'bar',
+      },
+    });
+
+    const expectedFullConfig = utils.createStringFromConfig({
+      project: {
+        routes: {
+          web: 'example.domain.com',
+        },
+        env: {
+          development: {
+            KEY: 'value',
+            FOO: 'bar',
+          },
+        },
+      },
+    });
+
+    expect(logger.log).toHaveBeenCalledWith(`\nCreated config:\n\n${expected}\nIs this correct? [y]`);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      '~/valid/wtf.json',
+      expectedFullConfig,
+      UTF8,
+      utils.writeConfigCallback
+    );
   });
 
 });
