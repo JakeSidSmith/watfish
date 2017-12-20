@@ -11,7 +11,6 @@ describe('run.ts', () => {
     spyOn(logger, 'log');
     spyOn(process, 'exit');
     spyOn(process, 'cwd').and.callFake(() => 'directory/');
-    spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
 
     (childProcess.spawn as jest.Mock<any>).mockClear();
   });
@@ -20,6 +19,7 @@ describe('run.ts', () => {
 
     beforeEach(() => {
       spyOn(run, 'runCommand');
+      spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
     });
 
     it('calls runCommand', () => {
@@ -75,6 +75,7 @@ describe('run.ts', () => {
     });
 
     it('should spawn a child process with the provided options', () => {
+      spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
       runCommand(['npm', 'install'], DEFAULT_ENV, ['--save']);
 
       expect(childProcess.spawn).toHaveBeenCalledWith(
@@ -95,6 +96,7 @@ describe('run.ts', () => {
     });
 
     it('should spawn a child process without a rest parameter', () => {
+      spyOn(utils, 'getEnvVariables').and.callFake(() => ({}));
       runCommand(['npm', 'install'], DEFAULT_ENV, undefined);
 
       expect(childProcess.spawn).toHaveBeenCalledWith(
@@ -112,6 +114,36 @@ describe('run.ts', () => {
       );
 
       expect(logger.log).toHaveBeenCalledWith('Running npm install');
+    });
+
+    it('should load environment variables found in the env and wtf.json', () => {
+      spyOn(utils, 'getConfigPath').and.returnValue('valid/wtf.json');
+      spyOn(utils, 'getProjectName').and.returnValue('project');
+
+      runCommand(['npm', 'install'], DEFAULT_ENV, undefined);
+
+      const combinedWtfJsonAndEnvVariables = {
+        KEY: 'value',
+        VAR: 'value',
+      };
+
+      expect(childProcess.spawn).toHaveBeenCalledWith(
+        'npm',
+        ['install'],
+        {
+          cwd: 'directory/',
+          shell: true,
+          env: {
+            ...combinedWtfJsonAndEnvVariables,
+            ...process.env,
+            PYTHONUNBUFFERED: 'true',
+          },
+          stdio: 'inherit',
+        }
+      );
+
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in directory/etc/environments/development/env');
+      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in wtf.json');
     });
 
     it('should exit if no command is supplied', () => {

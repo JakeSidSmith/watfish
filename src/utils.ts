@@ -284,9 +284,9 @@ export const loadWtfJson = (configPath: string, projectName: string, env: string
     const configEnvVariables = getIn(config, [projectName, 'env', env]) || {};
 
     logger.log(`Found ${Object.keys(configEnvVariables).length} variables in wtf.json`);
-  }
 
-  return {};
+    return config;
+  }
 };
 
 export const getRouterPort = () => {
