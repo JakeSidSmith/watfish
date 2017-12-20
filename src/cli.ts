@@ -64,7 +64,7 @@ collect(
           'init',
           {
             alias: 'i',
-            description: `Generate a ${NAME} config file`,
+            description: 'Generate project config (in ~/wtf.json)',
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,

@@ -72,7 +72,7 @@ Here's some of the commands that are available
 
   Commands:
     env, e    Change local project environment variables
-    init, i   Generate a watfish config file
+    init, i   Generate project config (in ~/wtf.json)
     run, r    Run arbitrary commands in the environment
     start, s  Start project processes
 
