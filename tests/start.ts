@@ -224,6 +224,15 @@ describe('start.ts', () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
+    it('should accept a custom env', () => {
+      spyOn(utils, 'getConfigPath').and.callFake(() => '~/wtf.json');
+      spyOn(utils, 'loadWtfJson').and.callThrough();
+
+      readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {env: 'custom'}, flags: {}});
+
+      expect(utils.loadWtfJson).toHaveBeenCalledWith('~/wtf.json', 'directory', 'custom');
+    });
+
   });
 
   describe('startProcesses', () => {
