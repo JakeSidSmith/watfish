@@ -32,14 +32,14 @@ export const runCommand = (
     return process.exit(1);
   }
 
-  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
-  const envVariables = getEnvVariables(envPath);
-
   const configPath = getConfigPath();
   const projectName = getProjectName();
 
   const wtfJson = loadWtfJson(configPath, projectName, env);
   const configEnvVariables = getIn(wtfJson, [projectName, 'env', env]) || {};
+
+  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+  const envVariables = getEnvVariables(envPath);
 
   const environment: {[i: string]: string} = {
     ...envVariables,
