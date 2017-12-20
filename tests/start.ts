@@ -232,11 +232,11 @@ describe('start.ts', () => {
       );
     });
 
-    it('should exit if wtf.json is invalid', () => {
+    it('should log if wtf.json is invalid', () => {
       readWtfJsonAndEnv('procfileData', {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}});
 
       expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at ~/wtf.json');
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(process.exit).not.toHaveBeenCalled();
     });
 
     it('should accept a custom env', () => {

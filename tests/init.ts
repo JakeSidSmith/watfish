@@ -55,7 +55,7 @@ describe('init.ts', () => {
       init.default();
 
       expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at invalid/wtf.json');
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(process.exit).not.toHaveBeenCalled();
     });
 
   });

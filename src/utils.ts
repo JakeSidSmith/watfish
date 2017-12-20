@@ -265,7 +265,6 @@ export const readWtfJson = (configPath: string): Config => {
   } catch (error) {
     logger.log(`Invalid wtf.json at ${configPath}`);
     logger.log(error.message);
-    process.exit(1);
     return {};
   }
 

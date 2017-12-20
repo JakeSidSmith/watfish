@@ -221,7 +221,7 @@ describe('utils.ts', () => {
 
   describe('readWtfJson', () => {
 
-    it('should the wtf.json', () => {
+    it('should read the wtf.json', () => {
       expect(readWtfJson('valid/wtf.json')).toEqual({
         project: {
           routes: {
@@ -240,11 +240,11 @@ describe('utils.ts', () => {
       expect(readWtfJson('empty/wtf.json')).toEqual({});
     });
 
-    it('should exit if config is invalid', () => {
+    it('should log if config is invalid', () => {
       readWtfJson('invalid/wtf.json');
 
       expect(logger.log).toHaveBeenCalledWith('Invalid wtf.json at invalid/wtf.json');
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(process.exit).not.toHaveBeenCalledWith();
     });
 
   });
