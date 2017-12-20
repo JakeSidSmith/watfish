@@ -1,6 +1,12 @@
 import * as fs from 'fs';
 import { Tree } from 'jargs';
-import { Config, ConfigProject, DEFAULT_ENV, UTF8 } from './constants';
+import {
+  Config,
+  ConfigProject,
+  DEFAULT_ENV,
+  MATCHES_NO,
+  UTF8,
+} from './constants';
 import * as logger from './logger';
 import {
   createStringFromConfig,
@@ -88,7 +94,7 @@ const envCommand = (tree: Tree) => {
 
     const input: string = (data || '').toString().trim();
 
-    if (input !== 'n' && input !== 'N') {
+    if (!MATCHES_NO.test(input)) {
       fs.writeFile(
         configPath,
         createStringFromConfig(config),
