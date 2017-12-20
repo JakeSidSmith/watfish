@@ -257,11 +257,11 @@ export const getTimeNow = () => {
 };
 
 export const readWtfJson = (configPath: string): Config => {
-  let config: Config | undefined = {};
+  let config: Config = {};
   const configContent = fs.readFileSync(configPath, UTF8);
 
   try {
-    config = JSON.parse(configContent) || {};
+    config = JSON.parse(configContent);
   } catch (error) {
     logger.log(`Invalid wtf.json at ${configPath}`);
     logger.log(error.message);
@@ -269,7 +269,7 @@ export const readWtfJson = (configPath: string): Config => {
     return {};
   }
 
-  return config || {};
+  return config;
 };
 
 export const loadWtfJson = (configPath: string, projectName: string, env: string): Config => {
