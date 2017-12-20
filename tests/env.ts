@@ -228,4 +228,169 @@ describe('env.ts', () => {
     );
   });
 
+  it('should get a value from the default environment', () => {
+    const answers = ['n'];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {},
+      flags: {},
+      args: {},
+      command: {
+        name: 'get',
+        kwargs: {},
+        flags: {},
+        args: {
+          key: 'KEY',
+        },
+      },
+    });
+
+    expect(logger.log).toHaveBeenCalledWith('value');
+    expect(process.exit).toHaveBeenCalledWith(0);
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should delete a value from the default environment', () => {
+    const answers = ['n'];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {},
+      flags: {},
+      args: {},
+      command: {
+        name: 'del',
+        kwargs: {},
+        flags: {},
+        args: {
+          key: 'KEY',
+        },
+      },
+    });
+
+    const expected = utils.createStringFromConfig({
+      development: {},
+    });
+
+    expect(logger.log).toHaveBeenCalledWith(`\nCreated config:\n\n${expected}\nIs this correct? [y]`);
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should exit for unknown sub commands', () => {
+    const answers = ['n'];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {},
+      flags: {},
+      args: {},
+      command: {
+        name: 'unknown',
+        kwargs: {},
+        flags: {},
+        args: {
+          key: 'KEY',
+        },
+      },
+    });
+
+    expect(logger.log).toHaveBeenCalledWith('Unknown command unknown');
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should accept an env argument from the env command', () => {
+    const answers = ['n'];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {
+        env: 'test',
+      },
+      flags: {},
+      args: {},
+      command: {
+        name: 'set',
+        kwargs: {},
+        flags: {},
+        args: {
+          key: 'FOO',
+          value: 'bar',
+        },
+      },
+    });
+
+    const expected = utils.createStringFromConfig({
+      development: {
+        KEY: 'value',
+      },
+      test: {
+        FOO: 'bar',
+      },
+    });
+
+    expect(logger.log).toHaveBeenCalledWith(`\nCreated config:\n\n${expected}\nIs this correct? [y]`);
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should accept an env argument from a sub command', () => {
+    const answers = ['n'];
+
+    mockStd(answers);
+
+    spyOn(utils, 'getConfigPath').and.returnValue('~/valid/wtf.json');
+    spyOn(utils, 'getProjectName').and.returnValue('project');
+
+    env({
+      name: 'env',
+      kwargs: {},
+      flags: {},
+      args: {},
+      command: {
+        name: 'set',
+        kwargs: {
+          env: 'test2',
+        },
+        flags: {},
+        args: {
+          key: 'FOO',
+          value: 'bar',
+        },
+      },
+    });
+
+    const expected = utils.createStringFromConfig({
+      development: {
+        KEY: 'value',
+      },
+      test2: {
+        FOO: 'bar',
+      },
+    });
+
+    expect(logger.log).toHaveBeenCalledWith(`\nCreated config:\n\n${expected}\nIs this correct? [y]`);
+    expect(fs.writeFile).not.toHaveBeenCalled();
+  });
+
 });
