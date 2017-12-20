@@ -133,3 +133,89 @@ An example `wtf.json` might look like the following.
   }
 }
 ```
+
+## Quick setup
+
+Initialize the project:
+
+```shell
+wtf init
+```
+
+Answer questions about routing:
+
+```shell
+What is the name of the process you would like to route?
+web
+From what url would you like to route this process?
+example.domain.com
+
+Created config:
+
+{
+  "routes": {
+    "web": "example.domain.com"
+  }
+}
+
+Is this correct? [y]
+
+wtf.json written to /Users/user/wtf.json
+```
+
+Add a development environment variable:
+
+```shell
+wtf env set SECRET_KEY my-secret-key
+
+Created config:
+
+{
+  "development": {
+    "SECRET_KEY": "my-secret-key"
+  }
+}
+
+Is this correct? [y]
+
+wtf.json written to /Users/user/wtf.json
+```
+
+Add a production environment variable:
+
+```shell
+wtf env set SECRET_KEY another-secret-key --env production
+
+Created config:
+
+{
+  "development": {
+    "SECRET_KEY": "my-secret-key"
+  },
+  "production" : {
+    "SECRET_KEY": "another-secret-key"
+  }
+}
+
+Is this correct? [y]
+
+wtf.json written to /Users/user/wtf.json
+```
+
+This will have created a `wtf.json` in your home directory with the following contents:
+
+```json
+{
+  "project": {
+    "routes": {
+      "web": "example.domain.com"
+    },
+      "development": {
+      "SECRET_KEY": "my-secret-key"
+    },
+    "production" : {
+      "SECRET_KEY": "another-secret-key"
+    }
+  }
+}
+```
