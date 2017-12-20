@@ -22,6 +22,7 @@ import {
   getConfigPath,
   getDisplayName,
   getEnvVariables,
+  getIn,
   getProjectName,
   getTimeNow,
   handleShebang,
@@ -184,8 +185,7 @@ export const startProcesses = (
       if (!processes.length || processes.indexOf(processName) >= 0) {
         const item = procfileConfig[processName];
 
-        const url = wtfJson.routes &&
-          (processName in wtfJson.routes) ? wtfJson.routes[processName] : undefined;
+        const url = getIn(wtfJson, ['routes', processName]);
 
         startProcess(item, processName, longestName, env, COLORS[index % (COLORS.length)], tree, url);
       }
