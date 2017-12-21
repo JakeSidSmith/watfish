@@ -50,7 +50,13 @@ collect(
         description:
           'Simple development platform with process management & router',
         usage: `${PROGRAM} command [<sub-command>] [options]`,
-        examples: [`${PROGRAM} start --env dev`],
+        examples: [
+          `${PROGRAM} init`,
+          `${PROGRAM} env set KEY value`,
+          `${PROGRAM} start`,
+          `${PROGRAM} start --env production`,
+          `${PROGRAM} run manage.py migrate`,
+        ],
         callback: program,
       },
       RequireAny(
@@ -58,7 +64,7 @@ collect(
           'init',
           {
             alias: 'i',
-            description: `Generate a ${NAME} config file`,
+            description: 'Generate project config (in ~/wtf.json)',
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,
