@@ -25,7 +25,7 @@ export interface PortError extends Error {
 
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
 
-export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) => {
+export const setIn = (obj: {[i: string]: any}, setPath: string[], value: any) => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -35,11 +35,11 @@ export const setIn = (obj: {[i: string]: any}, setPath: [string], value: any) =>
       obj[first] = {};
     }
 
-    setIn(obj[first], rest as [string], value);
+    setIn(obj[first], rest, value);
   }
 };
 
-export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
+export const getIn = (obj: {[i: string]: any}, setPath: string[]): any => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -49,11 +49,11 @@ export const getIn = (obj: {[i: string]: any}, setPath: [string]): any => {
       return;
     }
 
-    return getIn(obj[first], rest as [string]);
+    return getIn(obj[first], rest);
   }
 };
 
-export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
+export const delIn = (obj: {[i: string]: any}, setPath: string[]) => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -62,7 +62,7 @@ export const delIn = (obj: {[i: string]: any}, setPath: [string]) => {
     if (!(first in obj)) {
       return;
     } else {
-      delIn(obj[first], rest as [string]);
+      delIn(obj[first], rest);
     }
   }
 };
