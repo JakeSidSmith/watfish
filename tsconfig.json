@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "noImplicitAny": true,
+    "skipLibCheck": true,
     "strict": true,
     "pretty": true,
     "module": "commonjs",
