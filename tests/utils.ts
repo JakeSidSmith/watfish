@@ -16,6 +16,7 @@ import {
   handleShebang,
   injectEnvVars,
   isPortTaken,
+  isTruthyString,
   onClose,
   readWtfJson,
   setIn,
@@ -123,6 +124,16 @@ describe('utils.ts', () => {
 
       expect(logger.log).toHaveBeenCalledWith('Could not find an available port');
       expect(process.exit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('isTruthyString', () => {
+    it('should return true if a value is both a string, and truthy', () => {
+      expect(isTruthyString('true')).toBe(true);
+      expect(isTruthyString('false')).toBe(true);
+      expect(isTruthyString('')).toBe(false);
+      expect(isTruthyString(null)).toBe(false);
+      expect(isTruthyString({})).toBe(false);
     });
   });
 
