@@ -39,7 +39,7 @@ const COMMAND = Arg(
 
   collect(
     Help(
-      'help',
+      'heeeeeeeelp',
       {
         alias: 'h',
         description: 'Display help and usage info',
