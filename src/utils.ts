@@ -39,7 +39,7 @@ export const setIn = (obj: {[i: string]: any}, setPath: ReadonlyArray<string>, v
   }
 };
 
-export const getIn = (obj: {[i: string]: any}, setPath: ReadonlyArray<string>): any => {
+export const getIn = (obj: Readonly<{[i: string]: any}>, setPath: ReadonlyArray<string>): any => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -197,7 +197,7 @@ export const isTruthyString = (value: any): value is string => {
 
 export const injectEnvVars = (
   commandOptions: ReadonlyArray<string | undefined>,
-  environment: {[i: string]: string}
+  environment: Readonly<{[i: string]: string}>
 ) => {
   return commandOptions
     .filter(isTruthyString)
