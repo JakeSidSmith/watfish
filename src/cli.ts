@@ -37,182 +37,182 @@ const COMMAND = Arg(
   }
 );
 
-collect(
-  Help(
-    'help',
-    {
-      alias: 'h',
-      description: 'Display help and usage info',
-    },
-    Program(
-      NAME,
+  collect(
+    Help(
+      'help',
       {
-        description:
-          'Simple development platform with process management & router',
-        usage: `${PROGRAM} command [<sub-command>] [options]`,
-        examples: [
-          `${PROGRAM} init`,
-          `${PROGRAM} env set KEY value`,
-          `${PROGRAM} start`,
-          `${PROGRAM} start --env production`,
-          `${PROGRAM} run manage.py migrate`,
-        ],
-        callback: program,
+        alias: 'h',
+        description: 'Display help and usage info',
       },
-      RequireAny(
-        Command(
-          'init',
-          {
-            alias: 'i',
-            description: 'Generate project config (in ~/wtf.json)',
-            usage: `${PROGRAM} init`,
-            examples: [
-              `${PROGRAM} init`,
-            ],
-            callback: init,
-          }
-        ),
-        Command(
-          'start',
-          {
-            alias: 's',
-            description: 'Start project processes',
-            usage: `${PROGRAM} start [options]`,
-            examples: [
-              `${PROGRAM} start`,
-              `${PROGRAM} start watcher`,
-              `${PROGRAM} start --env production`,
-            ],
-            callback: start,
-          },
-          Arg(
-            'processes',
+      Program(
+        NAME,
+        {
+          description:
+            'Simple development platform with process management & router',
+          usage: `${PROGRAM} command [<sub-command>] [options]`,
+          examples: [
+            `${PROGRAM} init`,
+            `${PROGRAM} env set KEY value`,
+            `${PROGRAM} start`,
+            `${PROGRAM} start --env production`,
+            `${PROGRAM} run manage.py migrate`,
+          ],
+          callback: program,
+        },
+        RequireAny(
+          Command(
+            'init',
             {
-              multi: true,
-              description: 'Process to start',
+              alias: 'i',
+              description: 'Generate project config (in ~/wtf.json)',
+              usage: `${PROGRAM} init`,
+              examples: [
+                `${PROGRAM} init`,
+              ],
+              callback: init,
             }
           ),
-          ENVIRONMENT,
-          Flag(
-            'time',
-            {
-              alias: 't',
-              description: 'Display time in logs',
-            }
-          )
-        ),
-        Command(
-          'env',
-          {
-            alias: 'e',
-            description: 'Change local project environment variables',
-            usage: `${PROGRAM} env [options]`,
-            examples: [
-              `${PROGRAM} env`,
-              `${PROGRAM} env set key value`,
-              `${PROGRAM} env get key`,
-              `${PROGRAM} env del key`,
-              `${PROGRAM} env set key value --env production`,
-            ],
-            callback: env,
-          },
-          ENVIRONMENT,
           Command(
-            'set',
+            'start',
             {
               alias: 's',
-              description: 'Set config value',
-              usage: `${PROGRAM} config set [options]`,
+              description: 'Start project processes',
+              usage: `${PROGRAM} start [options]`,
               examples: [
+                `${PROGRAM} start`,
+                `${PROGRAM} start watcher`,
+                `${PROGRAM} start --env production`,
+              ],
+              callback: start,
+            },
+            Arg(
+              'processes',
+              {
+                multi: true,
+                description: 'Process to start',
+              }
+            ),
+            ENVIRONMENT,
+            Flag(
+              'time',
+              {
+                alias: 't',
+                description: 'Display time in logs',
+              }
+            )
+          ),
+          Command(
+            'env',
+            {
+              alias: 'e',
+              description: 'Change local project environment variables',
+              usage: `${PROGRAM} env [options]`,
+              examples: [
+                `${PROGRAM} env`,
                 `${PROGRAM} env set key value`,
+                `${PROGRAM} env get key`,
+                `${PROGRAM} env del key`,
                 `${PROGRAM} env set key value --env production`,
               ],
+              callback: env,
             },
             ENVIRONMENT,
-            RequireAll(
-              Arg(
-                'key',
-                {
-                  description: 'Key to set in config',
-                }
-              ),
-              Arg(
-                'value',
-                {
-                  description: 'Value to set in config',
-                }
+            Command(
+              'set',
+              {
+                alias: 's',
+                description: 'Set config value',
+                usage: `${PROGRAM} config set [options]`,
+                examples: [
+                  `${PROGRAM} env set key value`,
+                  `${PROGRAM} env set key value --env production`,
+                ],
+              },
+              ENVIRONMENT,
+              RequireAll(
+                Arg(
+                  'key',
+                  {
+                    description: 'Key to set in config',
+                  }
+                ),
+                Arg(
+                  'value',
+                  {
+                    description: 'Value to set in config',
+                  }
+                )
+              )
+            ),
+            Command(
+              'get',
+              {
+                alias: 'g',
+                description: 'Get config value',
+                usage: `${PROGRAM} config get [options]`,
+                examples: [
+                  `${PROGRAM} env get key`,
+                  `${PROGRAM} env set key --env production`,
+                ],
+              },
+              ENVIRONMENT,
+              Required(
+                Arg(
+                  'key',
+                  {
+                    description: 'Key to get from config',
+                  }
+                )
+              )
+            ),
+            Command(
+              'del',
+              {
+                alias: 'd',
+                description: 'Delete config value',
+                usage: `${PROGRAM} config del [options]`,
+                examples: [
+                  `${PROGRAM} config del key`,
+                  `${PROGRAM} config del key --env production`,
+                ],
+              },
+              ENVIRONMENT,
+              Required(
+                Arg(
+                  'key',
+                  {
+                    description: 'Key to remove from config',
+                  }
+                )
               )
             )
           ),
           Command(
-            'get',
+            'run',
             {
-              alias: 'g',
-              description: 'Get config value',
-              usage: `${PROGRAM} config get [options]`,
+              alias: 'r',
+              description: 'Run arbitrary commands in the environment',
+              usage: `${PROGRAM} run <command>`,
               examples: [
-                `${PROGRAM} env get key`,
-                `${PROGRAM} env set key --env production`,
+                `${PROGRAM} run build`,
+                `${PROGRAM} run manage.py migrate`,
               ],
+              callback: run,
             },
-            ENVIRONMENT,
             Required(
-              Arg(
-                'key',
-                {
-                  description: 'Key to get from config',
-                }
-              )
+              COMMAND
             )
           ),
-          Command(
-            'del',
+          COMMAND,
+          Flag(
+            'version',
             {
-              alias: 'd',
-              description: 'Delete config value',
-              usage: `${PROGRAM} config del [options]`,
-              examples: [
-                `${PROGRAM} config del key`,
-                `${PROGRAM} config del key --env production`,
-              ],
-            },
-            ENVIRONMENT,
-            Required(
-              Arg(
-                'key',
-                {
-                  description: 'Key to remove from config',
-                }
-              )
-            )
+              alias: 'v',
+              description: 'Display version',
+            }
           )
-        ),
-        Command(
-          'run',
-          {
-            alias: 'r',
-            description: 'Run arbitrary commands in the environment',
-            usage: `${PROGRAM} run <command>`,
-            examples: [
-              `${PROGRAM} run build`,
-              `${PROGRAM} run manage.py migrate`,
-            ],
-            callback: run,
-          },
-          Required(
-            COMMAND
-          )
-        ),
-        COMMAND,
-        Flag(
-          'version',
-          {
-            alias: 'v',
-            description: 'Display version',
-          }
         )
       )
-    )
-  ),
-  process.argv
-);
+    ),
+    process.argv
+  );
