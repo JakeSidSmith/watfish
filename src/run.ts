@@ -16,9 +16,9 @@ import {
 } from './utils';
 
 export const runCommand = (
-  commandAndOptions: undefined | Array<string | undefined> = [],
+  commandAndOptions: undefined | ReadonlyArray<string | undefined> = [],
   env: string,
-  rest: undefined | Array<string | undefined> = []
+  rest: undefined | ReadonlyArray<string | undefined> = []
 ) => {
   const [command, ...commandOptions] = commandAndOptions;
 
@@ -49,7 +49,7 @@ export const runCommand = (
   };
 
   const resolvedCommand = handleShebang(command);
-  const resolvedCommandOptions = injectEnvVars([...commandOptions as string[], ...rest as string[]], environment);
+  const resolvedCommandOptions = injectEnvVars([...commandOptions, ...rest], environment);
 
   const subProcess = childProcess.spawn(
     resolvedCommand,
@@ -76,7 +76,7 @@ const run = (tree: Tree) => {
   rest = Array.isArray(rest) ? rest : [];
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  runCommand(command as (string[] | undefined), env, rest as (string[] | undefined));
+  runCommand(command, env, rest);
 };
 
 export default run;

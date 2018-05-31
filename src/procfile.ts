@@ -3,7 +3,7 @@ const MATCHES_WHITESPACE = /\s+/g;
 
 export interface Command {
   command: string;
-  options: string[];
+  options: ReadonlyArray<string>;
 }
 
 export const parse = (data: string) => {
