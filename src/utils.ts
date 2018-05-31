@@ -25,7 +25,7 @@ export interface PortError extends Error {
 
 export type PortCallback = (error: PortError | undefined, inUse?: boolean) => any;
 
-export const setIn = (obj: {[i: string]: any}, setPath: string[], value: any) => {
+export const setIn = (obj: {[i: string]: any}, setPath: ReadonlyArray<string>, value: any) => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -39,7 +39,7 @@ export const setIn = (obj: {[i: string]: any}, setPath: string[], value: any) =>
   }
 };
 
-export const getIn = (obj: {[i: string]: any}, setPath: string[]): any => {
+export const getIn = (obj: {[i: string]: any}, setPath: ReadonlyArray<string>): any => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -53,7 +53,7 @@ export const getIn = (obj: {[i: string]: any}, setPath: string[]): any => {
   }
 };
 
-export const delIn = (obj: {[i: string]: any}, setPath: string[]) => {
+export const delIn = (obj: {[i: string]: any}, setPath: ReadonlyArray<string>) => {
   const [first, ...rest] = setPath;
 
   if (!rest.length) {
@@ -191,18 +191,27 @@ export const getEnvVariables = (envPath: string): {[i: string]: string} => {
   return envVariables;
 };
 
-export const injectEnvVars = (commandOptions: string[], environment: {[i: string]: string}) => {
-  return commandOptions.map((option) => {
-    return option.replace(MATCHES_ENV_VAR, (match: string): string => {
-      const varName = match.substring(1);
+export const isTruthyString = (value: any): value is string => {
+  return Boolean(value && typeof value === 'string');
+};
 
-      if (varName in environment) {
-        return environment[varName];
-      }
+export const injectEnvVars = (
+  commandOptions: ReadonlyArray<string | undefined>,
+  environment: {[i: string]: string}
+) => {
+  return commandOptions
+    .filter(isTruthyString)
+    .map((option) => {
+      return option.replace(MATCHES_ENV_VAR, (match: string): string => {
+        const varName = match.substring(1);
 
-      return match;
+        if (varName in environment) {
+          return environment[varName];
+        }
+
+        return match;
+      });
     });
-  });
 };
 
 export const onClose = (prefix: string, code: number) => {
