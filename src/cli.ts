@@ -65,7 +65,7 @@ collect(
           'init',
           {
             alias: 'i',
-            description: 'Generate project config (in ~/wtf.json)',
+            description: 'Generate initial project config (in ~/wtf.json)',
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,
@@ -77,7 +77,7 @@ collect(
           'start',
           {
             alias: 's',
-            description: 'Start project processes',
+            description: 'Start project processes from procfile',
             usage: `${PROGRAM} start [options]`,
             examples: [
               `${PROGRAM} start`,
@@ -106,7 +106,7 @@ collect(
           'env',
           {
             alias: 'e',
-            description: 'Change local project environment variables',
+            description: 'Change project environment variables',
             usage: `${PROGRAM} env [options]`,
             examples: [
               `${PROGRAM} env`,
