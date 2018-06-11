@@ -12,6 +12,7 @@ import {
   RequireAny,
   Required,
 } from 'jargs';
+import configure from './configure';
 import env from './env';
 import init from './init';
 import program from './program';
@@ -66,13 +67,26 @@ collect(
           'init',
           {
             alias: 'i',
-            description: `Generate initial project config ${CONFIG_LOCATION}`,
+            description: `Generate initial project config ${CONFIG_LOCATION} (wipes existing project config)`,
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,
               `${PROGRAM} i`,
             ],
             callback: init,
+          }
+        ),
+        Command(
+          'configure',
+          {
+            alias: 'c',
+            description: `Adjust project config ${CONFIG_LOCATION}`,
+            usage: `${PROGRAM} configure`,
+            examples: [
+              `${PROGRAM} configure`,
+              `${PROGRAM} c`,
+            ],
+            callback: configure,
           }
         ),
         Command(
