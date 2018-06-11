@@ -20,6 +20,7 @@ import start from './start';
 
 const NAME = 'watfish';
 const PROGRAM = 'wtf';
+const CONFIG_LOCATION = '(in ~/wtf.json)';
 
 const ENVIRONMENT = KWArg(
   'env',
@@ -65,7 +66,7 @@ collect(
           'init',
           {
             alias: 'i',
-            description: 'Generate initial project config (in ~/wtf.json)',
+            description: `Generate initial project config ${CONFIG_LOCATION}`,
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,
@@ -106,7 +107,7 @@ collect(
           'env',
           {
             alias: 'e',
-            description: 'Change project environment variables',
+            description: `Change project environment variables ${CONFIG_LOCATION}`,
             usage: `${PROGRAM} env [options]`,
             examples: [
               `${PROGRAM} env`,
