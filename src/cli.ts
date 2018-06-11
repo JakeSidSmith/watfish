@@ -55,6 +55,7 @@ collect(
           `${PROGRAM} env set KEY value`,
           `${PROGRAM} start`,
           `${PROGRAM} start --env production`,
+          `${PROGRAM} manage.py migrate`,
           `${PROGRAM} run manage.py migrate`,
         ],
         callback: program,
