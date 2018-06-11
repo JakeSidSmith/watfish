@@ -49,8 +49,7 @@ collect(
     Program(
       NAME,
       {
-        description:
-          'Simple development platform with process management & router',
+        description: 'Simple development platform with process management & router',
         usage: `${PROGRAM} command [<sub-command>] [options]`,
         examples: [
           `${PROGRAM} init`,
