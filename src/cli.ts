@@ -70,6 +70,7 @@ collect(
             usage: `${PROGRAM} init`,
             examples: [
               `${PROGRAM} init`,
+              `${PROGRAM} i`,
             ],
             callback: init,
           }
@@ -82,8 +83,10 @@ collect(
             usage: `${PROGRAM} start [options]`,
             examples: [
               `${PROGRAM} start`,
+              `${PROGRAM} s`,
               `${PROGRAM} start watcher`,
               `${PROGRAM} start --env production`,
+              `${PROGRAM} s watcher --env production`,
             ],
             callback: start,
           },
@@ -111,10 +114,11 @@ collect(
             usage: `${PROGRAM} env [options]`,
             examples: [
               `${PROGRAM} env`,
+              `${PROGRAM} e`,
               `${PROGRAM} env set key value`,
               `${PROGRAM} env get key`,
               `${PROGRAM} env del key`,
-              `${PROGRAM} env set key value --env production`,
+              `${PROGRAM} e set key value --env production`,
             ],
             callback: env,
           },
@@ -127,7 +131,8 @@ collect(
               usage: `${PROGRAM} config set [options]`,
               examples: [
                 `${PROGRAM} env set key value`,
-                `${PROGRAM} env set key value --env production`,
+                `${PROGRAM} e set key value`,
+                `${PROGRAM} e set key value --env production`,
               ],
             },
             ENVIRONMENT,
@@ -154,7 +159,8 @@ collect(
               usage: `${PROGRAM} config get [options]`,
               examples: [
                 `${PROGRAM} env get key`,
-                `${PROGRAM} env set key --env production`,
+                `${PROGRAM} e get key`,
+                `${PROGRAM} e set key --env production`,
               ],
             },
             ENVIRONMENT,
@@ -174,8 +180,9 @@ collect(
               description: 'Delete config value',
               usage: `${PROGRAM} config del [options]`,
               examples: [
-                `${PROGRAM} config del key`,
-                `${PROGRAM} config del key --env production`,
+                `${PROGRAM} env del key`,
+                `${PROGRAM} e del key`,
+                `${PROGRAM} e del key --env production`,
               ],
             },
             ENVIRONMENT,
@@ -197,7 +204,8 @@ collect(
             usage: `${PROGRAM} run <command>`,
             examples: [
               `${PROGRAM} run build`,
-              `${PROGRAM} run manage.py migrate`,
+              `${PROGRAM} r build`,
+              `${PROGRAM} r manage.py migrate`,
             ],
             callback: run,
           },
