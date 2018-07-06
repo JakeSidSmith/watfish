@@ -152,8 +152,12 @@ describe('utils.ts', () => {
     });
 
     it('returns the env variables from the env file', () => {
-      expect(getEnvVariables('etc/environments/development/env')).toEqual({VAR: 'value'});
-      expect(logger.log).toHaveBeenCalledWith('Found 1 variables in etc/environments/development/env\n');
+      expect(getEnvVariables('etc/environments/development/env')).toEqual({
+        VAR: 'value',
+        FOO: 'double-quoted',
+        BAR: 'single-quoted',
+      });
+      expect(logger.log).toHaveBeenCalledWith('Found 3 variables in etc/environments/development/env\n');
     });
   });
 

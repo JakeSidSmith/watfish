@@ -212,7 +212,11 @@ describe('start.ts', () => {
         {},
         'development',
         {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}},
-        {VAR: 'value'}
+        {
+          VAR: 'value',
+          FOO: 'double-quoted',
+          BAR: 'single-quoted',
+        }
       );
     });
 
@@ -228,7 +232,11 @@ describe('start.ts', () => {
         {},
         'development',
         {name: 'readWtfJsonAndEnv', args: {}, kwargs: {}, flags: {}},
-        {VAR: 'value'}
+        {
+          VAR: 'value',
+          FOO: 'double-quoted',
+          BAR: 'single-quoted',
+        }
       );
     });
 
