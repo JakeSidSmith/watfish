@@ -1,4 +1,5 @@
 import * as colors from 'colors/safe';
+import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as moment from 'moment';
 import * as net from 'net';
@@ -8,7 +9,6 @@ import {
   Config,
   DEFAULT_ENV,
   ENV_BIN,
-  MATCHES_ENV_KEY_VALUE,
   MATCHES_ENV_VAR,
   MATCHES_SHEBANG,
   PADDING,
@@ -174,17 +174,9 @@ export const getEnvVariables = (envPath: string): {[i: string]: string} => {
     return {};
   }
 
-  const lines = fs.readFileSync(envPath, UTF8).split('\n');
+  const envFile = fs.readFileSync(envPath, UTF8);
 
-  const envVariables: {[i: string]: string} = {};
-
-  lines.forEach((line) => {
-    const match = MATCHES_ENV_KEY_VALUE.exec(line);
-
-    if (match) {
-      envVariables[match[1]] = match[2];
-    }
-  });
+  const envVariables = dotenv.parse(envFile);
 
   logger.log(`Found ${Object.keys(envVariables).length} variables in ${envPath}\n`);
 

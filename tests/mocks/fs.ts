@@ -69,7 +69,7 @@ jest.mock('fs', () => {
       }
 
       if (MATCHES_ENV_FILE.test(path)) {
-        return 'VAR=value\nNOT-valid';
+        return 'VAR=value\nFOO="double-quoted"\nBAR=\'single-quoted\'\nNOT-valid';
       }
 
       if (MATCHES_SHEBANG.test(path)) {
