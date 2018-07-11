@@ -2,7 +2,7 @@ import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
-import { Colors, MATCHES_PYTHON_REQUEST, SOCKET_PORT } from './constants';
+import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { constructHTMLMessage, getRouterPort, isPortTaken, PortError } from './utils';
 
@@ -48,11 +48,14 @@ export const init = () => {
       });
     } else {
       const message = `Unknown host ${req.hostname}`;
+      res.status(404);
 
-      if (MATCHES_PYTHON_REQUEST.test(agent)) {
-        res.send(colors.red(message));
-      } else {
+      if (req.accepts('html')) {
         res.send(constructHTMLMessage(message));
+      } else if (req.accepts('json')) {
+        res.json({message});
+      } else {
+        res.send(message);
       }
     }
   });

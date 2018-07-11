@@ -25,7 +25,6 @@ export const PADDING = '                       ';
 export const MATCHES_SHEBANG = /#!( *\S+ +)?( *\S+ *)$/;
 export const MATCHES_ENV_VAR = /\$([_A-Z0-9]+)/;
 export const MATCHES_NO = /n/i;
-export const MATCHES_PYTHON_REQUEST = /python-request/;
 
 export const CONFIG_KEYS: Array<keyof Config> = [
   'routes',
