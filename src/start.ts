@@ -179,7 +179,9 @@ export const startProcesses = (
   envVariables: {[i: string]: string}
 ) => {
   let { processes } = tree.args;
+  let { exclude } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
+  exclude = Array.isArray(exclude) ? exclude : [];
 
   const procfileConfig = procfile.parse(procfileData.toString());
 
@@ -193,7 +195,8 @@ export const startProcesses = (
 
       if (
         (!processes.length || processes.indexOf(processName) >= 0) &&
-        (!longestName || displayName.length > longestName)
+        (!longestName || displayName.length > longestName) &&
+        exclude.indexOf(processName) < 0
       ) {
         longestName = displayName.length;
       }
@@ -202,8 +205,8 @@ export const startProcesses = (
 
   for (const processName in procfileConfig) {
     /* istanbul ignore else */
-    if (procfileConfig.hasOwnProperty(processName)) {
-      if (!processes.length || processes.indexOf(processName) >= 0) {
+    if (exclude.indexOf(processName) < 0 && procfileConfig.hasOwnProperty(processName)) {
+      if ((!processes.length || processes.indexOf(processName) >= 0) && exclude.indexOf(processName) < 0) {
         const item = procfileConfig[processName];
 
         const url = getIn(wtfJson, ['routes', processName]);

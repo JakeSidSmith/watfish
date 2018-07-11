@@ -92,6 +92,14 @@ collect(
               description: 'Process to start',
             }
           ),
+          KWArg(
+            'exclude',
+            {
+              alias: 'x',
+              multi: true,
+              description: 'Process to exclude from starting',
+            }
+          ),
           ENVIRONMENT,
           Flag(
             'time',
