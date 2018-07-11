@@ -2,10 +2,18 @@ jest.mock('express', () => {
   const req = {
     hostname: 'example.domain.com',
     headers: {},
+    accepts: (type: string) => {
+      const {headers = {}} = req as {headers?: {Accept?: string}};
+      const {Accept} = headers;
+
+      return typeof Accept === 'string' && Accept.indexOf(type) >= 0;
+    },
   };
 
   const res = {
     send: jest.fn(() => null),
+    json: jest.fn(() => null),
+    status: jest.fn(() => null),
   };
 
   const use = (callback: (req: any, res: any, next: () => any) => any) => {

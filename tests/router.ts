@@ -93,23 +93,54 @@ describe('router.ts', () => {
       expect(logger.log).toHaveBeenCalledWith('Process may still be starting\n');
     });
 
-    it('should return an HTML error for unknown hosts', () => {
+    it('should return an HTML error for accepts HTML requests', () => {
+      const expressMock = express as any;
+      expressMock._req.headers.Accept = 'text/html';
+
       router.init();
 
       expect((express as any)._res.send)
-        .toHaveBeenCalledWith(constructHTMLMessage('Unknown host example.domain.com'));
+        .toHaveBeenCalledWith(constructHTMLMessage('Watfish: Unknown host example.domain.com'));
+      expect((express as any)._res.status).toHaveBeenCalledWith(404);
+
+      delete expressMock._req.headers.Accept;
     });
 
-    it('should return an text error for unknown hosts if python request', () => {
+    it('should return a JSON error for accepts JSON requests', () => {
       const expressMock = express as any;
-
-      expressMock._req.headers['user-agent'] = 'python-requests-0.0.0';
+      expressMock._req.headers.Accept = 'application/json';
 
       router.init();
 
-      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+      expect((express as any)._res.json).toHaveBeenCalledWith({message: 'Watfish: Unknown host example.domain.com'});
+      expect((express as any)._res.status).toHaveBeenCalledWith(404);
 
-      delete expressMock._req.headers['user-agent'];
+      delete expressMock._req.headers.Accept;
+    });
+
+    it('should return an XML error for accepts XML requests', () => {
+      const expressMock = express as any;
+      expressMock._req.headers.Accept = 'application/xml';
+
+      router.init();
+
+      expect((express as any)._res.send)
+        .toHaveBeenCalledWith('<message>Watfish: Unknown host example.domain.com</message>');
+      expect((express as any)._res.status).toHaveBeenCalledWith(404);
+
+      delete expressMock._req.headers.Accept;
+    });
+
+    it('should return a text error for unknown accepts requests', () => {
+      const expressMock = express as any;
+      expressMock._req.headers.Accept = 'text/plain';
+
+      router.init();
+
+      expect((express as any)._res.send).toHaveBeenCalledWith('Watfish: Unknown host example.domain.com');
+      expect((express as any)._res.status).toHaveBeenCalledWith(404);
+
+      delete expressMock._req.headers.Accept;
     });
 
     it('should handle user agent arrays', () => {
@@ -119,7 +150,7 @@ describe('router.ts', () => {
 
       router.init();
 
-      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+      expect((express as any)._res.send).toHaveBeenCalledWith('Watfish: Unknown host example.domain.com');
 
       delete expressMock._req.headers['user-agent'];
     });
