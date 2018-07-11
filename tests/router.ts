@@ -99,19 +99,33 @@ describe('router.ts', () => {
 
       router.init();
 
-      expect((express as any)._res.send).toHaveBeenCalledWith(constructHTMLMessage('Unknown host example.domain.com'));
+      expect((express as any)._res.send)
+        .toHaveBeenCalledWith(constructHTMLMessage('Watfish: Unknown host example.domain.com'));
       expect((express as any)._res.status).toHaveBeenCalledWith(404);
 
       delete expressMock._req.headers.Accept;
     });
 
-    it('should return an JSON error for accepts JSON requests', () => {
+    it('should return a JSON error for accepts JSON requests', () => {
       const expressMock = express as any;
       expressMock._req.headers.Accept = 'application/json';
 
       router.init();
 
-      expect((express as any)._res.json).toHaveBeenCalledWith({message: 'Unknown host example.domain.com'});
+      expect((express as any)._res.json).toHaveBeenCalledWith({message: 'Watfish: Unknown host example.domain.com'});
+      expect((express as any)._res.status).toHaveBeenCalledWith(404);
+
+      delete expressMock._req.headers.Accept;
+    });
+
+    it('should return an XML error for accepts XML requests', () => {
+      const expressMock = express as any;
+      expressMock._req.headers.Accept = 'application/xml';
+
+      router.init();
+
+      expect((express as any)._res.send)
+        .toHaveBeenCalledWith('<message>Watfish: Unknown host example.domain.com</message>');
       expect((express as any)._res.status).toHaveBeenCalledWith(404);
 
       delete expressMock._req.headers.Accept;
@@ -123,7 +137,7 @@ describe('router.ts', () => {
 
       router.init();
 
-      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+      expect((express as any)._res.send).toHaveBeenCalledWith('Watfish: Unknown host example.domain.com');
       expect((express as any)._res.status).toHaveBeenCalledWith(404);
 
       delete expressMock._req.headers.Accept;
@@ -136,7 +150,7 @@ describe('router.ts', () => {
 
       router.init();
 
-      expect((express as any)._res.send).toHaveBeenCalledWith('Unknown host example.domain.com');
+      expect((express as any)._res.send).toHaveBeenCalledWith('Watfish: Unknown host example.domain.com');
 
       delete expressMock._req.headers['user-agent'];
     });

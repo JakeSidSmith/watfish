@@ -2,6 +2,7 @@ import * as colors from 'colors/safe';
 import * as express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as WebSocket from 'ws';
+import * as xml from 'xml';
 import { Colors, SOCKET_PORT } from './constants';
 import * as logger from './logger';
 import { constructHTMLMessage, getRouterPort, isPortTaken, PortError } from './utils';
@@ -54,6 +55,8 @@ export const init = () => {
         res.send(constructHTMLMessage(message));
       } else if (req.accepts('json')) {
         res.json({message});
+      } else if (req.accepts('xml')) {
+        res.send(xml({message}));
       } else {
         res.send(message);
       }
