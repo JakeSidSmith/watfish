@@ -47,7 +47,7 @@ export const init = () => {
         target: `http://0.0.0.0:${route.port}`,
       });
     } else {
-      const message = `Unknown host ${req.hostname}`;
+      const message = `Watfish: Unknown host ${req.hostname}`;
       res.status(404);
 
       if (req.accepts('html')) {
