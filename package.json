@@ -40,6 +40,7 @@
     "@types/http-proxy": "^1.16.1",
     "@types/node": "^8.10.17",
     "@types/ws": "^3.2.1",
+    "@types/xml": "^1.0.2",
     "colors": "^1.3.0",
     "dotenv": "^6.0.0",
     "event-stream": "^3.3.4",
@@ -48,7 +49,8 @@
     "jargs": "^0.4.1",
     "moment": "^2.22.1",
     "typescript": "^2.8.3",
-    "ws": "^3.3.3"
+    "ws": "^3.3.3",
+    "xml": "^1.0.1"
   },
   "devDependencies": {
     "@types/jest": "^22.2.3",
