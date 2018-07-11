@@ -307,7 +307,7 @@ describe('start.ts', () => {
 
     it('should spawn child the processes that are supplied', () => {
       startProcesses(
-        'web: http-server . -c-0 -o',
+        'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
         {},
         'development',
         {
@@ -337,6 +337,46 @@ describe('start.ts', () => {
             processes: ['web'],
           },
           kwargs: {},
+          flags: {},
+        },
+        {},
+        {},
+        undefined
+      );
+    });
+
+    it('should exclude the child processes that are explicitly excluded', () => {
+      startProcesses(
+        'web: http-server . -c-0 -o\nwatch-js: watchify -t babelify src/index.js -o build/index.js',
+        {},
+        'development',
+        {
+          name: 'start',
+          args: {},
+          kwargs: {
+            exclude: ['watch-js'],
+          },
+          flags: {},
+        },
+        {}
+      );
+
+      expect(start.startProcess).toHaveBeenCalledTimes(1);
+      expect(start.startProcess).toHaveBeenCalledWith(
+        {
+          command: 'http-server',
+          options: ['.', '-c-0', '-o'],
+        },
+        'web',
+        3,
+        DEFAULT_ENV,
+        'red',
+        {
+          name: 'start',
+          args: {},
+          kwargs: {
+            exclude: ['watch-js'],
+          },
           flags: {},
         },
         {},
