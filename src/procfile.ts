@@ -6,8 +6,12 @@ export interface Command {
   options: ReadonlyArray<string>;
 }
 
+export interface ProcfileConfig {
+  [i: string]: Command;
+}
+
 export const parse = (data: string) => {
-  const procs: {[i: string]: Command} = {};
+  const procs: ProcfileConfig = {};
 
   data.split('\n').forEach((line) => {
     const match = MATCHES_PROC_VALUE.exec(line);
