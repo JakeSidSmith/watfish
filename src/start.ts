@@ -2,13 +2,14 @@ import * as childProcess from 'child_process';
 import * as colors from 'colors/safe';
 import * as es from 'event-stream';
 import * as fs from 'fs';
+import * as glob from 'glob';
 import { Tree } from 'jargs';
 import * as path from 'path';
 import * as WebSocket from 'ws';
-import * as constants from './constants';
 import {
   Colors,
   COLORS,
+  ConfigProject,
   DEFAULT_ENV,
   SOCKET_PORT,
   UTF8,
@@ -172,8 +173,8 @@ export const startProcess = (
 };
 
 export const startProcesses = (
-  procfileData: string,
-  wtfJson: constants.ConfigProject,
+  procfileConfig: procfile.ProcfileConfig,
+  wtfJson: ConfigProject,
   env: string,
   tree: Tree,
   envVariables: {[i: string]: string}
@@ -182,8 +183,6 @@ export const startProcesses = (
   let { exclude } = tree.kwargs;
   processes = Array.isArray(processes) ? processes : [];
   exclude = Array.isArray(exclude) ? exclude : [];
-
-  const procfileConfig = procfile.parse(procfileData.toString());
 
   let longestName: number = 0;
   let index = 0;
@@ -230,18 +229,18 @@ export const startProcesses = (
   }
 };
 
-export const readWtfJsonAndEnv = (procfileData: string, tree: Tree) => {
+export const readWtfJsonAndEnv = (procfilePath: string, procfileConfig: procfile.ProcfileConfig, tree: Tree) => {
   const configPath = getConfigPath();
   const projectName = getProjectName();
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  const config = loadWtfJson(configPath, projectName, env);
-
-  const envPath = path.join(process.cwd(), 'etc/environments', env, 'env');
+  const envPath = path.dirname(procfilePath);
   const envVariables = getEnvVariables(envPath);
 
-  startProcesses(procfileData, getIn(config, [projectName]) || {}, env, tree, envVariables);
+  const config = loadWtfJson(configPath, projectName, env);
+
+  startProcesses(procfileConfig, getIn(config, [projectName]) || {}, env, tree, envVariables);
 };
 
 export const startRouterCommunication = () => {
@@ -272,7 +271,18 @@ const start = (tree: Tree) => {
   let { env } = tree.kwargs;
   env = typeof env === 'string' ? env : DEFAULT_ENV;
 
-  const procfilePath = path.join(process.cwd(), 'etc/environments', env, 'procfile');
+  const paths = glob.sync(`{*/${env}/,*/*/${env}/}procfile`, {nocase: true});
+
+  if (!paths.length) {
+    logger.log([
+      'Could not find a Procfile / procfile in the following locations:',
+      '*/${env}/procfile',
+      '*/*/${env}/procfile\n',
+    ].join('\n'));
+    return process.exit(1);
+  }
+
+  const procfilePath = path.join(process.cwd(), paths[0]);
 
   if (!fs.existsSync(procfilePath)) {
     logger.log(`No procfile found at ${procfilePath}`);
@@ -280,8 +290,11 @@ const start = (tree: Tree) => {
   }
 
   const procfileContent = fs.readFileSync(procfilePath, UTF8);
+  const procfileConfig = procfile.parse(procfileContent);
 
-  readWtfJsonAndEnv(procfileContent, tree);
+  logger.log(`Found ${Object.keys(procfileConfig).length} processes in ${procfilePath}\n`);
+
+  readWtfJsonAndEnv(procfilePath, procfileConfig, tree);
 };
 
 export default start;
