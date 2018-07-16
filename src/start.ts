@@ -74,11 +74,11 @@ export const startProcessWithMaybePort = (
 
   logger.log(colors[color](`Starting ${displayName} process...`));
 
-  const environment: {[i: string]: string} = {
+  const environment: {[i: string]: string | undefined} = {
     ...envVariables,
     ...configEnvVariables,
     ...process.env,
-    PORT: process.env.PORT || '',
+    PORT: process.env.PORT || undefined,
     PYTHONUNBUFFERED: 'true',
   };
 
