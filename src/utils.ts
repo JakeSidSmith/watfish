@@ -189,7 +189,7 @@ export const isTruthyString = (value: any): value is string => {
 
 export const injectEnvVars = (
   commandOptions: ReadonlyArray<string | undefined>,
-  environment: Readonly<{[i: string]: string}>
+  environment: Readonly<{[i: string]: string | undefined}>
 ) => {
   return commandOptions
     .filter(isTruthyString)
@@ -198,7 +198,25 @@ export const injectEnvVars = (
         const varName = match.substring(1);
 
         if (varName in environment) {
-          return environment[varName];
+          const value = environment[varName];
+
+          if (typeof value !== 'undefined') {
+            return value;
+          }
+        }
+
+        if (varName === 'PORT') {
+          logger.log(
+            colors.red(
+              `${WAT}Environment variable $${varName} is not defined, please ensure you have configured your routes`
+            )
+          );
+        } else {
+          logger.log(
+            colors.red(
+              `${WAT}Environment variable $${varName} is not defined`
+            )
+          );
         }
 
         return match;
