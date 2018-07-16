@@ -200,6 +200,7 @@ export const injectEnvVars = (
         if (varName in environment) {
           const value = environment[varName];
 
+          /* istanbul ignore else */
           if (typeof value !== 'undefined') {
             return value;
           }
