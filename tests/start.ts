@@ -718,7 +718,7 @@ describe('start.ts', () => {
           shell: true,
           env: {
             ...process.env,
-            PORT: '',
+            PORT: undefined,
             PYTHONUNBUFFERED: 'true',
           },
           stdio: 'pipe',
