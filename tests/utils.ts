@@ -143,6 +143,20 @@ describe('utils.ts', () => {
 
       expect(result).toEqual(['wat', '0.0.0.0:1234', '$NOPE']);
     });
+
+    it('should log if any env vars are undefined', () => {
+      const result = injectEnvVars(['wat', '0.0.0.0:$PORT', '$THING'], {});
+
+      expect(result).toEqual(['wat', '0.0.0.0:$PORT', '$THING']);
+
+      expect(logger.log).toHaveBeenCalledWith(
+        `${WAT}Environment variable $PORT is not defined, please ensure you have configured your routes`
+      );
+
+      expect(logger.log).toHaveBeenCalledWith(
+        `${WAT}Environment variable $THING is not defined`
+      );
+    });
   });
 
   describe('getEnvVariables', () => {
