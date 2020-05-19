@@ -45,7 +45,7 @@
     "dotenv": "^6.0.0",
     "event-stream": "^3.3.4",
     "express": "^4.16.3",
-    "http-proxy": "^1.17.0",
+    "http-proxy": "^1.18.1",
     "jargs": "^0.4.1",
     "moment": "^2.22.1",
     "typescript": "^2.8.3",
